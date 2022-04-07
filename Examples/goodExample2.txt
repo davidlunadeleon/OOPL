@@ -1,0 +1,27 @@
+  class Carro {
+    int llantas;
+    float presion_aire;
+    void checarLlantas(float presion_min) {
+      if(presion_aire < presion_min){
+          print("Falta aire");
+        } else {
+        print("Todo bien");
+        }
+      }
+  }
+
+  class CarroLujo : Carro {
+    bool quemacocos, asientos_piel;
+  }
+
+  void main(){
+    [
+         CarroLujo ferrari;
+    ]
+    ferrari.quemacocos = True;
+    ferrari.asientos_piel = False;
+    ferrari.presion_aire = 25.0;
+    ferrari.checarLlantas(30.0);
+  };
+
+main();

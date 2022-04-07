@@ -1,0 +1,25 @@
+  int i = 4;
+  float j = 28.75;
+
+  class Carro {
+    int llantas;
+    float presion_aire;
+    void checarLlantas(float presion_min) {
+      if(presion_aire < presion_min){
+          print("Falta aire");
+        } else {
+        print("Todo bien");
+        }
+      }
+  }
+
+  void main(){
+    [
+         Carro audi;
+    ]
+    audi.llantas = 4;
+    audi.presion_aire = 20.0;
+    audi.checarLlantas(30.0);
+  }
+
+main();
