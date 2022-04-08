@@ -41,7 +41,7 @@ keywords = {
 # --- Tokenizer
 
 tokens = list(keywords.values()) + [ 
-    'ID', 'INT_CONSTANT', 'FLOAT_CONSTANT', 'BOOL_CONSTANT', 'STRING_CONSTANT',
+    'ID', 'INT_CONSTANT', 'FLOAT_CONSTANT', 'BOOL_CONSTANT', 'STRING_CONSTANT', 'FILE',
     'RELOP', 'AND', 'OR',
     'SEMICOLON', 'COLON', 'COMMA', 'DOT', 'LPAREN' ,'RPAREN', 'LBRACK', 'RBRACK', 'LCURBR', 'RCURBR',
     'TIMES', 'DIVIDES', 'PLUS', 'MINUS', 'ASSIGNOP',
@@ -79,6 +79,7 @@ t_INT_CONSTANT = r'[+-]?[0-9]+'
 t_FLOAT_CONSTANT = r'[+-]?[0-9]+\.[0-9]+'
 t_BOOL_CONSTANT = r'(True|False)'
 t_STRING_CONSTANT = r'\".*\"'
+t_FILE = r'[a-zA-Z]+[a-zA-Z0-9_]\.oopl'
 
 # A function can be used if there is an associated action.
 # Write the matching regex in the docstring.
@@ -106,9 +107,10 @@ lexer = lex.lex()
 # specified in the docstring.
 def p_program(t):
     '''
-    program : CLASS program_1
+    program : class program_1
             | function program_1
             | variable program_1
+            |
     '''
     t[0] = "DONE"
 
@@ -118,88 +120,88 @@ def p_program_1(t):
               | program
     '''
 
-def d_class(t):
+def p_class(t):
     '''
     class : CLASS ID class_1 LCURBR class_2 RCURBR
     '''
 
-def d_class_1(t):
+def p_class_1(t):
     '''
     class_1 : COLON ID
             |
     '''
-def d_class_2(t):
+def p_class_2(t):
     '''
     class_2 : var_decl
             | function
     '''
 
-def d_for_loop(t):
+def p_for_loop(t):
     '''
     for_loop : FOR LPAREN for_loop_1 SEMICOLON expr SEMICOLON expr RPAREN block
     '''
 
-def d_for_loop_1(t):
+def p_for_loop_1(t):
     '''
     for_loop_1 : variable ASSIGNOP expr
                |
     '''
 
-def d_block(t):
+def p_block(t):
     '''
     block : LCURBR block_1 RCURBR
     '''
 
-def d_block_1(t):
+def p_block_1(t):
     '''
     block_1 : statement
             | var_decl
             |
     '''
 
-def d_while_loop(t):
+def p_while_loop(t):
     '''
     while_loop : WHILE LPAREN expr RPAREN block
     '''
 
-def d_conditional(t):
+def p_conditional(t):
     '''
     conditional : IF LPAREN expr RPAREN block conditional_1
     '''
 
-def d_conditional_1(t):
+def p_conditional_1(t):
     '''
     conditional_1 : ELSEIF LPAREN expr RPAREN block conditional_1
                   | ELSE block
                   |
     '''
 
-def d_var_decl(t):
+def p_var_decl(t):
     '''
     var_decl : composite_type ID var_decl_1 SEMICOLON
              | simple_type ID var_decl_2 SEMICOLON
     '''
 
-def d_var_decl_1(t):
+def p_var_decl_1(t):
     '''
     var_decl_1 : COMMA ID var_decl_1
               |
     '''
 
-def d_var_decl_2(t):
+def p_var_decl_2(t):
     '''
     var_decl_2 : COMMA ID var_decl_3
                | LBRACK INT_CONSTANT RBRACK var_decl_3
                |
     '''
 
-def d_var_decl_3(t):
+def p_var_decl_3(t):
     '''
     var_decl_3 : var_decl_2
                 | LBRACK INT_CONSTANT RBRACK var_decl_2
     '''
 
-def d_simple_type(t):
+def p_simple_type(t):
     '''
     simple_type : INT
                 | FLOAT
@@ -207,41 +209,41 @@ def d_simple_type(t):
                 | BOOL
     '''
 
-def d_composite_type(t):
+def p_composite_type(t):
     '''
     composite_type : ID
                    | FILE
     '''
 
-def d_function(t):
+def p_function(t):
     '''
     function : function_1 ID LPAREN params RPAREN LBRACK function_2 RBRACK block
     '''
 
-def d_function_1(t):
+def p_function_1(t):
     '''
     function_1 : simple_type
-               | void
+               | VOID
     '''
 
-def d_function_2(t):
+def p_function_2(t):
     '''
     function_2 : var_decl function_2
                |
     '''
 
-def d_params(t):
+def p_params(t):
     '''
     params : simple_type ID params_1
     '''
 
-def d_params_1(t):
+def p_params_1(t):
     '''
     params_1 : COMMA params
              |
     '''
 
-def d_statement(t):
+def p_statement(t):
     '''
     statement : assign
               | call
@@ -252,22 +254,22 @@ def d_statement(t):
               | for_loop
     '''
 
-def d_assign(t):
+def p_assign(t):
     '''
     assign : variable ASSIGNOP expr SEMICOLON
     '''
 
-def d_read(t):
+def p_read(t):
     '''
     read : READ LPAREN variable RPAREN SEMICOLON
     '''
 
-def d_write(t):
+def p_write(t):
     '''
     write : PRINT LPAREN write_1 RPAREN SEMICOLON
     '''
 
-def d_write_1(t):
+def p_write_1(t):
     '''
     write_1 : expr COMMA
             | STRING_CONSTANT COMMA
@@ -275,93 +277,93 @@ def d_write_1(t):
             | STRING_CONSTANT
     '''
 
-def d_variable(t):
+def p_variable(t):
     '''
     variable : ID variable_1
     '''
 
-def d_variable_1(t):
+def p_variable_1(t):
     '''
     variable_1 : DOT variable
                | LBRACK expr RBRACK variable_2
     '''
 
-def d_variable_2(t):
+def p_variable_2(t):
     '''
     variable_2 : LBRACK expr RBRACK
                |
     '''
 
-def d_call(t):
+def p_call(t):
     '''
     call : ID call_1
     '''
 
-def d_call_1(t):
+def p_call_1(t):
     '''
     call_1 : DOT call
            | LPAREN expr call_2 RPAREN SEMICOLON
     '''
 
-def d_call_2(t):
+def p_call_2(t):
     '''
     call_2 : COMMA expr call_2
            |
     '''
 
-def d_expr(t):
+def p_expr(t):
     '''
     expr : t_expr expr_1
     '''
 
-def d_expr_1(t):
+def p_expr_1(t):
     '''
     expr_1 : OR expr
            |
     '''
 
-def d_t_expr(t):
+def p_t_expr(t):
     '''
     t_expr : g_expr t_expr_1
     '''
 
-def d_t_expr_1(t):
+def p_t_expr_1(t):
     '''
     t_expr_1 : AND t_expr
              |
     '''
 
-def d_g_expr(t):
+def p_g_expr(t):
     '''
     g_expr : m_expr RELOP m_expr
            | m_expr
     '''
 
-def d_m_expr(t):
+def p_m_expr(t):
     '''
     m_expr : term m_expr_1
     '''
 
-def d_m_expr_1(t):
+def p_m_expr_1(t):
     '''
     m_expr_1 : PLUS
              | MINUS
              |
     '''
 
-def d_term(t):
+def p_term(t):
     '''
     term : factor term_1
     '''
 
-def d_term_1(t):
+def p_term_1(t):
     '''
     term_1 : DIVIDES
            | TIMES
            |
     '''
 
-def d_factor(t):
+def p_factor(t):
     '''
     factor : LPAREN expr RPAREN
            | variable
@@ -386,10 +388,7 @@ if __name__ == '__main__':
             with open(name, 'r') as file:
                 file_content = file.read()
                 # Parse an expression
-                if parser.parse(file_content) == "DONE":
-                    print("Data inputted from file is valid.")
-                else:
-                    print("Data inputted from file is invalid.")
+                parser.parse(file_content)
         except (EOFError, FileNotFoundError) as e:
             print(e)
     else:
