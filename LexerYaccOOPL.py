@@ -87,16 +87,6 @@ def t_ID(t):
     t.type = keywords.get(t.value, 'ID')
     return t
 
-# def t_CTEI(t):
-#     r'[0-9]+'
-#     t.value = int(t.value)
-#     return t
-
-# def t_CTEF(t):
-#     r'[0-9]+(\.[0-9]+)?'
-#     t.value = float(t.value)
-#     return t
-
 # Ignored token with an action associated with it
 def t_ignore_newline(t):
     r'\n+'
@@ -114,14 +104,272 @@ lexer = lex.lex()
 
 # Write functions for each grammar rule which is
 # specified in the docstring.
-def p_s(t):
+def p_program(t):
     '''
-    s : PROGRAM ID SEMICOLON s_1 bloque
+    program : CLASS program_1
+            | function program_1
+            | variable program_1
     '''
     t[0] = "DONE"
 
+def p_program_1(t):
+    '''
+    program_1 : MAIN LPAREN RPAREN block
+              | program
+    '''
 
+def d_class(t):
+    '''
+    class : CLASS ID class_1 LCURBR class_2 RCURBR
+    '''
 
+def d_class_1(t):
+    '''
+    class_1 : COLON ID
+            |
+    '''
+def d_class_2(t):
+    '''
+    class_2 : var_decl
+            | function
+    '''
+
+def d_for_loop(t):
+    '''
+    for_loop : FOR LPAREN for_loop_1 SEMICOLON expr SEMICOLON expr RPAREN block
+    '''
+
+def d_for_loop_1(t):
+    '''
+    for_loop_1 : variable ASSIGNOP expr
+               |
+    '''
+
+def d_block(t):
+    '''
+    block : LCURBR block_1 RCURBR
+    '''
+
+def d_block_1(t):
+    '''
+    block_1 : statement
+            | var_decl
+            |
+    '''
+
+def d_while_loop(t):
+    '''
+    while_loop : WHILE LPAREN expr RPAREN block
+    '''
+
+def d_conditional(t):
+    '''
+    conditional : IF LPAREN expr RPAREN block conditional_1
+    '''
+
+def d_conditional_1(t):
+    '''
+    conditional_1 : ELSEIF LPAREN expr RPAREN block conditional_1
+                  | ELSE block
+                  |
+    '''
+
+def d_var_decl(t):
+    '''
+    var_decl : composite_type ID var_decl_1 SEMICOLON
+             | simple_type ID var_decl_2 SEMICOLON
+    '''
+
+def d_var_decl_1(t):
+    '''
+    var_decl_1 : COMMA ID var_decl_1
+              |
+    '''
+
+def d_var_decl_2(t):
+    '''
+    var_decl_2 : COMMA ID var_decl_3
+               | LBRACK INT_CONSTANT RBRACK var_decl_3
+               |
+    '''
+
+def d_var_decl_3(t):
+    '''
+    var_decl_3 : var_decl_2
+                | LBRACK INT_CONSTANT RBRACK var_decl_2
+    '''
+
+def d_simple_type(t):
+    '''
+    simple_type : INT
+                | FLOAT
+                | STRING
+                | BOOL
+    '''
+
+def d_composite_type(t):
+    '''
+    composite_type : ID
+                   | FILE
+    '''
+
+def d_function(t):
+    '''
+    function : function_1 ID LPAREN params RPAREN LBRACK function_2 RBRACK block
+    '''
+
+def d_function_1(t):
+    '''
+    function_1 : simple_type
+               | void
+    '''
+
+def d_function_2(t):
+    '''
+    function_2 : var_decl function_2
+               |
+    '''
+
+def d_params(t):
+    '''
+    params : simple_type ID params_1
+    '''
+
+def d_params_1(t):
+    '''
+    params_1 : COMMA params
+             |
+    '''
+
+def d_statement(t):
+    '''
+    statement : assign
+              | call
+              | read
+              | write
+              | conditional
+              | while_loop
+              | for_loop
+    '''
+
+def d_assign(t):
+    '''
+    assign : variable ASSIGNOP expr SEMICOLON
+    '''
+
+def d_read(t):
+    '''
+    read : READ LPAREN variable RPAREN SEMICOLON
+    '''
+
+def d_write(t):
+    '''
+    write : PRINT LPAREN write_1 RPAREN SEMICOLON
+    '''
+
+def d_write_1(t):
+    '''
+    write_1 : expr COMMA
+            | STRING_CONSTANT COMMA
+            | expr
+            | STRING_CONSTANT
+    '''
+
+def d_variable(t):
+    '''
+    variable : ID variable_1
+    '''
+
+def d_variable_1(t):
+    '''
+    variable_1 : DOT variable
+               | LBRACK expr RBRACK variable_2
+    '''
+
+def d_variable_2(t):
+    '''
+    variable_2 : LBRACK expr RBRACK
+               |
+    '''
+
+def d_call(t):
+    '''
+    call : ID call_1
+    '''
+
+def d_call_1(t):
+    '''
+    call_1 : DOT call
+           | LPAREN expr call_2 RPAREN SEMICOLON
+    '''
+
+def d_call_2(t):
+    '''
+    call_2 : COMMA expr call_2
+           |
+    '''
+
+def d_expr(t):
+    '''
+    expr : t_expr expr_1
+    '''
+
+def d_expr_1(t):
+    '''
+    expr_1 : OR expr
+           |
+    '''
+
+def d_t_expr(t):
+    '''
+    t_expr : g_expr t_expr_1
+    '''
+
+def d_t_expr_1(t):
+    '''
+    t_expr_1 : AND t_expr
+             |
+    '''
+
+def d_g_expr(t):
+    '''
+    g_expr : m_expr RELOP m_expr
+           | m_expr
+    '''
+
+def d_m_expr(t):
+    '''
+    m_expr : term m_expr_1
+    '''
+
+def d_m_expr_1(t):
+    '''
+    m_expr_1 : PLUS
+             | MINUS
+             |
+    '''
+
+def d_term(t):
+    '''
+    term : factor term_1
+    '''
+
+def d_term_1(t):
+    '''
+    term_1 : DIVIDES
+           | TIMES
+           |
+    '''
+
+def d_factor(t):
+    '''
+    factor : LPAREN expr RPAREN
+           | variable
+           | call
+           | INT_CONSTANT
+           | FLOAT_CONSTANT
+           | STRING_CONSTANT
+    '''
 
 def p_error(p):
     # print(f'Syntax error at {p.value!r} in line {p.lineno}')
