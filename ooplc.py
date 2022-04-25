@@ -10,8 +10,6 @@
 #
 
 # Libraries
-from ply import lex
-from ply import yacc
 import sys
 
 # Internal modules

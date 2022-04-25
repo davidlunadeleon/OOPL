@@ -1,7 +1,7 @@
 # OOPL parser
 
 # Import libraries
-from ply import yacc
+from .libs.ply import yacc
 
 
 class Parser:

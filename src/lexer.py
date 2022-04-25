@@ -1,7 +1,7 @@
 # OOPL lexer
 
 # Import libraries
-from ply import lex
+from .libs.ply import lex
 
 
 class Lexer:
