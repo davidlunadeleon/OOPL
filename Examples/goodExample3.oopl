@@ -10,6 +10,9 @@ int main()
 	if (x == y) {
 		while (x < 10) {
 			x = x + 1;
+			if (x == 5) {
+				break;
+			}
 		}
 	}
 }
