@@ -1,0 +1,6 @@
+int main () [] {
+	# Undeclared variable
+	x = 10;
+	# Missing semicolon
+	print(x)
+}

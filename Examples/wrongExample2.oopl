@@ -20,5 +20,7 @@ void main()
 {
 	audi.llantas = i;
 	audi.presion_aire = 20.0;
+	# Undeclared class property
+	audi.name = "Audi";
 	audi.checarLlantas(30.0);
 }

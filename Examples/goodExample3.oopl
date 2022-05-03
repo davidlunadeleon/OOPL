@@ -1,0 +1,15 @@
+int main()
+[
+	int x, y;
+	float z;
+]
+{
+	x = 1;
+	z = x + 2.5;
+	y = z;
+	if (x == y) {
+		while (x < 10) {
+			x = x + 1;
+		}
+	}
+}
