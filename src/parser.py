@@ -20,6 +20,7 @@ class Parser:
         program : class program
                 | function program
                 | var_decl program
+                | COMMENT program
                 |
         """
         p[0] = "DONE"
@@ -44,7 +45,13 @@ class Parser:
 
     def p_function(self, p):
         """
-        function    : return_type ID LPAREN params RPAREN LBRACK function_variables RBRACK block
+        function    : return_type ID function_parameters LBRACK function_variables RBRACK block
+        """
+
+    def p_function_parameters(self, p):
+        """
+        function_parameters : LPAREN params RPAREN
+                            | LPAREN RPAREN
         """
 
     def p_return_type(self, p):
@@ -115,13 +122,96 @@ class Parser:
     def p_statement(self, p):
         """
         statement   : assign
-                    | call
+                    | expr SEMICOLON
                     | read
                     | write
                     | if_statement
                     | while_loop
                     | for_loop
                     | break
+                    | return
+        """
+
+    def p_break(self, p):
+        """
+        break   : BREAK SEMICOLON
+        """
+
+    def p_return(self, p):
+        """
+        return  : RETURN expr SEMICOLON
+        """
+
+    def p_assign(self, p):
+        """
+        assign  : variable ASSIGNOP assign
+                | assign_expr
+        """
+
+    def p_assign_expr(self, p):
+        """
+        assign_expr : expr SEMICOLON
+        """
+
+    def p_params(self, p):
+        """
+        params  : simple_type ID params_continuation
+        """
+
+    def p_params_continuation(self, p):
+        """
+        params_continuation : COMMA params
+                            |
+        """
+
+    def p_call(self, p):
+        """
+        call    : ID call_arguments
+                | ID DOT ID call_arguments
+        """
+
+    def p_call_arguments(self, p):
+        """
+        call_arguments  : LPAREN arguments RPAREN
+                        | LPAREN RPAREN
+        """
+
+    def p_arguments(self, p):
+        """
+        arguments   : expr arguments_continuation
+        """
+
+    def p_arguments_continuation(self, p):
+        """
+        arguments_continuation  :   COMMA arguments
+                                |
+        """
+
+    def p_variable(self, p):
+        """
+        variable : ID variable_continuation
+        """
+
+    def p_variable_continuation(self, p):
+        """
+        variable_continuation   : DOT ID
+                                | LBRACK expr RBRACK matrix_index
+        """
+
+    def p_matrix_index(self, p):
+        """
+        matrix_index    : LBRACK expr RBRACK
+                        |
+        """
+
+    def p_read(self, p):
+        """
+        read : READ LPAREN variable RPAREN SEMICOLON
+        """
+
+    def p_write(self, p):
+        """
+        write : PRINT call_arguments SEMICOLON
         """
 
     def p_var_decl(self, p):
@@ -147,74 +237,6 @@ class Parser:
         """
         var_decl_3 : var_decl_2
                     | LBRACK INT_CONSTANT RBRACK var_decl_2
-        """
-
-    def p_params(self, p):
-        """
-        params : simple_type ID params_1
-        """
-
-    def p_params_1(self, p):
-        """
-        params_1 : COMMA params
-                 |
-        """
-
-    def p_assign(self, p):
-        """
-        assign : variable ASSIGNOP expr SEMICOLON
-        """
-
-    def p_read(self, p):
-        """
-        read : READ LPAREN variable RPAREN SEMICOLON
-        """
-
-    def p_write(self, p):
-        """
-        write : PRINT LPAREN write_1 RPAREN SEMICOLON
-        """
-
-    def p_write_1(self, p):
-        """
-        write_1 : expr COMMA
-                | STRING_CONSTANT COMMA
-                | expr
-                | STRING_CONSTANT
-        """
-
-    def p_variable(self, p):
-        """
-        variable : ID variable_1
-        """
-
-    def p_variable_1(self, p):
-        """
-        variable_1 : DOT variable
-                   | LBRACK expr RBRACK variable_2
-        """
-
-    def p_variable_2(self, p):
-        """
-        variable_2 : LBRACK expr RBRACK
-                   |
-        """
-
-    def p_call(self, p):
-        """
-        call : ID call_1
-        """
-
-    def p_call_1(self, p):
-        """
-        call_1 : DOT call
-               | LPAREN expr call_2 RPAREN SEMICOLON
-        """
-
-    def p_call_2(self, p):
-        """
-        call_2 : COMMA expr call_2
-               |
         """
 
     def p_expr(self, p):
@@ -278,11 +300,6 @@ class Parser:
                | FLOAT_CONSTANT
                | STRING_CONSTANT
                | BOOL_CONSTANT
-        """
-
-    def p_break(self, p):
-        """
-        break   : BREAK SEMICOLON
         """
 
     def p_error(self, p):
