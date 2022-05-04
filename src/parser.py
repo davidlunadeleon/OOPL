@@ -216,27 +216,32 @@ class Parser:
 
     def p_var_decl(self, p):
         """
-        var_decl : composite_type ID var_decl_1 SEMICOLON
-                 | simple_type ID var_decl_2 SEMICOLON
+        var_decl : composite_type ID id_list SEMICOLON
+                 | simple_type ID matrix_row SEMICOLON
         """
 
-    def p_var_decl_1(self, p):
+    def p_id_list(self, p):
         """
-        var_decl_1 : COMMA ID var_decl_1
-                  |
-        """
-
-    def p_var_decl_2(self, p):
-        """
-        var_decl_2 : COMMA ID var_decl_3
-                   | LBRACK INT_CONSTANT RBRACK var_decl_3
-                   |
+        id_list : COMMA ID id_list
+                |
         """
 
-    def p_var_decl_3(self, p):
+    def p_matrix_row(self, p):
         """
-        var_decl_3 : var_decl_2
-                    | LBRACK INT_CONSTANT RBRACK var_decl_2
+        matrix_row  : LBRACK INT_CONSTANT RBRACK matrix_column
+                    | simple_id_list
+        """
+
+    def p_matrix_column(self, p):
+        """
+        matrix_column   :  LBRACK INT_CONSTANT RBRACK simple_id_list
+                        |
+        """
+
+    def p_simple_id_list(self, p):
+        """
+        simple_id_list  :   COMMA ID matrix_row
+                        |
         """
 
     def p_expr(self, p):
