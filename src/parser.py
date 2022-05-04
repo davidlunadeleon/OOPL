@@ -122,7 +122,7 @@ class Parser:
     def p_statement(self, p):
         """
         statement   : assign
-                    | expr SEMICOLON
+                    | expr_semicolon
                     | read
                     | write
                     | if_statement
@@ -145,23 +145,18 @@ class Parser:
     def p_assign(self, p):
         """
         assign  : variable ASSIGNOP assign
-                | assign_expr
+                | variable ASSIGNOP expr_semicolon
         """
 
-    def p_assign_expr(self, p):
+    def p_expr_semicolon(self, p):
         """
-        assign_expr : expr SEMICOLON
+        expr_semicolon  : expr SEMICOLON
         """
 
     def p_params(self, p):
         """
-        params  : simple_type ID params_continuation
-        """
-
-    def p_params_continuation(self, p):
-        """
-        params_continuation : COMMA params
-                            |
+        params  : simple_type ID COMMA params
+                | simple_type ID
         """
 
     def p_call(self, p):
@@ -178,24 +173,15 @@ class Parser:
 
     def p_arguments(self, p):
         """
-        arguments   : expr arguments_continuation
-        """
-
-    def p_arguments_continuation(self, p):
-        """
-        arguments_continuation  :   COMMA arguments
-                                |
+        arguments   : expr COMMA arguments
+                    | expr
         """
 
     def p_variable(self, p):
         """
-        variable : ID variable_continuation
-        """
-
-    def p_variable_continuation(self, p):
-        """
-        variable_continuation   : DOT ID
-                                | LBRACK expr RBRACK matrix_index
+        variable    : ID DOT ID
+                    | ID LBRACK expr RBRACK matrix_index
+                    | ID
         """
 
     def p_matrix_index(self, p):
@@ -246,65 +232,40 @@ class Parser:
 
     def p_expr(self, p):
         """
-        expr    : t_expr expr_cycle
-        """
-
-    def p_expr_cycle(self, p):
-        """
-        expr_cycle  : OR expr
-                    |
+        expr    : t_expr OR expr
+                | t_expr
         """
 
     def p_t_expr(self, p):
         """
-        t_expr  : comp_expr t_expr_cycle
-        """
-
-    def p_t_expr_cycle(self, p):
-        """
-        t_expr_cycle    : AND t_expr
-                        |
+        t_expr  : comp_expr AND t_expr
+                | comp_expr
         """
 
     def p_comp_expr(self, p):
         """
-        comp_expr   : g_expr comp_expr_cycle
-        """
-
-    def p_comp_expr_cycle(self, p):
-        """
-        comp_expr_cycle : COMPOP comp_expr
-                        |
+        comp_expr   : g_expr COMPOP comp_expr
+                    | g_expr
         """
 
     def p_g_expr(self, p):
         """
-        g_expr : m_expr RELOP m_expr
+        g_expr : m_expr RELOP g_expr
                | m_expr
         """
 
     def p_m_expr(self, p):
         """
-        m_expr : term m_expr_cycle
-        """
-
-    def p_m_expr_cycle(self, p):
-        """
-        m_expr_cycle    : PLUS m_expr
-                        | MINUS m_expr
-                        |
+        m_expr  : term PLUS m_expr
+                | term MINUS m_expr
+                | term
         """
 
     def p_term(self, p):
         """
-        term : factor term_cycle
-        """
-
-    def p_term_cycle(self, p):
-        """
-        term_cycle  : DIVIDES term
-                    | TIMES term
-                    |
+        term    : factor DIVIDES term
+                | factor TIMES term
+                | factor
         """
 
     def p_factor(self, p):
