@@ -246,24 +246,35 @@ class Parser:
 
     def p_expr(self, p):
         """
-        expr : t_expr expr_1
+        expr    : t_expr expr_cycle
         """
 
-    def p_expr_1(self, p):
+    def p_expr_cycle(self, p):
         """
-        expr_1 : OR expr
-               |
+        expr_cycle  : OR expr
+                    |
         """
 
     def p_t_expr(self, p):
         """
-        t_expr : g_expr t_expr_1
+        t_expr  : comp_expr t_expr_cycle
         """
 
-    def p_t_expr_1(self, p):
+    def p_t_expr_cycle(self, p):
         """
-        t_expr_1 : AND t_expr
-                 |
+        t_expr_cycle    : AND t_expr
+                        |
+        """
+
+    def p_comp_expr(self, p):
+        """
+        comp_expr   : g_expr comp_expr_cycle
+        """
+
+    def p_comp_expr_cycle(self, p):
+        """
+        comp_expr_cycle : COMPOP comp_expr
+                        |
         """
 
     def p_g_expr(self, p):
@@ -274,26 +285,26 @@ class Parser:
 
     def p_m_expr(self, p):
         """
-        m_expr : term m_expr_1
+        m_expr : term m_expr_cycle
         """
 
-    def p_m_expr_1(self, p):
+    def p_m_expr_cycle(self, p):
         """
-        m_expr_1 : PLUS
-                 | MINUS
-                 |
+        m_expr_cycle    : PLUS m_expr
+                        | MINUS m_expr
+                        |
         """
 
     def p_term(self, p):
         """
-        term : factor term_1
+        term : factor term_cycle
         """
 
-    def p_term_1(self, p):
+    def p_term_cycle(self, p):
         """
-        term_1 : DIVIDES
-               | TIMES
-               |
+        term_cycle  : DIVIDES term
+                    | TIMES term
+                    |
         """
 
     def p_factor(self, p):
