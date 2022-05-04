@@ -30,31 +30,32 @@ class Lexer:
 
     # Tokens definition
     tokens = list(keywords.values()) + [
-        "ID",
-        "INT_CONSTANT",
-        "FLOAT_CONSTANT",
-        "BOOL_CONSTANT",
-        "STRING_CONSTANT",
-        "FILE",
-        "RELOP",
         "AND",
-        "OR",
-        "SEMICOLON",
+        "ASSIGNOP",
+        "BOOL_CONSTANT",
         "COLON",
         "COMMA",
-        "DOT",
-        "LPAREN",
-        "RPAREN",
-        "LBRACK",
-        "RBRACK",
-        "LCURBR",
-        "RCURBR",
-        "TIMES",
-        "DIVIDES",
-        "PLUS",
-        "MINUS",
-        "ASSIGNOP",
         "COMMENT",
+        "COMPOP",
+        "DIVIDES",
+        "DOT",
+        "FILE",
+        "FLOAT_CONSTANT",
+        "ID",
+        "INT_CONSTANT",
+        "LBRACK",
+        "LCURBR",
+        "LPAREN",
+        "MINUS",
+        "OR",
+        "PLUS",
+        "RBRACK",
+        "RCURBR",
+        "RELOP",
+        "RPAREN",
+        "SEMICOLON",
+        "STRING_CONSTANT",
+        "TIMES",
     ]
 
     # Regular expressions and functions for tokens
@@ -63,7 +64,8 @@ class Lexer:
     t_ignore = " \t"
 
     # Simple tokens
-    t_RELOP = r"<>|>|<"
+    t_RELOP = r"([<>]=|>|<)"
+    t_COMPOP = r"[!=]="
     t_AND = r"&&"
     t_OR = r"\|\|"
     t_SEMICOLON = r";"
