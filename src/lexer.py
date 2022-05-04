@@ -64,7 +64,7 @@ class Lexer:
     t_ignore = " \t"
 
     # Simple tokens
-    t_RELOP = r"([<>]=|>|<)"
+    t_RELOP = r"([<>]=?)"
     t_COMPOP = r"[!=]="
     t_AND = r"&&"
     t_OR = r"\|\|"
