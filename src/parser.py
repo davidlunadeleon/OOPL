@@ -45,7 +45,8 @@ class Parser:
 
     def p_function(self, p):
         """
-        function    : return_type ID function_parameters LBRACK function_variables RBRACK block
+        function    : simple_type ID function_parameters LBRACK function_variables RBRACK block
+                    | VOID ID function_parameters LBRACK function_variables RBRACK block
         """
 
     def p_function_parameters(self, p):
@@ -54,11 +55,11 @@ class Parser:
                             | LPAREN RPAREN
         """
 
-    def p_return_type(self, p):
-        """
-        return_type : simple_type
-                    | VOID
-        """
+    # def p_return_type(self, p):
+    #     """
+    #     return_type : simple_type
+    #                 | VOID
+    #     """
 
     def p_function_variables(self, p):
         """
