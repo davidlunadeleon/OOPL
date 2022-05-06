@@ -75,8 +75,14 @@ class Parser:
 
     def p_for_loop_init(self, p):
         """
-        for_loop_init   : variable ASSIGNOP expr
+        for_loop_init   : for_loop_counter_type ID ASSIGNOP expr
                         |
+        """
+    
+    def p_for_loop_counter_type(self, p):
+        """
+        for_loop_counter_type   : INT
+                                | FLOAT
         """
 
     def p_block(self, p):
