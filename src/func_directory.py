@@ -1,5 +1,5 @@
 #
-# @file utilis.py
+# @file func_directory.py
 # @author David Luna and Yulisa Medina
 # @brief
 # @version 0.1
