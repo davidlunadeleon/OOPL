@@ -21,6 +21,7 @@ class Parser:
                 | function program
                 | var_decl program
                 | COMMENT program
+                | call SEMICOLON program
                 |
         """
         p[0] = "DONE"
