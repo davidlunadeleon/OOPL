@@ -56,12 +56,6 @@ class Parser:
                             | LPAREN RPAREN
         """
 
-    # def p_return_type(self, p):
-    #     """
-    #     return_type : simple_type
-    #                 | VOID
-    #     """
-
     def p_function_variables(self, p):
         """
         function_variables  : var_decl function_variables
@@ -75,14 +69,8 @@ class Parser:
 
     def p_for_loop_init(self, p):
         """
-        for_loop_init   : for_loop_counter_type ID ASSIGNOP expr
+        for_loop_init   : variable ASSIGNOP expr
                         |
-        """
-    
-    def p_for_loop_counter_type(self, p):
-        """
-        for_loop_counter_type   : INT
-                                | FLOAT
         """
 
     def p_block(self, p):
