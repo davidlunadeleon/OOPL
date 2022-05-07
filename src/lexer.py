@@ -3,13 +3,15 @@
 # Import libraries
 from .libs.ply import lex
 
+from .utils.types import TokenList
+
 
 class Lexer:
     def __init__(self):
         self.lexer = lex.lex(module=self)
 
     # Keywords definition
-    keywords = {
+    keywords: dict[str, str] = {
         "bool": "BOOL",
         "break": "BREAK",
         "class": "CLASS",
@@ -29,7 +31,7 @@ class Lexer:
     }
 
     # Tokens definition
-    tokens = list(keywords.values()) + [
+    tokens: TokenList = list(keywords.values()) + [
         "AND",
         "ASSIGNOP",
         "BOOL_CONSTANT",

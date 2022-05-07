@@ -3,8 +3,14 @@
 # Import libraries
 from .libs.ply import yacc
 
+from .utils.types import TokenList
+from .lexer import Lexer
+
 
 class Parser:
+    tokens: TokenList
+    lexer: Lexer
+
     def __init__(self, lexer):
         self.lexer = lexer
         self.tokens = lexer.tokens
