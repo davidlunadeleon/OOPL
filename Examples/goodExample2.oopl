@@ -24,5 +24,3 @@ void main()
 	ferrari.presion_aire = 25.0;
 	ferrari.checarLlantas(30.0);
 }
-
-main();

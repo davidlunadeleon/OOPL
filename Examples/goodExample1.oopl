@@ -1,5 +1,5 @@
-int i = 4;
-float j = 28.75;
+int i;
+float j;
 
 class Carro {
 	int llantas;
