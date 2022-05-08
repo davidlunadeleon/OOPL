@@ -3,18 +3,23 @@
 # Import libraries
 from .libs.ply import yacc
 
-from .utils.types import TokenList
 from .lexer import Lexer
+from .utils.types import TokenList
+from .var_table import VarTable
 
 
 class Parser:
     tokens: TokenList
     lexer: Lexer
+    global_var_table: VarTable
+    type_stack: list[str]
 
     def __init__(self, lexer):
         self.lexer = lexer
         self.tokens = lexer.tokens
         self.parser = yacc.yacc(module=self)
+        self.global_var_table = VarTable()
+        self.type_stack = []
 
     def parse(self, p):
         self.parser.parse(p)
@@ -28,9 +33,15 @@ class Parser:
                 | var_decl program
                 | COMMENT program
                 | call SEMICOLON program
-                |
+                | finish
         """
         p[0] = "DONE"
+
+    def p_finish(self, p):
+        """
+        finish  :
+        """
+        self.global_var_table.print("Global variable table")
 
     def p_class(self, p):
         """
@@ -109,17 +120,26 @@ class Parser:
 
     def p_simple_type(self, p):
         """
-        simple_type : INT
-                    | FLOAT
-                    | STRING
-                    | BOOL
+        simple_type : INT set_type
+                    | FLOAT set_type
+                    | STRING set_type
+                    | BOOL set_type
         """
+        p[0] = p[1]
 
     def p_composite_type(self, p):
         """
-        composite_type : ID
-                       | FILE
+        composite_type : ID set_type
+                       | FILE set_type
         """
+        p[0] = p[1]
+
+    def p_set_type(self, p):
+        """
+        set_type    :
+        """
+        type = p[-1]
+        self.type_stack.append(type)
 
     def p_statement(self, p):
         """
@@ -204,13 +224,27 @@ class Parser:
 
     def p_var_decl(self, p):
         """
-        var_decl : composite_type ID id_list SEMICOLON
-                 | simple_type ID matrix_row SEMICOLON
+        var_decl : composite_type ID reg_var id_list SEMICOLON
+                 | simple_type ID reg_var matrix_row end_var_reg SEMICOLON
         """
+
+    def p_end_var_registration(self, p):
+        """
+        end_var_reg :
+        """
+        self.type_stack.pop()
+
+    def p_reg_var(self, p):
+        """
+        reg_var :
+        """
+        var_name = p[-1]
+        var_type = self.type_stack[-1]
+        self.global_var_table.add(var_name, var_type, "test")
 
     def p_id_list(self, p):
         """
-        id_list : COMMA ID id_list
+        id_list : COMMA ID reg_var id_list
                 |
         """
 
@@ -228,7 +262,7 @@ class Parser:
 
     def p_simple_id_list(self, p):
         """
-        simple_id_list  :   COMMA ID matrix_row
+        simple_id_list  :   COMMA ID reg_var matrix_row
                         |
         """
 
