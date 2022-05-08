@@ -55,5 +55,28 @@ class VarTable:
         """
         return False if self.table.get(name) is None else True
 
-    def __del__(self) -> None:
-        del self.table
+    def print(self, table_name: str) -> None:
+        """
+        Print the VarTable
+
+        Arguments:
+        table_name: str -- Name to print in the table header.
+        """
+        # TODO: Look for a better printing method. This thing is UGLY!
+        char_length = 100
+        column_lenght = (char_length - 5) / 4
+        template_string = f"|{{:^{column_lenght}}}|{{:^{column_lenght}}}|{{:^{column_lenght}}}|{{:^{char_length - column_lenght * 3 - 2}}}|"
+        bar = "".join(["-" * char_length])
+        template_header = f"|{{:^{char_length - 2}}}|"
+        print(bar)
+        print(template_header.format(table_name))
+        print(bar)
+        print(template_string.format("Variable name", "Type", "Name", "Value"))
+        if len(self.table.items()) > 0:
+            for key, value in self.table.items():
+                print(
+                    template_string.format(
+                        key, value["type"], value["name"], value["value"]
+                    )
+                )
+        print(bar)

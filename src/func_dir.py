@@ -24,7 +24,7 @@ class FuncDir:
     func_dir: dict[str, FuncInfo]
 
     def __init__(self):
-        self.funcDir = {}
+        self.func_dir = {}
 
     def add(self, name: str, return_type: str) -> None:
         """
@@ -67,5 +67,13 @@ class FuncDir:
         """
         return False if self.func_dir.get(name) is None else True
 
-    def __del__(self):
-        del self.func_dir
+    def print(self) -> None:
+        """
+        Print the function directory.
+        """
+        for key, value in self.func_dir.items():
+            print(f'Function: {key} with return type: {value["type"]}')
+            value["param_table"].print("Parameters table")
+            print("\n")
+            value["var_table"].print("Variables table")
+            print("\n")
