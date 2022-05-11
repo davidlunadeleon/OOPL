@@ -1,13 +1,14 @@
 from re import T
+from webbrowser import Opera
 from utils.enums import Types, Operations
 
 class SemanticCube:
-    sem_cube = dict()
+    sem_cube: dict()
 
     def __init__(self):
         self.sem_cube = {
             Types.INT: {
-                "+": {
+                Operations.PLUS: {
                     Types.INT: {
                         Types.INT
                     },
@@ -15,7 +16,7 @@ class SemanticCube:
                         Types.FLOAT
                     }
                 },
-                "-": {
+                Operations.MINUS: {
                     Types.INT: {
                         Types.INT
                     },
@@ -23,7 +24,7 @@ class SemanticCube:
                         Types.FLOAT
                     }
                 },
-                "/": {
+                Operations.DIVIDES: {
                     Types.INT: {
                         Types.INT
                     },
@@ -31,7 +32,7 @@ class SemanticCube:
                         Types.FLOAT
                     }
                 },
-                "*": {
+                Operations.TIMES: {
                     Types.INT: {
                         Types.INT
                     },
@@ -40,7 +41,7 @@ class SemanticCube:
                     }
                 },
 
-                ">": {
+                Operations.GT: {
                     Types.INT: {
                         Types.BOOL
                     },
@@ -48,7 +49,7 @@ class SemanticCube:
                         Types.BOOL
                     }
                 },
-                ">=": {
+                Operations.EQGT: {
                     Types.INT: {
                         Types.BOOL
                     },
@@ -56,7 +57,7 @@ class SemanticCube:
                         Types.BOOL
                     }
                 },
-                "<": {
+                Operations.LT: {
                     Types.INT: {
                         Types.BOOL
                     },
@@ -64,7 +65,7 @@ class SemanticCube:
                         Types.BOOL
                     }
                 },
-                "<=": {
+                Operations.EQLT: {
                     Types.INT: {
                         Types.BOOL
                     },
@@ -72,7 +73,7 @@ class SemanticCube:
                         Types.BOOL
                     }
                 },
-                "==": {
+                Operations.EQ: {
                     Types.INT: {
                         Types.BOOL
                     },
@@ -80,7 +81,7 @@ class SemanticCube:
                         Types.BOOL
                     }
                 },
-                "!=": {
+                Operations.DIFF: {
                     Types.INT: {
                         Types.BOOL
                     },
@@ -88,7 +89,7 @@ class SemanticCube:
                         Types.BOOL
                     }
                 },
-                "=": {
+                Operations.ASSIGNOP: {
                     Types.INT: {
                         Types.INT
                     },
@@ -99,7 +100,7 @@ class SemanticCube:
             },
 
             Types.FLOAT: {
-                "+": {
+                Operations.PLUS: {
                     Types.INT: {
                         Types.FLOAT
                     },
@@ -107,7 +108,7 @@ class SemanticCube:
                         Types.FLOAT
                     }
                 },
-                "-": {
+                Operations.MINUS: {
                     Types.INT: {
                         Types.FLOAT
                     },
@@ -115,7 +116,7 @@ class SemanticCube:
                         Types.FLOAT
                     }
                 },
-                "/": {
+                Operations.DIVIDES: {
                     Types.INT: {
                         Types.FLOAT
                     },
@@ -123,7 +124,7 @@ class SemanticCube:
                         Types.FLOAT
                     }
                 },
-                "*": {
+                Operations.TIMES: {
                     Types.INT: {
                         Types.FLOAT
                     },
@@ -132,7 +133,7 @@ class SemanticCube:
                     }
                 },
 
-                ">": {
+                Operations.GT: {
                     Types.INT: {
                         Types.BOOL
                     },
@@ -140,7 +141,7 @@ class SemanticCube:
                         Types.BOOL
                     }
                 },
-                ">=": {
+                Operations.EQGT: {
                     Types.INT: {
                         Types.BOOL
                     },
@@ -148,7 +149,7 @@ class SemanticCube:
                         Types.BOOL
                     }
                 },
-                "<": {
+                Operations.LT: {
                     Types.INT: {
                         Types.BOOL
                     },
@@ -156,7 +157,7 @@ class SemanticCube:
                         Types.BOOL
                     }
                 },
-                "<=": {
+                Operations.EQLT: {
                     Types.INT: {
                         Types.BOOL
                     },
@@ -164,7 +165,7 @@ class SemanticCube:
                         Types.BOOL
                     }
                 },
-                "==": {
+                Operations.EQ: {
                     Types.INT: {
                         Types.BOOL
                     },
@@ -172,7 +173,7 @@ class SemanticCube:
                         Types.BOOL
                     }
                 },
-                "!=": {
+                Operations.DIFF: {
                     Types.INT: {
                         Types.BOOL
                     },
@@ -180,7 +181,7 @@ class SemanticCube:
                         Types.BOOL
                     }
                 },
-                "=": {
+                Operations.ASSIGNOP: {
                     Types.INT: {
                         Types.FLOAT
                     },
@@ -191,42 +192,42 @@ class SemanticCube:
             },
 
             Types.STRING: {
-                "+": {
+                Operations.PLUS: {
                     Types.STRING: {
                         Types.STRING
                     }
                 },
-                ">": {
+                Operations.GT: {
                     Types.STRING: {
                         Types.BOOL
                     }
                 },
-                ">=": {
+                Operations.EQGT: {
                     Types.STRING: {
                         Types.BOOL
                     }
                 },
-                "<": {
+                Operations.LT: {
                     Types.STRING: {
                         Types.BOOL
                     }
                 },
-                "<=": {
+                Operations.EQLT: {
                     Types.STRING: {
                         Types.BOOL
                     }
                 },
-                "==": {
+                Operations.EQ: {
                     Types.STRING: {
                         Types.BOOL
                     }
                 },
-                "!=": {
+                Operations.DIFF: {
                     Types.STRING: {
                         Types.BOOL
                     }
                 },
-                "=": {
+                Operations.ASSIGNOP: {
                     Types.STRING: {
                         Types.STRING
                     }
@@ -234,27 +235,27 @@ class SemanticCube:
             },
             
             Types.BOOL: {
-                "==": {
+                Operations.EQ: {
                     Types.BOOL: {
                         Types.BOOL
                     }
                 },
-                "!=": {
+                Operations.DIFF: {
                     Types.BOOL: {
                         Types.STRING
                     }
                 },
-                "=": {
+                Operations.ASSIGNOP: {
                     Types.BOOL: {
                         Types.BOOL
                     }
                 },
-                "||": {
+                Operations.OR: {
                     Types.BOOL: {
                         Types.BOOL
                     }
                 },
-                "&&": {
+                Operations.AND: {
                     Types.BOOL: {
                         Types.BOOL
                     }
@@ -262,7 +263,7 @@ class SemanticCube:
             }
         }
     
-    def getType(self, left_type: str, oper: str ,right_type: str) -> Types:
+    def get(self, left_type: Types, oper: Operations ,right_type: Types) -> Types:
         """
         Get the return type of an operation.
 
@@ -272,14 +273,17 @@ class SemanticCube:
         right_type: str -- Type of right operator.
         """
         try:
-            left_type = Types(left_type)
-            # oper = Operations(oper)
-            right_type = Types(right_type)
-            return self.sem_cube.get(left_type).get(oper).get(right_type)
+            result = self.sem_cube.get(left_type).get(oper).get(right_type)
         except Exception as e:
             raise TypeError('Type-mismatch of operands.') from None
+        
+        if result is None:
+            raise TypeError('Type-mismatch of operands.')
+        else:
+            return result
+
     
-    def has(self, left_type: str, oper: str ,right_type: str) -> bool:
+    def has(self, left_type: Types, oper: Operations ,right_type: Types) -> bool:
         """
         Check whether an operation is valid.
 
@@ -288,10 +292,7 @@ class SemanticCube:
         oper: str -- Operation requested.
         right_type: str -- Type of right operator.
         """
-        left_type = Types(left_type)
-        # oper = Operations(oper)
-        right_type = Types(right_type)
-        return False if self.getType(left_type, oper, right_type) is None else True
+        return False if self.get(left_type, oper, right_type) is None else True
 
 buffer = SemanticCube()
-print(buffer.has('bool', '||', 'bool'))
+print(buffer.get(Types('bool'), Operations('+'), Types('string')))

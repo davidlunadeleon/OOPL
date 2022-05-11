@@ -17,6 +17,6 @@ class Operations(enum.Enum):
     EQLT = '<='
     EQ = '=='
     DIFF = '!='
-    ASSIGN = '='
+    ASSIGNOP = '='
     OR = '||'
     AND = '&&'
