@@ -1,8 +1,9 @@
 from utils.enums import Types, Operations
+from typing import Dict
 
 
 class SemanticCube:
-    sem_cube: dict[Types, dict[Operations, dict[Types, Types]]]
+    sem_cube: Dict[Types, Dict[Operations, Dict[Types, Types]]]
 
     def __init__(self):
         self.sem_cube = {
