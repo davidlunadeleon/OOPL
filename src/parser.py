@@ -203,7 +203,7 @@ class Parser:
                 | simple_type_id
         """
         if len(p) == 4:
-            p[0] = [p[1]] + p[3]
+            p[0] = [p[1], *p[3]]
         else:
             p[0] = [p[1]]
 
@@ -264,7 +264,7 @@ class Parser:
                  | simple_type ID matrix_row SEMICOLON
         """
         var_type = p[1]
-        var_names = [p[2]] + p[3]
+        var_names = [p[2], *p[3]]
         scope = self.scope_stack[-1]
         if scope == "global":
             for var_name in var_names:
@@ -283,7 +283,7 @@ class Parser:
                 |
         """
         if len(p) == 4:
-            p[0] = [p[2]] + p[3]
+            p[0] = [p[2], *p[3]]
         else:
             p[0] = []
 
@@ -313,7 +313,7 @@ class Parser:
                         |
         """
         if len(p) == 4:
-            p[0] = [p[2]] + p[3]
+            p[0] = [p[2], *p[3]]
         else:
             p[0] = []
 
