@@ -1,4 +1,4 @@
-from utils.enums import Types, Operations
+from .utils.enums import Types, Operations
 from typing import Dict
 
 
