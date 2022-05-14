@@ -1,0 +1,34 @@
+# Explanation: The function main is defined twice.
+
+int main()[] {
+	print("Fail!");
+}
+
+int main()
+[
+	int x, y, i, j;
+	float z;
+	string f;
+	int mat[2][2];
+]
+{
+	x = 1;
+	z = x + 2.5;
+	y = z;
+	if (x == y) {
+		while (x < 10) {
+			x = x + 1;
+			if (x == 5) {
+				break;
+			}
+		}
+	} elseif (x > 10 * 2 &&  y != 30) {
+		print(x, y);
+		for (i = 0; i < 2; i = i + 1) {
+			for (j = 0; j < 2; j = j + 1) {
+				read(f);
+				mat[i][j] = f;
+			}
+		}
+	}
+}
