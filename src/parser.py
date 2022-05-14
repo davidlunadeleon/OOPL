@@ -13,16 +13,16 @@ class Parser:
     tokens: TokenList
     lexer: Lexer
     global_var_table: VarTable
-    type_stack: list[str]
     func_dir: FuncDir
+    scope_stack: list[str]
 
     def __init__(self, lexer):
         self.lexer = lexer
         self.tokens = lexer.tokens
         self.parser = yacc.yacc(module=self)
         self.global_var_table = VarTable()
-        self.type_stack = []
         self.func_dir = FuncDir()
+        self.scope_stack = ["global"]
 
     def parse(self, p):
         self.parser.parse(p)
@@ -68,23 +68,35 @@ class Parser:
 
     def p_function(self, p):
         """
-        function    : simple_type ID register_function function_parameters LBRACK function_variables RBRACK block
-                    | void ID register_function function_parameters LBRACK function_variables RBRACK block
+        function    : simple_type_id function_parameters register_function LBRACK function_variables RBRACK block
+                    | void_id function_parameters register_function LBRACK function_variables RBRACK block
         """
+        self.scope_stack.pop()
 
     def p_register_function(self, p):
         """
         register_function   :
         """
-        function_name = p[-1]
-        function_type = self.type_stack.pop()
+        function_type, function_name = p[-2]
+        function_parameters = p[-1]
         self.func_dir.add(function_name, function_type)
+        self.scope_stack.append(function_name)
+        func_info = self.func_dir.get(function_name)
+        for param_type, param_name in function_parameters:
+            if func_info is not None:
+                func_info["param_table"].add(param_name, param_type, "test")
+            else:
+                raise Exception("The function information table was not found.")
 
     def p_function_parameters(self, p):
         """
         function_parameters : LPAREN params RPAREN
                             | LPAREN RPAREN
         """
+        if len(p) == 4:
+            p[0] = p[2]
+        else:
+            p[0] = []
 
     def p_function_variables(self, p):
         """
@@ -131,34 +143,25 @@ class Parser:
                         |
         """
 
-    def p_simple_type(self, p):
+    def p_type(self, p):
         """
-        simple_type : INT set_type
-                    | FLOAT set_type
-                    | STRING set_type
-                    | BOOL set_type
+        simple_type     : INT
+                        | FLOAT
+                        | STRING
+                        | BOOL
+        composite_type  : ID
+                        | FILE
+        void            : VOID
         """
         p[0] = p[1]
 
     def p_composite_type(self, p):
-        """
-        composite_type : ID set_type
-                       | FILE set_type
-        """
+        """ """
         p[0] = p[1]
 
     def p_void(self, p):
-        """
-        void    : VOID set_type
-        """
+        """ """
         p[0] = p[1]
-
-    def p_set_type(self, p):
-        """
-        set_type    :
-        """
-        type = p[-1]
-        self.type_stack.append(type)
 
     def p_statement(self, p):
         """
@@ -196,9 +199,23 @@ class Parser:
 
     def p_params(self, p):
         """
-        params  : simple_type ID COMMA params
-                | simple_type ID
+        params  : simple_type_id COMMA params
+                | simple_type_id
         """
+        if len(p) == 4:
+            p[0] = [p[1]] + p[3]
+        else:
+            p[0] = [p[1]]
+
+    def p_type_id(self, p):
+        """
+        simple_type_id      : simple_type ID
+        composite_type_id   : composite_type ID
+        void_id             : void ID
+        """
+        id_type = p[1]
+        id = p[2]
+        p[0] = (id_type, id)
 
     def p_call(self, p):
         """
@@ -243,47 +260,62 @@ class Parser:
 
     def p_var_decl(self, p):
         """
-        var_decl : composite_type ID reg_var id_list SEMICOLON
-                 | simple_type ID reg_var matrix_row end_var_reg SEMICOLON
+        var_decl : composite_type ID id_list SEMICOLON
+                 | simple_type ID matrix_row SEMICOLON
         """
-
-    def p_end_var_registration(self, p):
-        """
-        end_var_reg :
-        """
-        self.type_stack.pop()
-
-    def p_reg_var(self, p):
-        """
-        reg_var :
-        """
-        var_name = p[-1]
-        var_type = self.type_stack[-1]
-        self.global_var_table.add(var_name, var_type, "test")
+        var_type = p[1]
+        var_names = [p[2]] + p[3]
+        scope = self.scope_stack[-1]
+        if scope == "global":
+            for var_name in var_names:
+                self.global_var_table.add(var_name, var_type, "test")
+        else:
+            func_info = self.func_dir.get(scope)
+            if func_info is not None:
+                for var_name in var_names:
+                    func_info["var_table"].add(var_name, var_type, "test")
+            else:
+                raise Exception("The function information table was not found.")
 
     def p_id_list(self, p):
         """
-        id_list : COMMA ID reg_var id_list
+        id_list : COMMA ID id_list
                 |
         """
+        if len(p) == 4:
+            p[0] = [p[2]] + p[3]
+        else:
+            p[0] = []
 
     def p_matrix_row(self, p):
         """
         matrix_row  : LBRACK INT_CONSTANT RBRACK matrix_column
                     | simple_id_list
         """
+        if len(p) == 5:
+            p[0] = p[4]
+        else:
+            p[0] = p[1]
 
     def p_matrix_column(self, p):
         """
         matrix_column   :  LBRACK INT_CONSTANT RBRACK simple_id_list
                         |
         """
+        if len(p) == 5:
+            p[0] = p[4]
+        else:
+            p[0] = []
 
     def p_simple_id_list(self, p):
         """
-        simple_id_list  :   COMMA ID reg_var matrix_row
+        simple_id_list  :   COMMA ID matrix_row
                         |
         """
+        if len(p) == 4:
+            p[0] = [p[2]] + p[3]
+        else:
+            p[0] = []
 
     def p_expr(self, p):
         """
