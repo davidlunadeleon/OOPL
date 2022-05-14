@@ -3,12 +3,12 @@
 # Import libraries
 from .libs.ply import yacc
 
+from .func_dir import FuncDir
 from .lexer import Lexer
+from .semantic_cube import SemanticCube
+from .utils.enums import Types, Operations
 from .utils.types import TokenList
 from .var_table import VarTable
-from .func_dir import FuncDir
-from .utils.enums import Types, Operations
-from .semantic_cube import SemanticCube
 
 
 class Parser:
@@ -27,6 +27,7 @@ class Parser:
         self.func_dir = FuncDir()
         self.scope_stack = ["global"]
         self.semantic_cube = SemanticCube()
+        self.cont = 1000
 
     def parse(self, p):
         self.parser.parse(p)
@@ -315,41 +316,117 @@ class Parser:
 
     def p_expr(self, p):
         """
-        expr    : t_expr OR expr
+        expr    : expr OR t_expr
                 | t_expr
         """
+        if len(p) == 4:
+            l_type, l_value = p[1]
+            r_type, r_value = p[3]
+            operation = Operations.OR
+            result_type = self.semantic_cube.get(l_type, operation, r_type)
+            print(f"{operation},{l_value},{r_value},{self.cont}")
+            p[0] = (result_type, self.cont)
+            self.cont += 1
+        else:
+            p[0] = p[1]
 
     def p_t_expr(self, p):
         """
-        t_expr  : comp_expr AND t_expr
+        t_expr  : t_expr AND comp_expr
                 | comp_expr
         """
+        if len(p) == 4:
+            l_type, l_value = p[1]
+            r_type, r_value = p[3]
+            operation = Operations.AND
+            result_type = self.semantic_cube.get(l_type, operation, r_type)
+            print(f"{operation},{l_value},{r_value},{self.cont}")
+            p[0] = (result_type, self.cont)
+            self.cont += 1
+        else:
+            p[0] = p[1]
 
     def p_comp_expr(self, p):
         """
-        comp_expr   : g_expr COMPOP comp_expr
+        comp_expr   : comp_expr COMPOP g_expr
                     | g_expr
         """
+        if len(p) == 4:
+            l_type, l_value = p[1]
+            r_type, r_value = p[3]
+            if p[2] == "==":
+                operation = Operations.EQ
+            else:
+                operation = Operations.DIFF
+            result_type = self.semantic_cube.get(l_type, operation, r_type)
+            print(f"{operation},{l_value},{r_value},{self.cont}")
+            p[0] = (result_type, self.cont)
+            self.cont += 1
+        else:
+            p[0] = p[1]
 
     def p_g_expr(self, p):
         """
-        g_expr : m_expr RELOP g_expr
+        g_expr : g_expr RELOP m_expr
                | m_expr
         """
+        if len(p) == 4:
+            l_type, l_value = p[1]
+            r_type, r_value = p[3]
+            if p[2] == ">":
+                operation = Operations.GT
+            elif p[2] == "<":
+                operation = Operations.LT
+            elif p[2] == "<=":
+                operation = Operations.EQLT
+            else:
+                operation = Operations.EQGT
+            result_type = self.semantic_cube.get(l_type, operation, r_type)
+            print(f"{operation},{l_value},{r_value},{self.cont}")
+            p[0] = (result_type, self.cont)
+            self.cont += 1
+        else:
+            p[0] = p[1]
 
     def p_m_expr(self, p):
         """
-        m_expr  : term PLUS m_expr
-                | term MINUS m_expr
+        m_expr  : m_expr PLUS term
+                | m_expr MINUS term
                 | term
         """
+        if len(p) == 4:
+            l_type, l_value = p[1]
+            r_type, r_value = p[3]
+            if p[2] == "+":
+                operation = Operations.PLUS
+            else:
+                operation = Operations.MINUS
+            result_type = self.semantic_cube.get(l_type, operation, r_type)
+            print(f"{operation},{l_value},{r_value},{self.cont}")
+            p[0] = (result_type, self.cont)
+            self.cont += 1
+        else:
+            p[0] = p[1]
 
     def p_term(self, p):
         """
-        term    : factor DIVIDES term
-                | factor TIMES term
+        term    : term DIVIDES factor
+                | term TIMES factor
                 | factor
         """
+        if len(p) == 4:
+            l_type, l_value = p[1]
+            r_type, r_value = p[3]
+            if p[2] == "/":
+                operation = Operations.DIVIDES
+            else:
+                operation = Operations.TIMES
+            result_type = self.semantic_cube.get(l_type, operation, r_type)
+            print(f"{operation},{l_value},{r_value},{self.cont}")
+            p[0] = (result_type, self.cont)
+            self.cont += 1
+        else:
+            p[0] = p[1]
 
     def p_factor(self, p):
         """
@@ -358,6 +435,10 @@ class Parser:
                | call
                | constant
         """
+        if len(p) == 4:
+            pass
+        else:
+            p[0] = p[1]
 
     def p_constant(self, p):
         """
