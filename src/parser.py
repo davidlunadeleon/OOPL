@@ -155,14 +155,6 @@ class Parser:
         """
         p[0] = p[1]
 
-    def p_composite_type(self, p):
-        """ """
-        p[0] = p[1]
-
-    def p_void(self, p):
-        """ """
-        p[0] = p[1]
-
     def p_statement(self, p):
         """
         statement   : assign
