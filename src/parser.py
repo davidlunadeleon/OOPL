@@ -6,6 +6,7 @@ from .libs.ply import yacc
 from .lexer import Lexer
 from .utils.types import TokenList
 from .var_table import VarTable
+from .func_dir import FuncDir
 
 
 class Parser:
@@ -13,6 +14,7 @@ class Parser:
     lexer: Lexer
     global_var_table: VarTable
     type_stack: list[str]
+    func_dir: FuncDir
 
     def __init__(self, lexer):
         self.lexer = lexer
@@ -20,6 +22,7 @@ class Parser:
         self.parser = yacc.yacc(module=self)
         self.global_var_table = VarTable()
         self.type_stack = []
+        self.func_dir = FuncDir()
 
     def parse(self, p):
         self.parser.parse(p)
@@ -42,6 +45,8 @@ class Parser:
         finish  :
         """
         self.global_var_table.print("Global variable table")
+        print("\n")
+        self.func_dir.print()
 
     def p_class(self, p):
         """
@@ -63,9 +68,17 @@ class Parser:
 
     def p_function(self, p):
         """
-        function    : simple_type ID function_parameters LBRACK function_variables RBRACK block
-                    | VOID ID function_parameters LBRACK function_variables RBRACK block
+        function    : simple_type ID register_function function_parameters LBRACK function_variables RBRACK block
+                    | void ID register_function function_parameters LBRACK function_variables RBRACK block
         """
+
+    def p_register_function(self, p):
+        """
+        register_function   :
+        """
+        function_name = p[-1]
+        function_type = self.type_stack.pop()
+        self.func_dir.add(function_name, function_type)
 
     def p_function_parameters(self, p):
         """
@@ -81,12 +94,12 @@ class Parser:
 
     def p_for_loop(self, p):
         """
-        for_loop    : FOR LPAREN for_loop_init SEMICOLON expr SEMICOLON expr RPAREN block
+        for_loop    : FOR LPAREN for_loop_assign SEMICOLON expr SEMICOLON for_loop_assign RPAREN block
         """
 
-    def p_for_loop_init(self, p):
+    def p_for_loop_assign(self, p):
         """
-        for_loop_init   : variable ASSIGNOP expr
+        for_loop_assign : variable ASSIGNOP expr
                         |
         """
 
@@ -131,6 +144,12 @@ class Parser:
         """
         composite_type : ID set_type
                        | FILE set_type
+        """
+        p[0] = p[1]
+
+    def p_void(self, p):
+        """
+        void    : VOID set_type
         """
         p[0] = p[1]
 
