@@ -7,6 +7,8 @@ from .lexer import Lexer
 from .utils.types import TokenList
 from .var_table import VarTable
 from .func_dir import FuncDir
+from .utils.enums import Types, Operations
+from .semantic_cube import SemanticCube
 
 
 class Parser:
@@ -15,6 +17,7 @@ class Parser:
     global_var_table: VarTable
     func_dir: FuncDir
     scope_stack: list[str]
+    semantic_cube: SemanticCube
 
     def __init__(self, lexer):
         self.lexer = lexer
@@ -23,6 +26,7 @@ class Parser:
         self.global_var_table = VarTable()
         self.func_dir = FuncDir()
         self.scope_stack = ["global"]
+        self.semantic_cube = SemanticCube()
 
     def parse(self, p):
         self.parser.parse(p)
@@ -352,11 +356,41 @@ class Parser:
         factor : LPAREN expr RPAREN
                | variable
                | call
-               | INT_CONSTANT
-               | FLOAT_CONSTANT
-               | STRING_CONSTANT
-               | BOOL_CONSTANT
+               | constant
         """
+
+    def p_constant(self, p):
+        """
+        constant    : int_constant
+                    | float_constant
+                    | string_constant
+                    | bool_constant
+        """
+        p[0] = p[1]
+
+    def p_bool_constant(self, p):
+        """
+        bool_constant   : BOOL_CONSTANT
+        """
+        p[0] = (Types.BOOL, p[1])
+
+    def p_string_constant(self, p):
+        """
+        string_constant : STRING_CONSTANT
+        """
+        p[0] = (Types.STRING, p[1])
+
+    def p_float_constant(self, p):
+        """
+        float_constant  : FLOAT_CONSTANT
+        """
+        p[0] = (Types.FLOAT, p[1])
+
+    def p_int_constant(self, p):
+        """
+        int_constant    : INT_CONSTANT
+        """
+        p[0] = (Types.INT, p[1])
 
     def p_error(self, p):
         # print(f'Syntax error at {p.value!r} in line {p.lineno}')
