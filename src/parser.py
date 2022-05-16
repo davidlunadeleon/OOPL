@@ -96,7 +96,8 @@ class Parser:
         func_info = self.func_dir.get(function_name)
         for param_type, param_name in function_parameters:
             if func_info is not None:
-                func_info["param_table"].add(param_name, param_type, "test")
+                address = self.memory.reserve(Types(param_type))
+                func_info["param_table"].add(param_name, param_type, address)
             else:
                 raise Exception("The function information table was not found.")
 
@@ -272,12 +273,14 @@ class Parser:
         scope = self.scope_stack[-1]
         if scope == "global":
             for var_name in var_names:
-                self.global_var_table.add(var_name, var_type, "test")
+                address = self.memory.reserve(Types(var_type))
+                self.global_var_table.add(var_name, var_type, address)
         else:
             func_info = self.func_dir.get(scope)
             if func_info is not None:
                 for var_name in var_names:
-                    func_info["var_table"].add(var_name, var_type, "test")
+                    address = self.memory.reserve(Types(var_type))
+                    func_info["var_table"].add(var_name, var_type, address)
             else:
                 raise Exception("The function information table was not found.")
 

@@ -1,10 +1,12 @@
-from typing import Any, TypedDict, Union
+from typing import TypedDict, Union
+
+from .utils.types import MemoryAddress
 
 
 class VarInfo(TypedDict):
     name: str
     type: str
-    value: Any
+    address: MemoryAddress
 
 
 class VarTable:
@@ -13,23 +15,19 @@ class VarTable:
     def __init__(self) -> None:
         self.table = {}
 
-    def add(self, name: str, var_type: str, value: Any) -> None:
+    def add(self, name: str, var_type: str, address: MemoryAddress) -> None:
         """
         Insert a new variable to the table.
 
         Arguments:
         name: str -- Name of the variable.
         var_type: str -- Type of the variable.
-        value: Any -- Value of the variable
+        address: MemoryAddress -- Address of the variable.
         """
         if name in self.table:
             raise Exception(f"The variable {name} is already in the table.")
         else:
-            self.table[name] = {
-                "name": name,
-                "type": var_type,
-                "value": value,
-            }
+            self.table[name] = {"name": name, "type": var_type, "address": address}
 
     def get(self, name: str) -> Union[VarInfo, None]:
         """
@@ -71,12 +69,12 @@ class VarTable:
         print(bar)
         print(template_header.format(table_name))
         print(bar)
-        print(template_string.format("Variable name", "Type", "Name", "Value"))
+        print(template_string.format("Variable name", "Type", "Name", "Address"))
         if len(self.table.items()) > 0:
             for key, value in self.table.items():
                 print(
                     template_string.format(
-                        key, value["type"], value["name"], value["value"]
+                        key, value["type"], value["name"], str(value["address"])
                     )
                 )
         print(bar)
