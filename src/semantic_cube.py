@@ -90,9 +90,3 @@ class SemanticCube:
         right_type: str -- Type of right operator.
         """
         return False if self.get(left_type, oper, right_type) is None else True
-
-
-buffer = SemanticCube()
-# print(buffer.get(Types.BOOL, Operations.PLUS, Types.STRING))
-print(buffer.get(Types.STRING, Operations.PLUS, Types.STRING))
-print(buffer.get(Types.INT, Operations.ASSIGNOP, Types.FLOAT))
