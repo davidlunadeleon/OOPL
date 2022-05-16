@@ -1,11 +1,12 @@
 from typing import TypedDict, Union
 
 from .utils.types import MemoryAddress
+from .utils.enums import Types
 
 
 class VarInfo(TypedDict):
     name: str
-    type: str
+    type: Types
     address: MemoryAddress
 
 
@@ -15,7 +16,7 @@ class VarTable:
     def __init__(self) -> None:
         self.table = {}
 
-    def add(self, name: str, var_type: str, address: MemoryAddress) -> None:
+    def add(self, name: str, var_type: Types, address: MemoryAddress) -> None:
         """
         Insert a new variable to the table.
 

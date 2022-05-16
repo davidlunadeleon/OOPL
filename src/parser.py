@@ -166,7 +166,7 @@ class Parser:
                         | FILE
         void            : VOID
         """
-        p[0] = p[1]
+        p[0] = Types(p[1])
 
     def p_statement(self, p):
         """
@@ -246,6 +246,19 @@ class Parser:
                     | ID LBRACK expr RBRACK matrix_index
                     | ID
         """
+        if len(p) == 2:
+            scope = self.scope_stack[-1]
+            var_info = None
+            if (func_info := self.func_dir.get(scope)) is not None:
+                var_info = func_info["var_table"].get(p[1]) or func_info[
+                    "param_table"
+                ].get(p[1])
+            if var_info is None:
+                var_info = self.global_var_table.get(p[1])
+            if var_info is not None:
+                p[0] = (var_info["type"], var_info["address"])
+        else:
+            pass
 
     def p_matrix_index(self, p):
         """
