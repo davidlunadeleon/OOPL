@@ -1,22 +1,24 @@
 import enum
 
+
 class Types(enum.Enum):
-    INT = 'int'
-    FLOAT = 'float'
-    STRING = 'string'
-    BOOL = 'bool'
+    BOOL = "bool"
+    FLOAT = "float"
+    INT = "int"
+    STRING = "string"
+
 
 class Operations(enum.Enum):
-    PLUS = '+'
-    MINUS = '-'
-    DIVIDES = '/'
-    TIMES = '*'
-    GT = '>'
-    EQGT = '>='
-    LT = '<'
-    EQLT = '<='
-    EQ = '=='
-    DIFF = '!='
-    ASSIGNOP = '='
-    OR = '||'
-    AND = '&&'
+    AND = "&&"
+    ASSIGNOP = "="
+    DIFF = "!="
+    DIVIDES = "/"
+    EQ = "=="
+    EQGT = ">="
+    EQLT = "<="
+    GT = ">"
+    LT = "<"
+    MINUS = "-"
+    OR = "||"
+    PLUS = "+"
+    TIMES = "*"
