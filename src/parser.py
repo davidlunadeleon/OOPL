@@ -321,119 +321,35 @@ class Parser:
         else:
             p[0] = []
 
-    def p_expr(self, p):
+    def p_operators(self, p):
         """
-        expr    : expr OR t_expr
-                | t_expr
-        """
-        if len(p) == 4:
-            l_type, l_value = p[1]
-            r_type, r_value = p[3]
-            operation = Operations.OR
-            result_type = self.semantic_cube.get(l_type, operation, r_type)
-            mem_address = self.memory.reserve(result_type)
-            self.quads.add((operation, l_value, r_value, mem_address))
-            p[0] = (result_type, mem_address)
-        else:
-            p[0] = p[1]
-
-    def p_t_expr(self, p):
-        """
-        t_expr  : t_expr AND comp_expr
-                | comp_expr
-        """
-        if len(p) == 4:
-            l_type, l_value = p[1]
-            r_type, r_value = p[3]
-            operation = Operations.AND
-            result_type = self.semantic_cube.get(l_type, operation, r_type)
-            mem_address = self.memory.reserve(result_type)
-            self.quads.add((operation, l_value, r_value, mem_address))
-            p[0] = (result_type, mem_address)
-        else:
-            p[0] = p[1]
-
-    def p_comp_expr(self, p):
-        """
+        expr        : expr OR t_expr
+        t_expr      : t_expr AND comp_expr
         comp_expr   : comp_expr COMPOP g_expr
-                    | g_expr
+        g_expr      : g_expr RELOP m_expr
+        m_expr      : m_expr PLUS term
+        m_expr      : m_expr MINUS term
+        term        : term DIVIDES factor
+        term        : term TIMES factor
         """
-        if len(p) == 4:
-            l_type, l_value = p[1]
-            r_type, r_value = p[3]
-            if p[2] == "==":
-                operation = Operations.EQ
-            else:
-                operation = Operations.DIFF
-            result_type = self.semantic_cube.get(l_type, operation, r_type)
-            mem_address = self.memory.reserve(result_type)
-            self.quads.add((operation, l_value, r_value, mem_address))
-            p[0] = (result_type, mem_address)
-        else:
-            p[0] = p[1]
+        l_type, l_addr = p[1]
+        r_type, r_addr = p[3]
+        operation = Operations(p[2])
+        result_type = self.semantic_cube.get(l_type, operation, r_type)
+        mem_address = self.memory.reserve(result_type)
+        self.quads.add((operation, l_addr, r_addr, mem_address))
+        p[0] = (result_type, mem_address)
 
-    def p_g_expr(self, p):
+    def p_expressions(self, p):
         """
-        g_expr : g_expr RELOP m_expr
-               | m_expr
+        expr        : t_expr
+        t_expr      : comp_expr
+        comp_expr   : g_expr
+        g_expr      : m_expr
+        m_expr      : term
+        term        : factor
         """
-        if len(p) == 4:
-            l_type, l_value = p[1]
-            r_type, r_value = p[3]
-            if p[2] == ">":
-                operation = Operations.GT
-            elif p[2] == "<":
-                operation = Operations.LT
-            elif p[2] == "<=":
-                operation = Operations.EQLT
-            else:
-                operation = Operations.EQGT
-            result_type = self.semantic_cube.get(l_type, operation, r_type)
-            mem_address = self.memory.reserve(result_type)
-            self.quads.add((operation, l_value, r_value, mem_address))
-            p[0] = (result_type, mem_address)
-        else:
-            p[0] = p[1]
-
-    def p_m_expr(self, p):
-        """
-        m_expr  : m_expr PLUS term
-                | m_expr MINUS term
-                | term
-        """
-        if len(p) == 4:
-            l_type, l_value = p[1]
-            r_type, r_value = p[3]
-            if p[2] == "+":
-                operation = Operations.PLUS
-            else:
-                operation = Operations.MINUS
-            result_type = self.semantic_cube.get(l_type, operation, r_type)
-            mem_address = self.memory.reserve(result_type)
-            self.quads.add((operation, l_value, r_value, mem_address))
-            p[0] = (result_type, mem_address)
-        else:
-            p[0] = p[1]
-
-    def p_term(self, p):
-        """
-        term    : term DIVIDES factor
-                | term TIMES factor
-                | factor
-        """
-        if len(p) == 4:
-            l_type, l_value = p[1]
-            r_type, r_value = p[3]
-            if p[2] == "/":
-                operation = Operations.DIVIDES
-            else:
-                operation = Operations.TIMES
-            result_type = self.semantic_cube.get(l_type, operation, r_type)
-            mem_address = self.memory.reserve(result_type)
-            self.quads.add((operation, l_value, r_value, mem_address))
-            p[0] = (result_type, mem_address)
-        else:
-            p[0] = p[1]
+        p[0] = p[1]
 
     def p_factor(self, p):
         """
