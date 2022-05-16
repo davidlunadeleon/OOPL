@@ -6,11 +6,18 @@ int two()[]
 int main()
 [
 	int x, y;
+	bool b1, b2;
+	float a;
+	string str;
 ]
 {
 	x = 1;
 	x = 1 + 2 * 3;
 	x = 1 - 2 + 1 / 3;
 	y = two();
+	a = 2.0 + 1.5;
+	b1 = True;
+	b2 = False;
+	str = "Hello!";
 	return 1;
 }
