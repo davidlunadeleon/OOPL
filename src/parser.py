@@ -196,11 +196,12 @@ class Parser:
         assign  : variable ASSIGNOP assign
                 | variable ASSIGNOP expr_semicolon
         """
-
-    def p_expr_semicolon(self, p):
-        """
-        expr_semicolon  : expr SEMICOLON
-        """
+        l_type, l_addr = p[1]
+        r_type, r_addr = p[3]
+        operation = Operations(p[2])
+        result_type = self.semantic_cube.get(l_type, operation, r_type)
+        self.quads.add((operation, r_addr, None, l_addr))
+        p[0] = (result_type, l_addr)
 
     def p_params(self, p):
         """
@@ -358,17 +359,18 @@ class Parser:
 
     def p_identity(self, p):
         """
-        expr        : t_expr
-        t_expr      : comp_expr
-        comp_expr   : g_expr
-        g_expr      : m_expr
-        m_expr      : term
-        term        : factor
-        constant    : int_constant
-                    | float_constant
-                    | string_constant
-                    | bool_constant
-        factor      : constant
+        expr            : t_expr
+        t_expr          : comp_expr
+        comp_expr       : g_expr
+        g_expr          : m_expr
+        m_expr          : term
+        term            : factor
+        constant        : int_constant
+                        | float_constant
+                        | string_constant
+                        | bool_constant
+        factor          : constant
+        expr_semicolon  : expr SEMICOLON
         """
         p[0] = p[1]
 
