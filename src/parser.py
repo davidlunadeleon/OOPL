@@ -9,25 +9,30 @@ from .semantic_cube import SemanticCube
 from .utils.enums import Types, Operations
 from .utils.types import TokenList
 from .var_table import VarTable
+from .quadruple_list import QuadrupleList
+from .memory import Memory
 
 
 class Parser:
-    tokens: TokenList
-    lexer: Lexer
-    global_var_table: VarTable
     func_dir: FuncDir
+    global_var_table: VarTable
+    lexer: Lexer
     scope_stack: list[str]
     semantic_cube: SemanticCube
+    tokens: TokenList
+    quads: QuadrupleList
+    memory: Memory
 
     def __init__(self, lexer):
         self.lexer = lexer
         self.tokens = lexer.tokens
         self.parser = yacc.yacc(module=self)
-        self.global_var_table = VarTable()
         self.func_dir = FuncDir()
+        self.global_var_table = VarTable()
         self.scope_stack = ["global"]
         self.semantic_cube = SemanticCube()
-        self.cont = 1000
+        self.quads = QuadrupleList()
+        self.memory = Memory()
 
     def parse(self, p):
         self.parser.parse(p)
@@ -52,6 +57,8 @@ class Parser:
         self.global_var_table.print("Global variable table")
         print("\n")
         self.func_dir.print()
+        self.quads.print()
+        self.memory.print()
 
     def p_class(self, p):
         """
@@ -324,9 +331,9 @@ class Parser:
             r_type, r_value = p[3]
             operation = Operations.OR
             result_type = self.semantic_cube.get(l_type, operation, r_type)
-            print(f"{operation},{l_value},{r_value},{self.cont}")
-            p[0] = (result_type, self.cont)
-            self.cont += 1
+            mem_address = self.memory.reserve(result_type)
+            self.quads.add((operation, l_value, r_value, mem_address))
+            p[0] = (result_type, mem_address)
         else:
             p[0] = p[1]
 
@@ -340,9 +347,9 @@ class Parser:
             r_type, r_value = p[3]
             operation = Operations.AND
             result_type = self.semantic_cube.get(l_type, operation, r_type)
-            print(f"{operation},{l_value},{r_value},{self.cont}")
-            p[0] = (result_type, self.cont)
-            self.cont += 1
+            mem_address = self.memory.reserve(result_type)
+            self.quads.add((operation, l_value, r_value, mem_address))
+            p[0] = (result_type, mem_address)
         else:
             p[0] = p[1]
 
@@ -359,9 +366,9 @@ class Parser:
             else:
                 operation = Operations.DIFF
             result_type = self.semantic_cube.get(l_type, operation, r_type)
-            print(f"{operation},{l_value},{r_value},{self.cont}")
-            p[0] = (result_type, self.cont)
-            self.cont += 1
+            mem_address = self.memory.reserve(result_type)
+            self.quads.add((operation, l_value, r_value, mem_address))
+            p[0] = (result_type, mem_address)
         else:
             p[0] = p[1]
 
@@ -382,9 +389,9 @@ class Parser:
             else:
                 operation = Operations.EQGT
             result_type = self.semantic_cube.get(l_type, operation, r_type)
-            print(f"{operation},{l_value},{r_value},{self.cont}")
-            p[0] = (result_type, self.cont)
-            self.cont += 1
+            mem_address = self.memory.reserve(result_type)
+            self.quads.add((operation, l_value, r_value, mem_address))
+            p[0] = (result_type, mem_address)
         else:
             p[0] = p[1]
 
@@ -402,9 +409,9 @@ class Parser:
             else:
                 operation = Operations.MINUS
             result_type = self.semantic_cube.get(l_type, operation, r_type)
-            print(f"{operation},{l_value},{r_value},{self.cont}")
-            p[0] = (result_type, self.cont)
-            self.cont += 1
+            mem_address = self.memory.reserve(result_type)
+            self.quads.add((operation, l_value, r_value, mem_address))
+            p[0] = (result_type, mem_address)
         else:
             p[0] = p[1]
 
@@ -422,9 +429,9 @@ class Parser:
             else:
                 operation = Operations.TIMES
             result_type = self.semantic_cube.get(l_type, operation, r_type)
-            print(f"{operation},{l_value},{r_value},{self.cont}")
-            p[0] = (result_type, self.cont)
-            self.cont += 1
+            mem_address = self.memory.reserve(result_type)
+            self.quads.add((operation, l_value, r_value, mem_address))
+            p[0] = (result_type, mem_address)
         else:
             p[0] = p[1]
 
@@ -453,25 +460,43 @@ class Parser:
         """
         bool_constant   : BOOL_CONSTANT
         """
-        p[0] = (Types.BOOL, p[1])
+        val = bool(p[1])
+        address = self.memory.find(val)
+        if address is None:
+            address = self.memory.append(val)
+        p[0] = (Types.BOOL, address)
 
     def p_string_constant(self, p):
         """
         string_constant : STRING_CONSTANT
         """
-        p[0] = (Types.STRING, p[1])
+        val = str(p[1])
+        address = self.memory.find(val)
+        if address is None:
+            address = self.memory.append(val)
+        p[0] = (Types.STRING, address)
 
     def p_float_constant(self, p):
         """
         float_constant  : FLOAT_CONSTANT
         """
-        p[0] = (Types.FLOAT, p[1])
+        val = float(p[1])
+        address = self.memory.find(val)
+        if address is None:
+            address = self.memory.append(val)
+        p[0] = (Types.FLOAT, address)
 
     def p_int_constant(self, p):
         """
         int_constant    : INT_CONSTANT
         """
-        p[0] = (Types.INT, p[1])
+        val = int(p[1])
+        address = self.memory.find(val)
+        if address is None:
+            address = self.memory.append(val)
+        print(val)
+        print(address)
+        p[0] = (Types.INT, address)
 
     def p_error(self, p):
         # print(f'Syntax error at {p.value!r} in line {p.lineno}')
