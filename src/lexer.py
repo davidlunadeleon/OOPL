@@ -28,8 +28,8 @@ class Lexer:
         "this": "THIS",
         "void": "VOID",
         "while": "WHILE",
-        "True": "BOOL_CONSTANT",
-        "False": "BOOL_CONSTANT",
+        "True": "BOOL_CONSTANT_TRUE",
+        "False": "BOOL_CONSTANT_FALSE",
     }
 
     # Tokens definition

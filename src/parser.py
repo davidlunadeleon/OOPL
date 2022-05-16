@@ -374,7 +374,8 @@ class Parser:
 
     def p_bool_constant(self, p):
         """
-        bool_constant   : BOOL_CONSTANT
+        bool_constant   : BOOL_CONSTANT_TRUE
+                        | BOOL_CONSTANT_FALSE
         """
         val = True if p[1] == "True" else False
         address = self.memory.find(val)
