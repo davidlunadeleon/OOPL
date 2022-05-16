@@ -376,7 +376,7 @@ class Parser:
         """
         bool_constant   : BOOL_CONSTANT
         """
-        val = bool(p[1])
+        val = True if p[1] == "True" else False
         address = self.memory.find(val)
         if address is None:
             address = self.memory.append(val)
@@ -410,8 +410,6 @@ class Parser:
         address = self.memory.find(val)
         if address is None:
             address = self.memory.append(val)
-        print(val)
-        print(address)
         p[0] = (Types.INT, address)
 
     def p_error(self, p):
