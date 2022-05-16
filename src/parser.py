@@ -191,18 +191,6 @@ class Parser:
         return  : RETURN expr SEMICOLON
         """
 
-    def p_assign(self, p):
-        """
-        assign  : variable ASSIGNOP assign
-                | variable ASSIGNOP expr
-        """
-        l_type, l_addr = p[1]
-        r_type, r_addr = p[3]
-        operation = Operations(p[2])
-        result_type = self.semantic_cube.get(l_type, operation, r_type)
-        self.quads.add((operation, r_addr, None, l_addr))
-        p[0] = (result_type, l_addr)
-
     def p_params(self, p):
         """
         params  : simple_type_id COMMA params
@@ -340,6 +328,8 @@ class Parser:
 
     def p_operators(self, p):
         """
+        assign      : variable ASSIGNOP assign
+                    | variable ASSIGNOP expr
         expr        : expr OR t_expr
         t_expr      : t_expr AND comp_expr
         comp_expr   : comp_expr COMPOP g_expr
@@ -353,9 +343,13 @@ class Parser:
         r_type, r_addr = p[3]
         operation = Operations(p[2])
         result_type = self.semantic_cube.get(l_type, operation, r_type)
-        mem_address = self.memory.reserve(result_type)
-        self.quads.add((operation, l_addr, r_addr, mem_address))
-        p[0] = (result_type, mem_address)
+        if operation is Operations.ASSIGNOP:
+            self.quads.add((operation, r_addr, None, l_addr))
+            p[0] = (result_type, l_addr)
+        else:
+            mem_address = self.memory.reserve(result_type)
+            self.quads.add((operation, l_addr, r_addr, mem_address))
+            p[0] = (result_type, mem_address)
 
     def p_identity(self, p):
         """
@@ -370,6 +364,8 @@ class Parser:
                         | string_constant
                         | bool_constant
         factor          : constant
+                        | variable
+                        | call
         expr_semicolon  : expr SEMICOLON
         """
         p[0] = p[1]
@@ -377,13 +373,8 @@ class Parser:
     def p_factor(self, p):
         """
         factor : LPAREN expr RPAREN
-               | variable
-               | call
         """
-        if len(p) == 4:
-            pass
-        else:
-            p[0] = p[1]
+        p[0] = p[2]
 
     def p_bool_constant(self, p):
         """
