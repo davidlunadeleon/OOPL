@@ -124,7 +124,7 @@ class Parser:
 
     def p_for_loop_assign(self, p):
         """
-        for_loop_assign : variable ASSIGNOP expr
+        for_loop_assign : assign
                         |
         """
 
@@ -170,7 +170,7 @@ class Parser:
 
     def p_statement(self, p):
         """
-        statement   : assign
+        statement   : assign SEMICOLON
                     | expr_semicolon
                     | read
                     | write
@@ -194,7 +194,7 @@ class Parser:
     def p_assign(self, p):
         """
         assign  : variable ASSIGNOP assign
-                | variable ASSIGNOP expr_semicolon
+                | variable ASSIGNOP expr
         """
         l_type, l_addr = p[1]
         r_type, r_addr = p[3]
