@@ -328,9 +328,9 @@ class Parser:
         comp_expr   : comp_expr COMPOP g_expr
         g_expr      : g_expr RELOP m_expr
         m_expr      : m_expr PLUS term
-        m_expr      : m_expr MINUS term
+                    | m_expr MINUS term
         term        : term DIVIDES factor
-        term        : term TIMES factor
+                    | term TIMES factor
         """
         l_type, l_addr = p[1]
         r_type, r_addr = p[3]
@@ -340,7 +340,7 @@ class Parser:
         self.quads.add((operation, l_addr, r_addr, mem_address))
         p[0] = (result_type, mem_address)
 
-    def p_expressions(self, p):
+    def p_identity(self, p):
         """
         expr        : t_expr
         t_expr      : comp_expr
@@ -348,6 +348,11 @@ class Parser:
         g_expr      : m_expr
         m_expr      : term
         term        : factor
+        constant    : int_constant
+                    | float_constant
+                    | string_constant
+                    | bool_constant
+        factor      : constant
         """
         p[0] = p[1]
 
@@ -356,21 +361,11 @@ class Parser:
         factor : LPAREN expr RPAREN
                | variable
                | call
-               | constant
         """
         if len(p) == 4:
             pass
         else:
             p[0] = p[1]
-
-    def p_constant(self, p):
-        """
-        constant    : int_constant
-                    | float_constant
-                    | string_constant
-                    | bool_constant
-        """
-        p[0] = p[1]
 
     def p_bool_constant(self, p):
         """
