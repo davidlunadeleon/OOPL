@@ -17,3 +17,7 @@ class QuadrupleList:
 
     def fill(self, index: int, quad: Quadruple) -> None:
         self.quads[index] = quad
+
+    def print(self) -> None:
+        for quad in self.quads:
+            print(quad)
