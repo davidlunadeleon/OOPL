@@ -28,13 +28,14 @@ class Lexer:
         "this": "THIS",
         "void": "VOID",
         "while": "WHILE",
+        "True": "BOOL_CONSTANT",
+        "False": "BOOL_CONSTANT",
     }
 
     # Tokens definition
     tokens: TokenList = list(keywords.values()) + [
         "AND",
         "ASSIGNOP",
-        "BOOL_CONSTANT",
         "COLON",
         "COMMA",
         "COMMENT",
@@ -87,7 +88,6 @@ class Lexer:
     t_ASSIGNOP = r"="
     t_INT_CONSTANT = r"[+-]?[0-9]+"
     t_FLOAT_CONSTANT = r"[+-]?[0-9]+\.[0-9]+"
-    t_BOOL_CONSTANT = r"(True|False)"
     t_STRING_CONSTANT = r"\".*\""
     t_FILE = r"[a-zA-Z]+[a-zA-Z0-9_]\.oopl"
 
