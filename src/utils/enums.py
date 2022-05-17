@@ -6,6 +6,7 @@ class Types(enum.Enum):
     FLOAT = "float"
     INT = "int"
     STRING = "string"
+    VOID = "void"
 
 
 class Operations(enum.Enum):
