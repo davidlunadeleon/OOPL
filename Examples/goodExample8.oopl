@@ -1,0 +1,30 @@
+int main()
+[
+	int x, y;
+	string str;
+]
+{
+	x = 3;
+	y = 100;
+
+	if(x > 10){
+		x = y;
+	}
+
+	if(x < 10){
+		x = y - 10;
+	}else{
+		x = 2;
+	}
+
+	if(x * 3 < 4){
+		y = x;
+	}elseif(22 + 5 == 100){
+		y = x + 4;
+	}elseif(123 != 0){
+		y = x - 3;
+	}else{
+		y = 1/2;
+	}
+
+}
