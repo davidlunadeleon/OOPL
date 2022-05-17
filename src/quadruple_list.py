@@ -10,6 +10,7 @@ class QuadrupleList:
         self.quads = []
 
     def add(self, quad: Quadruple) -> None:
+        self.ptr += 1
         self.quads.append(quad)
 
     def get(self, index: int) -> Quadruple:
@@ -19,5 +20,5 @@ class QuadrupleList:
         self.quads[index] = quad
 
     def print(self) -> None:
-        for quad in self.quads:
-            print(quad)
+        for index, quad in enumerate(self.quads):
+            print(index, "\t", quad)
