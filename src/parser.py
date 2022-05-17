@@ -148,8 +148,8 @@ class Parser:
         after_expr = self.jump_stack.pop()
         before_expr = self.jump_stack.pop()
         self.quads.add((Operations.GOTO, None, None, before_expr))
-        op_code, addr, _, _ = self.quads.get(after_expr)
-        self.quads.fill(after_expr, (op_code, addr, None, self.quads.ptr))
+        op_code, addr, _, _ = self.quads[after_expr]
+        self.quads[after_expr] = (op_code, addr, None, self.quads.ptr)
 
     def p_init_while(self, p):
         """

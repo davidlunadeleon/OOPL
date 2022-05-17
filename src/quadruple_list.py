@@ -13,10 +13,10 @@ class QuadrupleList:
         self.ptr += 1
         self.quads.append(quad)
 
-    def get(self, index: int) -> Quadruple:
+    def __getitem__(self, index: int) -> Quadruple:
         return self.quads[index]
 
-    def fill(self, index: int, quad: Quadruple) -> None:
+    def __setitem__(self, index: int, quad: Quadruple) -> None:
         self.quads[index] = quad
 
     def print(self) -> None:
