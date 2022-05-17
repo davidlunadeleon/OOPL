@@ -22,6 +22,7 @@ class Parser:
     tokens: TokenList
     quads: QuadrupleList
     memory: Memory
+    jump_stack: list[int]
 
     def __init__(self, lexer):
         self.lexer = lexer
@@ -33,6 +34,7 @@ class Parser:
         self.semantic_cube = SemanticCube()
         self.quads = QuadrupleList()
         self.memory = Memory()
+        self.jump_stack = []
 
     def parse(self, p):
         self.parser.parse(p)
@@ -141,8 +143,30 @@ class Parser:
 
     def p_while_loop(self, p):
         """
-        while_loop  : WHILE LPAREN expr RPAREN block
+        while_loop  : WHILE LPAREN init_while expr expr_while RPAREN block
         """
+        after_expr = self.jump_stack.pop()
+        before_expr = self.jump_stack.pop()
+        self.quads.add((Operations.GOTO, None, None, before_expr))
+        op_code, addr, _, _ = self.quads.get(after_expr)
+        self.quads.fill(after_expr, (op_code, addr, None, self.quads.ptr))
+
+    def p_init_while(self, p):
+        """
+        init_while  :
+        """
+        self.jump_stack.append(self.quads.ptr)
+
+    def p_expr_while(self, p):
+        """
+        expr_while  :
+        """
+        expr_type, expr_addr = p[-1]
+        if expr_type is Types.BOOL:
+            self.jump_stack.append(self.quads.ptr)
+            self.quads.add((Operations.GOTOF, expr_addr, None, None))
+        else:
+            raise TypeError("Non boolean expression found in while loop.")
 
     def p_if_statement(self, p):
         """
