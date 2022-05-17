@@ -157,15 +157,20 @@ class Parser:
         else:
             raise TypeError("Non boolean expression found in loop.")
 
-    def p_block(self, p):
+    def p_no_action(self, p):
         """
-        block   : LCURBR block_content RCURBR
-        """
-
-    def p_block_content(self, p):
-        """
+        block           : LCURBR block_content RCURBR
         block_content   : statement block_content
                         |
+        statement       : assign SEMICOLON
+                        | expr_semicolon
+                        | read
+                        | write
+                        | if_statement
+                        | while_loop
+                        | for_loop
+                        | break
+                        | return
         """
 
     def p_while_loop(self, p):
@@ -191,8 +196,7 @@ class Parser:
         end = self.jump_stack.pop()
         op_code, addr, _, _ = self.quads[end]
         self.quads[end] = (op_code, addr, None, self.quads.ptr)
-        
-    
+
     def p_if_statement_neural_point_1(self, p):
         """
         if_statement_neural_point_1    :
@@ -203,7 +207,6 @@ class Parser:
             self.jump_stack.append(self.quads.ptr - 1)
         else:
             raise TypeError("Type-mismatch of operands.")
-
 
     def p_if_alternative(self, p):
         """
@@ -230,7 +233,7 @@ class Parser:
             self.jump_stack.append(self.quads.ptr - 1)
         else:
             raise TypeError("Type-mismatch of operands.")
-        
+
     def p_if_alternative_neural_point_4(self, p):
         """
         if_alternative_neural_point_4  :
@@ -252,19 +255,6 @@ class Parser:
         void            : VOID
         """
         p[0] = Types(p[1])
-
-    def p_statement(self, p):
-        """
-        statement   : assign SEMICOLON
-                    | expr_semicolon
-                    | read
-                    | write
-                    | if_statement
-                    | while_loop
-                    | for_loop
-                    | break
-                    | return
-        """
 
     def p_break(self, p):
         """
