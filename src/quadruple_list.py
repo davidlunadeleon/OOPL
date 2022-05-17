@@ -16,8 +16,11 @@ class QuadrupleList:
         return self.quads[index]
 
     def fill(self, index: int, quad: Quadruple) -> None:
-        self.quads[index] = quad
+        # Offset because array starts at 0 but instructions are counted from 1
+        self.quads[index - 1] = quad
 
     def print(self) -> None:
-        for quad in self.quads:
-            print(quad)
+        # for quad in self.quads:
+        #     print(quad)
+        for i, quad in enumerate(self.quads):
+            print(i + 1, quad)

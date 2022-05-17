@@ -1,6 +1,8 @@
 # OOPL parser
 
 # Import libraries
+from pickle import NONE
+from webbrowser import Opera
 from .libs.ply import yacc
 
 from .func_dir import FuncDir
@@ -22,6 +24,8 @@ class Parser:
     tokens: TokenList
     quads: QuadrupleList
     memory: Memory
+    jumps: list[int]
+    instr_ptr: int
 
     def __init__(self, lexer):
         self.lexer = lexer
@@ -33,6 +37,8 @@ class Parser:
         self.semantic_cube = SemanticCube()
         self.quads = QuadrupleList()
         self.memory = Memory()
+        self.jumps = list()
+        self.instr_ptr = 1
 
     def parse(self, p):
         self.parser.parse(p)
@@ -146,15 +152,80 @@ class Parser:
 
     def p_if_statement(self, p):
         """
-        if_statement    : IF LPAREN expr RPAREN block if_alternative
+        if_statement    : IF LPAREN if_statement_neural_point_1 RPAREN block if_alternative
         """
+        if p[6] is None:
+            # There are no elseifs or elses
+            end = self.jumps.pop()
+            self.quads.fill(end, (Operations.GOTOF, self.instr_ptr, None, None))
+        else:
+            end = self.jumps.pop()
+            self.quads.fill(end, (Operations.GOTO, self.instr_ptr, None, None))
+        
+    
+    def p_if_statement_neural_point_1(self, p):
+        """
+        if_statement_neural_point_1    : expr
+        """
+        if p[1][0] is Types.BOOL:
+            result = self.memory.__getitem__(p[1][1])
+            self.quads.add((Operations.GOTOF, result, None, None))
+            self.instr_ptr+= 1
+            self.jumps.append(self.instr_ptr - 1)
+        else:
+            raise TypeError("Type-mismatch of operands.")
+
+    # def p_if_statement_neural_point_5(self, p):
+    #     """
+    #     if_statement_neural_point_5    : 
+    #     """
+    #     end = self.jumps.pop()
+    #     self.quads.fill(end, (Operations.GOTO, self.instr_ptr, None, None))
+
 
     def p_if_alternative(self, p):
         """
-        if_alternative  : ELSEIF LPAREN expr RPAREN block if_alternative
-                        | ELSE block
+        if_alternative  : ELSEIF LPAREN if_alternative_neural_point_2 if_alternative_neural_point_3 RPAREN block if_alternative
+                        | ELSE if_alternative_neural_point_4 block
                         |
         """
+
+    def p_if_alternative_neural_point_2(self, p):
+        """
+        if_alternative_neural_point_2  :
+
+        """
+        print(self.jumps)
+        false = self.jumps.pop()
+        self.quads.fill(false, (Operations.GOTOF, self.instr_ptr, None, None))
+
+    def p_if_alternative_neural_point_3(self, p):
+        """
+        if_alternative_neural_point_3  : expr
+
+        """
+        if p[1][0] is Types.BOOL:
+            result = self.memory.__getitem__(p[1][1])
+            self.quads.add((Operations.GOTOF, result, None, None))
+            self.instr_ptr+= 1
+            # false = self.jumps.pop()
+            self.jumps.append(self.instr_ptr - 1)
+            # Need to evaluate the expr in the else if, so need to jump to (cont - 1) - 1
+            # self.quads.fill(false, (Operations.GOTOF, self.instr_ptr, None, None))
+        else:
+            raise TypeError("Type-mismatch of operands.")
+        
+    def p_if_alternative_neural_point_4(self, p):
+        """
+        if_alternative_neural_point_4  :
+
+        """
+        self.quads.add((Operations.GOTO, None, None, None))
+        self.instr_ptr+= 1
+        false = self.jumps.pop()
+        self.jumps.append(self.instr_ptr - 1)
+        self.quads.fill(false, (Operations.GOTOF, self.instr_ptr, None, None))
+
 
     def p_type(self, p):
         """
@@ -345,10 +416,12 @@ class Parser:
         result_type = self.semantic_cube.get(l_type, operation, r_type)
         if operation is Operations.ASSIGNOP:
             self.quads.add((operation, r_addr, None, l_addr))
+            self.instr_ptr +=1
             p[0] = (result_type, l_addr)
         else:
             mem_address = self.memory.reserve(result_type)
             self.quads.add((operation, l_addr, r_addr, mem_address))
+            self.instr_ptr +=1
             p[0] = (result_type, mem_address)
 
     def p_identity(self, p):

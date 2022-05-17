@@ -23,3 +23,5 @@ class Operations(enum.Enum):
     OR = "||"
     PLUS = "+"
     TIMES = "*"
+    GOTOF = "gotof"
+    GOTO = "goto"
