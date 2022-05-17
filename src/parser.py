@@ -170,15 +170,64 @@ class Parser:
 
     def p_if_statement(self, p):
         """
-        if_statement    : IF LPAREN expr RPAREN block if_alternative
+        if_statement    : IF LPAREN if_statement_neural_point_1 RPAREN block if_alternative
         """
+        if p[6] is None:
+            # There are no elseifs or elses
+            end = self.jump_stack.pop()
+            self.quads.__setitem__(end, (Operations.GOTOF, self.quads.ptr, None, None))
+        else:
+            end = self.jump_stack.pop()
+            self.quads.__setitem__(end, (Operations.GOTO, self.quads.ptr, None, None))
+        
+    
+    def p_if_statement_neural_point_1(self, p):
+        """
+        if_statement_neural_point_1    : expr
+        """
+        if p[1][0] is Types.BOOL:
+            result = self.memory.__getitem__(p[1][1])
+            self.quads.add((Operations.GOTOF, result, None, None))
+            self.jump_stack.append(self.quads.ptr - 1)
+        else:
+            raise TypeError("Type-mismatch of operands.")
+
 
     def p_if_alternative(self, p):
         """
-        if_alternative  : ELSEIF LPAREN expr RPAREN block if_alternative
-                        | ELSE block
+        if_alternative  : ELSEIF LPAREN if_alternative_neural_point_2 if_alternative_neural_point_3 RPAREN block if_alternative
+                        | ELSE if_alternative_neural_point_4 block
                         |
         """
+
+    def p_if_alternative_neural_point_2(self, p):
+        """
+        if_alternative_neural_point_2  :
+        """
+        false = self.jump_stack.pop()
+        self.quads.__setitem__(false, (Operations.GOTOF, self.quads.ptr, None, None))
+
+    def p_if_alternative_neural_point_3(self, p):
+        """
+        if_alternative_neural_point_3  : expr
+        """
+        if p[1][0] is Types.BOOL:
+            result = self.memory.__getitem__(p[1][1])
+            self.quads.add((Operations.GOTOF, result, None, None))
+            # false = self.jump_stack.pop()
+            self.jump_stack.append(self.quads.ptr - 1)
+            # self.quads.__setitem__(false, (Operations.GOTOF, self.instr_ptr, None, None))
+        else:
+            raise TypeError("Type-mismatch of operands.")
+        
+    def p_if_alternative_neural_point_4(self, p):
+        """
+        if_alternative_neural_point_4  :
+        """
+        self.quads.add((Operations.GOTO, None, None, None))
+        false = self.jump_stack.pop()
+        self.jump_stack.append(self.quads.ptr - 1)
+        self.quads.__setitem__(false, (Operations.GOTOF, self.quads.ptr, None, None))
 
     def p_type(self, p):
         """
