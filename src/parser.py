@@ -121,14 +121,40 @@ class Parser:
 
     def p_for_loop(self, p):
         """
-        for_loop    : FOR LPAREN for_loop_assign SEMICOLON expr SEMICOLON for_loop_assign RPAREN block
+        for_loop    : FOR LPAREN for_loop_assign SEMICOLON ptr_to_jump_stack expr loop_expr SEMICOLON ptr_to_jump_stack for_loop_assign RPAREN ptr_to_jump_stack block
         """
+        before_block = self.jump_stack.pop()
+        second_assign = self.jump_stack.pop()
+        before_second_assign = self.jump_stack.pop()
+        after_expr = self.jump_stack.pop()
+        before_expr = self.jump_stack.pop()
+        first_assign = self.jump_stack.pop()
+        self.quads.add((Operations.GOTO, None, None, before_second_assign))
+        op_code, _, _, _ = self.quads[second_assign]
+        self.quads[second_assign] = (op_code, None, None, before_expr)
+        op_code, _, _, _ = self.quads[first_assign]
+        self.quads[first_assign] = (op_code, None, None, before_block)
+        op_code, addr, _, _ = self.quads[after_expr]
+        self.quads[after_expr] = (op_code, addr, None, self.quads.ptr)
 
     def p_for_loop_assign(self, p):
         """
         for_loop_assign : assign
                         |
         """
+        self.jump_stack.append(self.quads.ptr)
+        self.quads.add((Operations.GOTO, None, None, None))
+
+    def p_loop_expr(self, p):
+        """
+        loop_expr  :
+        """
+        expr_type, expr_addr = p[-1]
+        if expr_type is Types.BOOL:
+            self.jump_stack.append(self.quads.ptr)
+            self.quads.add((Operations.GOTOF, expr_addr, None, None))
+        else:
+            raise TypeError("Non boolean expression found in loop.")
 
     def p_block(self, p):
         """
@@ -143,7 +169,7 @@ class Parser:
 
     def p_while_loop(self, p):
         """
-        while_loop  : WHILE LPAREN init_while expr expr_while RPAREN block
+        while_loop  : WHILE LPAREN ptr_to_jump_stack expr loop_expr RPAREN block
         """
         after_expr = self.jump_stack.pop()
         before_expr = self.jump_stack.pop()
@@ -151,22 +177,11 @@ class Parser:
         op_code, addr, _, _ = self.quads[after_expr]
         self.quads[after_expr] = (op_code, addr, None, self.quads.ptr)
 
-    def p_init_while(self, p):
+    def p_ptr_to_jump_stack(self, p):
         """
-        init_while  :
+        ptr_to_jump_stack  :
         """
         self.jump_stack.append(self.quads.ptr)
-
-    def p_expr_while(self, p):
-        """
-        expr_while  :
-        """
-        expr_type, expr_addr = p[-1]
-        if expr_type is Types.BOOL:
-            self.jump_stack.append(self.quads.ptr)
-            self.quads.add((Operations.GOTOF, expr_addr, None, None))
-        else:
-            raise TypeError("Non boolean expression found in while loop.")
 
     def p_if_statement(self, p):
         """
