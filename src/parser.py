@@ -1,6 +1,7 @@
 # OOPL parser
 
 # Import libraries
+from audioop import add
 from .libs.ply import yacc
 
 from .func_dir import FuncDir
@@ -187,22 +188,18 @@ class Parser:
         """
         if_statement    : IF LPAREN if_statement_neural_point_1 RPAREN block if_alternative
         """
-        if p[6] is None:
-            # There are no elseifs or elses
-            end = self.jump_stack.pop()
-            self.quads.__setitem__(end, (Operations.GOTOF, self.quads.ptr, None, None))
-        else:
-            end = self.jump_stack.pop()
-            self.quads.__setitem__(end, (Operations.GOTO, self.quads.ptr, None, None))
+        end = self.jump_stack.pop()
+        op_code, addr, _, _ = self.quads[end]
+        self.quads[end] = (op_code, addr, None, self.quads.ptr)
         
     
     def p_if_statement_neural_point_1(self, p):
         """
         if_statement_neural_point_1    : expr
         """
-        if p[1][0] is Types.BOOL:
-            result = self.memory.__getitem__(p[1][1])
-            self.quads.add((Operations.GOTOF, result, None, None))
+        expr_type, expr_addr = p[1]
+        if expr_type is Types.BOOL:
+            self.quads.add((Operations.GOTOF, expr_addr, None, None))
             self.jump_stack.append(self.quads.ptr - 1)
         else:
             raise TypeError("Type-mismatch of operands.")
@@ -214,24 +211,26 @@ class Parser:
                         | ELSE if_alternative_neural_point_4 block
                         |
         """
+        if len(p) > 1 and p[1] == 'else':
+            # print(p[1])
+            p[0] = p[1]
 
     def p_if_alternative_neural_point_2(self, p):
         """
         if_alternative_neural_point_2  :
         """
         false = self.jump_stack.pop()
-        self.quads.__setitem__(false, (Operations.GOTOF, self.quads.ptr, None, None))
+        op_code, addr, _, _ = self.quads[false]
+        self.quads[false] = (op_code, addr, None, self.quads.ptr)
 
     def p_if_alternative_neural_point_3(self, p):
         """
         if_alternative_neural_point_3  : expr
         """
-        if p[1][0] is Types.BOOL:
-            result = self.memory.__getitem__(p[1][1])
-            self.quads.add((Operations.GOTOF, result, None, None))
-            # false = self.jump_stack.pop()
+        expr_type, expr_addr = p[1]
+        if expr_type is Types.BOOL:
+            self.quads.add((Operations.GOTOF, expr_addr, None, None))
             self.jump_stack.append(self.quads.ptr - 1)
-            # self.quads.__setitem__(false, (Operations.GOTOF, self.instr_ptr, None, None))
         else:
             raise TypeError("Type-mismatch of operands.")
         
@@ -242,7 +241,10 @@ class Parser:
         self.quads.add((Operations.GOTO, None, None, None))
         false = self.jump_stack.pop()
         self.jump_stack.append(self.quads.ptr - 1)
-        self.quads.__setitem__(false, (Operations.GOTOF, self.quads.ptr, None, None))
+        op_code, addr, _, _ = self.quads[false]
+        print(op_code)
+        print(addr)
+        self.quads[false] = (op_code, addr, None, self.quads.ptr)
 
     def p_type(self, p):
         """
