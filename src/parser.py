@@ -186,7 +186,7 @@ class Parser:
 
     def p_if_statement(self, p):
         """
-        if_statement    : IF LPAREN if_statement_neural_point_1 RPAREN block if_alternative
+        if_statement    : IF LPAREN expr if_statement_neural_point_1 RPAREN block if_alternative
         """
         end = self.jump_stack.pop()
         op_code, addr, _, _ = self.quads[end]
@@ -195,9 +195,9 @@ class Parser:
     
     def p_if_statement_neural_point_1(self, p):
         """
-        if_statement_neural_point_1    : expr
+        if_statement_neural_point_1    :
         """
-        expr_type, expr_addr = p[1]
+        expr_type, expr_addr = p[-1]
         if expr_type is Types.BOOL:
             self.quads.add((Operations.GOTOF, expr_addr, None, None))
             self.jump_stack.append(self.quads.ptr - 1)
@@ -207,13 +207,10 @@ class Parser:
 
     def p_if_alternative(self, p):
         """
-        if_alternative  : ELSEIF LPAREN if_alternative_neural_point_2 if_alternative_neural_point_3 RPAREN block if_alternative
+        if_alternative  : ELSEIF LPAREN if_alternative_neural_point_2 expr if_alternative_neural_point_3 RPAREN block if_alternative
                         | ELSE if_alternative_neural_point_4 block
                         |
         """
-        if len(p) > 1 and p[1] == 'else':
-            # print(p[1])
-            p[0] = p[1]
 
     def p_if_alternative_neural_point_2(self, p):
         """
@@ -225,9 +222,9 @@ class Parser:
 
     def p_if_alternative_neural_point_3(self, p):
         """
-        if_alternative_neural_point_3  : expr
+        if_alternative_neural_point_3  :
         """
-        expr_type, expr_addr = p[1]
+        expr_type, expr_addr = p[-1]
         if expr_type is Types.BOOL:
             self.quads.add((Operations.GOTOF, expr_addr, None, None))
             self.jump_stack.append(self.quads.ptr - 1)
@@ -242,8 +239,6 @@ class Parser:
         false = self.jump_stack.pop()
         self.jump_stack.append(self.quads.ptr - 1)
         op_code, addr, _, _ = self.quads[false]
-        print(op_code)
-        print(addr)
         self.quads[false] = (op_code, addr, None, self.quads.ptr)
 
     def p_type(self, p):
