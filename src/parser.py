@@ -395,8 +395,9 @@ class Parser:
                             raise TypeError(
                                 f"Wrong parameter {param_name} in call to {func_name}. Expected {param_type} but received {arg_type}."
                             )
+                    
                     self.quads.add(
-                        (Operations.GOSUB, None, None, func_info["start_quad"])
+                        (Operations.GOSUB, func_name, None, func_info["start_quad"])
                     )
                     p[0] = (func_info["type"], func_info["return_address"])
             else:
@@ -515,10 +516,6 @@ class Parser:
         term        : term DIVIDES factor
                     | term TIMES factor
         """
-        print('here')
-        print(p[1])
-        print(p[2])
-        print(p[3])
         l_type, l_addr = p[1]
         r_type, r_addr = p[3]
         operation = Operations(p[2])
