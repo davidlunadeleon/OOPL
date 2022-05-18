@@ -12,12 +12,15 @@
 from typing import TypedDict, Union
 
 from .var_table import VarTable
+from .utils.types import FunctionResources
 
 
 class FuncInfo(TypedDict):
     type: str
     var_table: VarTable
     param_table: VarTable
+    resources: FunctionResources
+    start_quad: int | None
 
 
 class FuncDir:
@@ -41,6 +44,8 @@ class FuncDir:
                 "type": return_type,
                 "var_table": VarTable(),
                 "param_table": VarTable(),
+                "resources": None,
+                "start_quad": None,
             }
 
     def get(self, name: str) -> Union[FuncInfo, None]:
@@ -72,7 +77,9 @@ class FuncDir:
         Print the function directory.
         """
         for key, value in self.func_dir.items():
-            print(f'Function: {key} with return type: {value["type"]}')
+            print(f'Function: {key} with return type: {value["type"]}\n')
+            print(f'Resources: {value["resources"]}\n')
+            print(f'Start quadruple: {value["start_quad"]}\n')
             value["param_table"].print("Parameters table")
             print("\n")
             value["var_table"].print("Variables table")
