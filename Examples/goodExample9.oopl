@@ -15,8 +15,12 @@ int add_or_sub(int x, int y)[]
 int main()
 [
 	string str;
+	int two;
+	int test;
 ]
 {
+	two = two();
+	test = add_or_sub(1, 2);
 	str = "Hello!";
 	return 1;
 }
