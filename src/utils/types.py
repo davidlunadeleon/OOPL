@@ -9,3 +9,4 @@ TokenList = list[str]
 MemoryAddress = int | None
 MemoryType = bool | float | int | str
 Quadruple = Tuple[Operations, MemoryAddress, MemoryAddress, MemoryAddress]
+FunctionResources = Tuple[int, int, int, int] | None
