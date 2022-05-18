@@ -1,0 +1,15 @@
+# Explanation: missing return statement in function add.
+
+int add(int x, int y)[]
+{
+	x = 1;
+	y = 2;
+}
+
+int main()
+[
+	int x, y;
+]
+{
+	return 1;
+}

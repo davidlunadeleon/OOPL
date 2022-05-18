@@ -1,0 +1,24 @@
+# Explanation: wrong type return statement in function add.
+
+int add(int x, int y)
+[
+	bool is2;
+]
+{
+	x = 1;
+	y = 2;
+	if (x + y == 2) {
+		is2 = True;
+	} else {
+		is2 = False;
+	}
+	return is2;
+}
+
+int main()
+[
+	int x, y;
+]
+{
+	return 1;
+}
