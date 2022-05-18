@@ -13,6 +13,7 @@ from typing import TypedDict, Union
 
 from .var_table import VarTable
 from .utils.types import FunctionResources, MemoryAddress
+from .utils.enums import Types
 
 
 class FuncInfo(TypedDict):
@@ -20,7 +21,7 @@ class FuncInfo(TypedDict):
     resources: FunctionResources
     return_address: MemoryAddress
     start_quad: int | None
-    type: str
+    type: Types
     var_table: VarTable
     has_return_statement: bool
 
@@ -31,7 +32,7 @@ class FuncDir:
     def __init__(self):
         self.func_dir = {}
 
-    def add(self, name: str, return_type: str, return_address: MemoryAddress) -> None:
+    def add(self, name: str, return_type: Types, return_address: MemoryAddress) -> None:
         """
         Insert a new function to the directory.
 
