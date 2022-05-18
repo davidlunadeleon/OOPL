@@ -12,15 +12,16 @@
 from typing import TypedDict, Union
 
 from .var_table import VarTable
-from .utils.types import FunctionResources
+from .utils.types import FunctionResources, MemoryAddress
 
 
 class FuncInfo(TypedDict):
-    type: str
-    var_table: VarTable
     param_table: VarTable
     resources: FunctionResources
+    return_address: MemoryAddress
     start_quad: int | None
+    type: str
+    var_table: VarTable
 
 
 class FuncDir:
@@ -29,7 +30,7 @@ class FuncDir:
     def __init__(self):
         self.func_dir = {}
 
-    def add(self, name: str, return_type: str) -> None:
+    def add(self, name: str, return_type: str, return_address: MemoryAddress) -> None:
         """
         Insert a new function to the directory.
 
@@ -41,11 +42,12 @@ class FuncDir:
             raise Exception(f"The function {name} is already in the directory.")
         else:
             self.func_dir[name] = {
-                "type": return_type,
-                "var_table": VarTable(),
                 "param_table": VarTable(),
                 "resources": None,
+                "return_address": return_address,
                 "start_quad": None,
+                "type": return_type,
+                "var_table": VarTable(),
             }
 
     def get(self, name: str) -> Union[FuncInfo, None]:
@@ -80,6 +82,7 @@ class FuncDir:
             print(f'Function: {key} with return type: {value["type"]}\n')
             print(f'Resources: {value["resources"]}\n')
             print(f'Start quadruple: {value["start_quad"]}\n')
+            print(f'Return address: {value["return_address"]}\n')
             value["param_table"].print("Parameters table")
             print("\n")
             value["var_table"].print("Variables table")
