@@ -22,7 +22,8 @@ class Parser:
     semantic_cube: SemanticCube
     tokens: TokenList
     quads: QuadrupleList
-    memory: Memory
+    global_memory: Memory
+    function_memory: Memory
     jump_stack: list[int]
 
     def __init__(self, lexer):
@@ -34,7 +35,8 @@ class Parser:
         self.scope_stack = ["global"]
         self.semantic_cube = SemanticCube()
         self.quads = QuadrupleList()
-        self.memory = Memory()
+        self.global_memory = Memory(0)
+        self.function_memory = Memory(4000)
         self.jump_stack = []
 
     def parse(self, p):
@@ -61,7 +63,7 @@ class Parser:
         print("\n")
         self.func_dir.print()
         self.quads.print()
-        self.memory.print()
+        self.global_memory.print()
 
     def p_class(self, p):
         """
@@ -83,10 +85,24 @@ class Parser:
 
     def p_function(self, p):
         """
-        function    : simple_type_id function_parameters register_function LBRACK function_variables RBRACK block
-                    | void_id function_parameters register_function LBRACK function_variables RBRACK block
+        function    : simple_type_id function_parameters register_function LBRACK function_variables RBRACK mark_function_begin block
+                    | void_id function_parameters register_function LBRACK function_variables RBRACK mark_function_begin block
         """
-        self.scope_stack.pop()
+        scope = self.scope_stack.pop()
+        func_info = self.func_dir.get(scope)
+        if func_info is not None:
+            func_info["resources"] = self.function_memory.describe_resources()
+        self.function_memory.print()
+        self.function_memory.clear()
+
+    def p_mark_function_begin(self, p):
+        """
+        mark_function_begin :
+        """
+        scope = self.scope_stack[-1]
+        func_info = self.func_dir.get(scope)
+        if func_info is not None:
+            func_info["start_quad"] = self.quads.ptr
 
     def p_register_function(self, p):
         """
@@ -99,7 +115,7 @@ class Parser:
         func_info = self.func_dir.get(function_name)
         for param_type, param_name in function_parameters:
             if func_info is not None:
-                address = self.memory.reserve(Types(param_type))
+                address = self.function_memory.reserve(Types(param_type))
                 func_info["param_table"].add(param_name, param_type, address)
             else:
                 raise Exception("The function information table was not found.")
@@ -350,13 +366,13 @@ class Parser:
         scope = self.scope_stack[-1]
         if scope == "global":
             for var_name in var_names:
-                address = self.memory.reserve(Types(var_type))
+                address = self.global_memory.reserve(Types(var_type))
                 self.global_var_table.add(var_name, var_type, address)
         else:
             func_info = self.func_dir.get(scope)
             if func_info is not None:
                 for var_name in var_names:
-                    address = self.memory.reserve(Types(var_type))
+                    address = self.function_memory.reserve(Types(var_type))
                     func_info["var_table"].add(var_name, var_type, address)
             else:
                 raise Exception("The function information table was not found.")
@@ -422,7 +438,7 @@ class Parser:
             self.quads.add((operation, r_addr, None, l_addr))
             p[0] = (result_type, l_addr)
         else:
-            mem_address = self.memory.reserve(result_type)
+            mem_address = self.function_memory.reserve(result_type)
             self.quads.add((operation, l_addr, r_addr, mem_address))
             p[0] = (result_type, mem_address)
 
@@ -457,9 +473,9 @@ class Parser:
                         | BOOL_CONSTANT_FALSE
         """
         val = True if p[1] == "True" else False
-        address = self.memory.find(val)
+        address = self.global_memory.find(val)
         if address is None:
-            address = self.memory.append(val)
+            address = self.global_memory.append(val)
         p[0] = (Types.BOOL, address)
 
     def p_string_constant(self, p):
@@ -467,9 +483,9 @@ class Parser:
         string_constant : STRING_CONSTANT
         """
         val = str(p[1])
-        address = self.memory.find(val)
+        address = self.global_memory.find(val)
         if address is None:
-            address = self.memory.append(val)
+            address = self.global_memory.append(val)
         p[0] = (Types.STRING, address)
 
     def p_float_constant(self, p):
@@ -477,9 +493,9 @@ class Parser:
         float_constant  : FLOAT_CONSTANT
         """
         val = float(p[1])
-        address = self.memory.find(val)
+        address = self.global_memory.find(val)
         if address is None:
-            address = self.memory.append(val)
+            address = self.global_memory.append(val)
         p[0] = (Types.FLOAT, address)
 
     def p_int_constant(self, p):
@@ -487,9 +503,9 @@ class Parser:
         int_constant    : INT_CONSTANT
         """
         val = int(p[1])
-        address = self.memory.find(val)
+        address = self.global_memory.find(val)
         if address is None:
-            address = self.memory.append(val)
+            address = self.global_memory.append(val)
         p[0] = (Types.INT, address)
 
     def p_error(self, p):
