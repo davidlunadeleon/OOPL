@@ -1,6 +1,7 @@
 # OOPL parser
 
 # Import libraries
+from webbrowser import Opera
 from .libs.ply import yacc
 
 from .func_dir import FuncDir
@@ -96,6 +97,10 @@ class Parser:
             ):
                 raise Exception("Missing return statement for non void function.")
             func_info["resources"] = self.function_memory.describe_resources()
+        
+        # Only add if there is no return after and it is the end of the function
+        if self.quads[self.quads.ptr - 1][0] != Operations.ENDSUB:
+            self.quads.add((Operations.ENDSUB, None, None, None))
         self.function_memory.print()
         self.function_memory.clear()
 
