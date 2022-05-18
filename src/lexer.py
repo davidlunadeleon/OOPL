@@ -88,7 +88,7 @@ class Lexer:
     t_ASSIGNOP = r"="
     t_INT_CONSTANT = r"[+-]?[0-9]+"
     t_FLOAT_CONSTANT = r"[+-]?[0-9]+\.[0-9]+"
-    t_STRING_CONSTANT = r"\".*\""
+    t_STRING_CONSTANT = r"\"[^\"]*\""
     t_FILE = r"[a-zA-Z]+[a-zA-Z0-9_]\.oopl"
 
     # Complex tokens
