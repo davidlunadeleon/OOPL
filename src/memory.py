@@ -2,6 +2,7 @@ from typing import Optional, TypeVar, Generic
 
 from .utils.types import MemoryType, MemoryAddress
 from .utils.enums import Types
+from .utils.types import FunctionResources
 
 T = TypeVar("T")
 
@@ -16,23 +17,18 @@ class MemoryList(Generic[T]):
 
 
 class Memory:
-    __default_chunk_size: int
     chunk_size: int
     bools: MemoryList[bool | None]
     floats: MemoryList[float | None]
     ints: MemoryList[int | None]
     strings: MemoryList[str | None]
 
-    def __init__(self, chunk_size: Optional[int] = None) -> None:
-        self.__default_chunk_size = 1000
-        if chunk_size is None:
-            self.chunk_size = self.__default_chunk_size
-        else:
-            self.chunk_size = chunk_size
-        self.bools = MemoryList(0)
-        self.floats = MemoryList(self.chunk_size)
-        self.ints = MemoryList(self.chunk_size * 2)
-        self.strings = MemoryList(self.chunk_size * 3)
+    def __init__(self, base_address: int, chunk_size: int = 1000) -> None:
+        self.chunk_size = chunk_size
+        self.bools = MemoryList(base_address)
+        self.floats = MemoryList(base_address + self.chunk_size)
+        self.ints = MemoryList(base_address + self.chunk_size * 2)
+        self.strings = MemoryList(base_address + self.chunk_size * 3)
 
     def __get_list_from_index(self, index: int) -> MemoryList:
         if index < self.floats.start_address:
@@ -102,6 +98,20 @@ class Memory:
             return l.values.index(value) + l.start_address
         except ValueError:
             return None
+
+    def clear(self) -> None:
+        self.bools.values.clear()
+        self.floats.values.clear()
+        self.ints.values.clear()
+        self.strings.values.clear()
+
+    def describe_resources(self) -> FunctionResources:
+        return (
+            len(self.bools.values),
+            len(self.floats.values),
+            len(self.ints.values),
+            len(self.strings.values),
+        )
 
     def print(self):
         print("bools")
