@@ -14,6 +14,7 @@ class Operations(enum.Enum):
     ASSIGNOP = "="
     DIFF = "!="
     DIVIDES = "/"
+    ENDSUB = "ENDSUB"
     EQ = "=="
     EQGT = ">="
     EQLT = "<="
