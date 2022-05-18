@@ -129,7 +129,6 @@ class Parser:
             else:
                 raise Exception("The function information table was not found.")
     
-
     def p_empty_list(self, p):
         """
         function_parameters : LPAREN RPAREN
@@ -353,7 +352,6 @@ class Parser:
             else self.global_memory.reserve(function_type)
         )
         self.func_dir.add(function_name, False, function_type, return_address)
-        self.scope_stack.append(function_name)
         func_info = self.func_dir.get(function_name)
         for param_type, param_name in function_parameters:
             if func_info is not None:
@@ -449,7 +447,6 @@ class Parser:
         write : PRINT call_arguments SEMICOLON
         """
         print_args = p[2]
-        print(print_args)
         for print_arg in print_args:
             if print_arg is not None:
                 self.quads.add((Operations.PRINT, print_arg[1], None, None))
@@ -508,7 +505,6 @@ class Parser:
     def p_operators(self, p):
         """
         assign      : variable ASSIGNOP assign
-                    | variable ASSIGNOP call
                     | variable ASSIGNOP expr
         expr        : expr OR t_expr
         t_expr      : t_expr AND comp_expr
