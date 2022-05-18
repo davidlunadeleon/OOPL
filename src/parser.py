@@ -48,6 +48,7 @@ class Parser:
         """
         program : class program
                 | function program
+                | function_header program
                 | var_decl program
                 | COMMENT program
                 | call SEMICOLON program
@@ -333,6 +334,13 @@ class Parser:
         id_type = p[1]
         id = p[2]
         p[0] = (id_type, id)
+    
+    def p_function_header(self, p):
+        """
+        function_header    : simple_type_id function_parameters SEMICOLON
+                           | void_id function_parameters SEMICOLON
+        """
+
 
     def p_call(self, p):
         """

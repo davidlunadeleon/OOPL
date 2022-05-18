@@ -1,0 +1,30 @@
+void one();
+
+int largest(int x, int y);
+
+int largest(int x, int y)[]
+{
+	if (x > y) {
+		return x;
+	} else {
+		return y;
+	}
+}
+
+void one()[]
+{
+	print("One");
+}
+
+
+int main()
+[
+	int two;
+	int largest;
+]
+{
+	one();
+	largest = largest(1, two);
+	print(largest);
+	return 1;
+}
