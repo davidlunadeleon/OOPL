@@ -339,6 +339,43 @@ class Parser:
         call    : ID call_arguments
                 | ID DOT ID call_arguments
         """
+        if len(p) == 3:
+            func_name = p[1]
+            func_args = p[2]
+            if (func_info := self.func_dir.get(func_name)) is not None and (
+                func_resources := func_info["resources"]
+            ) is not None:
+                func_bools, func_floats, func_ints, func_strings = func_resources
+                self.quads.add((Operations.ERAB, None, None, func_bools))
+                self.quads.add((Operations.ERAF, None, None, func_floats))
+                self.quads.add((Operations.ERAI, None, None, func_ints))
+                self.quads.add((Operations.ERAS, None, None, func_strings))
+                param_table = func_info["param_table"]
+                if len(func_args) != len(param_table.table.items()):
+                    raise Exception(f"Argument mismatch when calling {func_name}.")
+                else:
+                    for arg, param in zip(func_args, param_table.table.items()):
+                        _, param_info = param
+                        param_type = param_info["type"]
+                        param_addr = param_info["address"]
+                        param_name = param_info["name"]
+                        arg_type, arg_addr = arg
+                        if param_type is arg_type:
+                            self.quads.add(
+                                (Operations.PARAM, arg_addr, None, param_addr)
+                            )
+                        else:
+                            raise TypeError(
+                                f"Wrong parameter {param_name} in call to {func_name}. Expected {param_type} but received {arg_type}."
+                            )
+                    self.quads.add(
+                        (Operations.GOSUB, None, None, func_info["start_quad"])
+                    )
+                    p[0] = (func_info["type"], func_info["return_address"])
+            else:
+                raise Exception(f"Function {func_name} has not been declared.")
+        else:
+            pass
 
     def p_variable(self, p):
         """
