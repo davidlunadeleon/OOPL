@@ -139,12 +139,6 @@ class Parser:
         """
         p[0] = []
 
-    def p_function_variables(self, p):
-        """
-        function_variables  : var_decl function_variables
-                            |
-        """
-
     def p_for_loop(self, p):
         """
         for_loop    : FOR LPAREN for_loop_assign SEMICOLON ptr_to_jump_stack expr loop_expr SEMICOLON ptr_to_jump_stack for_loop_assign RPAREN ptr_to_jump_stack block
@@ -184,18 +178,20 @@ class Parser:
 
     def p_no_action(self, p):
         """
-        block           : LCURBR block_content RCURBR
-        block_content   : statement block_content
-                        |
-        statement       : assign SEMICOLON
-                        | expr SEMICOLON
-                        | read
-                        | write
-                        | if_statement
-                        | while_loop
-                        | for_loop
-                        | break
-                        | return SEMICOLON
+        block               : LCURBR block_content RCURBR
+        block_content       : statement block_content
+                            |
+        statement           : assign SEMICOLON
+                            | expr SEMICOLON
+                            | read
+                            | write
+                            | if_statement
+                            | while_loop
+                            | for_loop
+                            | break
+                            | return SEMICOLON
+        function_variables  : var_decl function_variables
+                            |
         """
 
     def p_while_loop(self, p):
