@@ -24,6 +24,7 @@ class FuncInfo(TypedDict):
     type: Types
     var_table: VarTable
     has_return_statement: bool
+    body_defined : bool
 
 
 class FuncDir:
@@ -32,15 +33,16 @@ class FuncDir:
     def __init__(self):
         self.func_dir = {}
 
-    def add(self, name: str, return_type: Types, return_address: MemoryAddress) -> None:
+    def add(self, name: str, body_defined: bool, return_type: Types, return_address: MemoryAddress) -> None:
         """
         Insert a new function to the directory.
 
         Arguments:
         name: str -- Name of the function.
+        body_defined: bool -- Whether the function body was registered before (for header definition control).
         return_type: str -- Return type of the function.
         """
-        if name in self.func_dir:
+        if name in self.func_dir and self.func_dir.get(name)["body_defined"]:
             raise Exception(f"The function {name} is already in the directory.")
         else:
             self.func_dir[name] = {
@@ -51,6 +53,7 @@ class FuncDir:
                 "type": return_type,
                 "var_table": VarTable(),
                 "has_return_statement": False,
+                "body_defined": body_defined
             }
 
     def get(self, name: str) -> Union[FuncInfo, None]:

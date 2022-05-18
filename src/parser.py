@@ -119,7 +119,7 @@ class Parser:
             if function_type is Types.VOID
             else self.global_memory.reserve(function_type)
         )
-        self.func_dir.add(function_name, function_type, return_address)
+        self.func_dir.add(function_name, True, function_type, return_address)
         self.scope_stack.append(function_name)
         func_info = self.func_dir.get(function_name)
         for param_type, param_name in function_parameters:
@@ -128,6 +128,7 @@ class Parser:
                 func_info["param_table"].add(param_name, param_type, address)
             else:
                 raise Exception("The function information table was not found.")
+    
 
     def p_empty_list(self, p):
         """
@@ -336,9 +337,31 @@ class Parser:
 
     def p_function_header(self, p):
         """
-        function_header    : simple_type_id function_parameters SEMICOLON
-                           | void_id function_parameters SEMICOLON
+        function_header    : simple_type_id function_parameters register_function_header SEMICOLON
+                           | void_id function_parameters register_function_header SEMICOLON
         """
+    
+    def p_register_function_header(self, p):
+        """
+        register_function_header   :
+        """
+        function_type, function_name = p[-2]
+        function_parameters = p[-1]
+        return_address = (
+            None
+            if function_type is Types.VOID
+            else self.global_memory.reserve(function_type)
+        )
+        self.func_dir.add(function_name, False, function_type, return_address)
+        self.scope_stack.append(function_name)
+        func_info = self.func_dir.get(function_name)
+        for param_type, param_name in function_parameters:
+            if func_info is not None:
+                address = self.function_memory.reserve(Types(param_type))
+                func_info["param_table"].add(param_name, param_type, address)
+            else:
+                raise Exception("The function information table was not found.")
+
 
     def p_call(self, p):
         """
@@ -419,18 +442,19 @@ class Parser:
             if ((func_info := self.func_dir.get(scope)) is not None and (var_info := func_info["var_table"].get_from_address(expr_addr)) is not None) or (var_info := self.global_var_table.get_from_address(expr_addr) is not None):   
                 self.quads.add((Operations.READ, expr_addr, None, None))
         else:
-            raise Exception("No variable found with that id.")
+            raise Exception(f"No variable found with the id {p[3]}.")
 
     def p_write(self, p):
         """
         write : PRINT call_arguments SEMICOLON
         """
         print_args = p[2]
+        print(print_args)
         for print_arg in print_args:
             if print_arg is not None:
                 self.quads.add((Operations.PRINT, print_arg[1], None, None))
             else:
-                raise Exception("No variable found with that id.")
+                raise Exception(f"No variable found with the id {p[3]}.")
 
     def p_var_decl(self, p):
         """
@@ -484,6 +508,7 @@ class Parser:
     def p_operators(self, p):
         """
         assign      : variable ASSIGNOP assign
+                    | variable ASSIGNOP call
                     | variable ASSIGNOP expr
         expr        : expr OR t_expr
         t_expr      : t_expr AND comp_expr
@@ -494,6 +519,10 @@ class Parser:
         term        : term DIVIDES factor
                     | term TIMES factor
         """
+        print('here')
+        print(p[1])
+        print(p[2])
+        print(p[3])
         l_type, l_addr = p[1]
         r_type, r_addr = p[3]
         operation = Operations(p[2])
