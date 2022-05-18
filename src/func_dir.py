@@ -22,6 +22,7 @@ class FuncInfo(TypedDict):
     start_quad: int | None
     type: str
     var_table: VarTable
+    has_return_statement: bool
 
 
 class FuncDir:
@@ -48,6 +49,7 @@ class FuncDir:
                 "start_quad": None,
                 "type": return_type,
                 "var_table": VarTable(),
+                "has_return_statement": False,
             }
 
     def get(self, name: str) -> Union[FuncInfo, None]:
