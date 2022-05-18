@@ -129,12 +129,6 @@ class Parser:
             else:
                 raise Exception("The function information table was not found.")
 
-    def p_function_parameters(self, p):
-        """
-        function_parameters : LPAREN params RPAREN
-        """
-        p[0] = p[2]
-
     def p_empty_list(self, p):
         """
         function_parameters : LPAREN RPAREN
@@ -194,7 +188,7 @@ class Parser:
         block_content   : statement block_content
                         |
         statement       : assign SEMICOLON
-                        | expr_semicolon
+                        | expr SEMICOLON
                         | read
                         | write
                         | if_statement
@@ -322,10 +316,12 @@ class Parser:
         else:
             raise Exception("Can't return from outside a function.")
 
-    def p_params(self, p):
+    def p_type_addr_list(self, p):
         """
-        params  : simple_type_id COMMA params
-                | simple_type_id
+        params      : simple_type_id COMMA params
+                    | simple_type_id
+        arguments   : expr COMMA arguments
+                    | expr
         """
         if len(p) == 4:
             p[0] = [p[1], *p[3]]
@@ -346,17 +342,6 @@ class Parser:
         """
         call    : ID call_arguments
                 | ID DOT ID call_arguments
-        """
-
-    def p_call_arguments(self, p):
-        """
-        call_arguments  : LPAREN arguments RPAREN
-        """
-
-    def p_arguments(self, p):
-        """
-        arguments   : expr COMMA arguments
-                    | expr
         """
 
     def p_variable(self, p):
@@ -484,13 +469,14 @@ class Parser:
         factor          : constant
                         | variable
                         | call
-        expr_semicolon  : expr SEMICOLON
         """
         p[0] = p[1]
 
-    def p_factor(self, p):
+    def p_take_second(self, p):
         """
-        factor : LPAREN expr RPAREN
+        factor              : LPAREN expr RPAREN
+        function_parameters : LPAREN params RPAREN
+        call_arguments      : LPAREN arguments RPAREN
         """
         p[0] = p[2]
 
