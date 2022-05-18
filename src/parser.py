@@ -1,8 +1,6 @@
 # OOPL parser
 
 # Import libraries
-from audioop import add
-from webbrowser import Opera
 from .libs.ply import yacc
 
 from .func_dir import FuncDir
@@ -335,13 +333,12 @@ class Parser:
         id_type = p[1]
         id = p[2]
         p[0] = (id_type, id)
-    
+
     def p_function_header(self, p):
         """
         function_header    : simple_type_id function_parameters SEMICOLON
                            | void_id function_parameters SEMICOLON
         """
-
 
     def p_call(self, p):
         """
@@ -424,7 +421,6 @@ class Parser:
         print_args = p[2]
         for print_arg in print_args:
             self.quads.add((Operations.PRINT, print_arg[1], None, None))
-
 
     def p_var_decl(self, p):
         """
