@@ -16,14 +16,15 @@ void one()[]
 	print("One", 1);
 }
 
+int largest;
 
 int main()
 [
 	int two;
-	int largest;
 ]
 {
 	one();
+	read(two);
 	largest = largest(1, two);
 	print(largest);
 	return 1;

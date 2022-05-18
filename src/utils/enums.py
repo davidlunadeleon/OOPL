@@ -34,3 +34,4 @@ class Operations(enum.Enum):
     PLUS = "+"
     TIMES = "*"
     PRINT = "PRINT"
+    READ = "READ"

@@ -2,6 +2,7 @@
 
 # Import libraries
 from audioop import add
+from cmath import exp
 from webbrowser import Opera
 from .libs.ply import yacc
 
@@ -416,6 +417,13 @@ class Parser:
         """
         read : READ LPAREN variable RPAREN SEMICOLON
         """
+        if(p[3] is not None):
+            expr_type, expr_addr = p[3] 
+            scope = self.scope_stack[-1]
+            if ((func_info := self.func_dir.get(scope)) is not None and (var_info := func_info["var_table"].get_from_address(expr_addr)) is not None) or (var_info := self.global_var_table.get_from_address(expr_addr) is not None):   
+                self.quads.add((Operations.READ, expr_addr, None, None))
+        else:
+            raise Exception("No variable found with that id.")
 
     def p_write(self, p):
         """
@@ -423,7 +431,10 @@ class Parser:
         """
         print_args = p[2]
         for print_arg in print_args:
-            self.quads.add((Operations.PRINT, print_arg[1], None, None))
+            if print_arg is not None:
+                self.quads.add((Operations.PRINT, print_arg[1], None, None))
+            else:
+                raise Exception("No variable found with that id.")
 
 
     def p_var_decl(self, p):

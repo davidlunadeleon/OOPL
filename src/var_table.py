@@ -42,6 +42,21 @@ class VarTable:
         """
         return self.table.get(name)
 
+    def get_from_address(self, address: str) -> Union[VarInfo, None]:
+        """
+        Get a variable in the table.
+
+        Arguments:
+        addr: str -- Variable to get.
+
+        Returns:
+        Union[VarInfo, None] -- None, if the variable is not found.
+        """
+        for k, v in self.table.items():
+            if v["address"] == address:
+                return v
+        return None
+
     def has(self, name: str) -> bool:
         """
         Check whether a variable is contained in the table.
