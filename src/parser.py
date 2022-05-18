@@ -2,6 +2,7 @@
 
 # Import libraries
 from audioop import add
+from webbrowser import Opera
 from .libs.ply import yacc
 
 from .func_dir import FuncDir
@@ -420,6 +421,10 @@ class Parser:
         """
         write : PRINT call_arguments SEMICOLON
         """
+        print_args = p[2]
+        for print_arg in print_args:
+            self.quads.add((Operations.PRINT, print_arg[1], None, None))
+
 
     def p_var_decl(self, p):
         """

@@ -13,7 +13,7 @@ int largest(int x, int y)[]
 
 void one()[]
 {
-	print("One");
+	print("One", 1);
 }
 
 

@@ -33,3 +33,4 @@ class Operations(enum.Enum):
     PARAM = "PARAM"
     PLUS = "+"
     TIMES = "*"
+    PRINT = "PRINT"
