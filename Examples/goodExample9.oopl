@@ -1,0 +1,22 @@
+int two()[]
+{
+	return 1 + 1;
+}
+
+int add_or_sub(int x, int y)[]
+{
+	if (x > y) {
+		return x + y;
+	} else {
+		return x - y;
+	}
+}
+
+int main()
+[
+	string str;
+]
+{
+	str = "Hello!";
+	return 1;
+}
