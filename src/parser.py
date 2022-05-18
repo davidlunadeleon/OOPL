@@ -123,12 +123,18 @@ class Parser:
     def p_function_parameters(self, p):
         """
         function_parameters : LPAREN params RPAREN
-                            | LPAREN RPAREN
         """
-        if len(p) == 4:
-            p[0] = p[2]
-        else:
-            p[0] = []
+        p[0] = p[2]
+
+    def p_empty_list(self, p):
+        """
+        function_parameters : LPAREN RPAREN
+        call_arguments      : LPAREN RPAREN
+        id_list             :
+        matrix_column       :
+        simple_id_list      :
+        """
+        p[0] = []
 
     def p_function_variables(self, p):
         """
@@ -311,7 +317,6 @@ class Parser:
     def p_call_arguments(self, p):
         """
         call_arguments  : LPAREN arguments RPAREN
-                        | LPAREN RPAREN
         """
 
     def p_arguments(self, p):
@@ -380,12 +385,8 @@ class Parser:
     def p_id_list(self, p):
         """
         id_list : COMMA ID id_list
-                |
         """
-        if len(p) == 4:
-            p[0] = [p[2], *p[3]]
-        else:
-            p[0] = []
+        p[0] = [p[2], *p[3]]
 
     def p_matrix_row(self, p):
         """
@@ -400,22 +401,14 @@ class Parser:
     def p_matrix_column(self, p):
         """
         matrix_column   :  LBRACK INT_CONSTANT RBRACK simple_id_list
-                        |
         """
-        if len(p) == 5:
-            p[0] = p[4]
-        else:
-            p[0] = []
+        p[0] = p[4]
 
     def p_simple_id_list(self, p):
         """
         simple_id_list  :   COMMA ID matrix_row
-                        |
         """
-        if len(p) == 4:
-            p[0] = [p[2], *p[3]]
-        else:
-            p[0] = []
+        p[0] = [p[2], *p[3]]
 
     def p_operators(self, p):
         """
