@@ -89,8 +89,12 @@ class Parser:
                     | void_id function_parameters register_function LBRACK function_variables RBRACK mark_function_begin block
         """
         scope = self.scope_stack.pop()
-        func_info = self.func_dir.get(scope)
-        if func_info is not None:
+        if (func_info := self.func_dir.get(scope)) is not None:
+            if (
+                func_info["type"] is not Types.VOID
+                and not func_info["has_return_statement"]
+            ):
+                raise Exception("Missing return statement for non void function.")
             func_info["resources"] = self.function_memory.describe_resources()
         self.function_memory.print()
         self.function_memory.clear()
@@ -110,7 +114,12 @@ class Parser:
         """
         function_type, function_name = p[-2]
         function_parameters = p[-1]
-        self.func_dir.add(function_name, function_type)
+        return_address = (
+            None
+            if function_type is Types.VOID
+            else self.global_memory.reserve(function_type)
+        )
+        self.func_dir.add(function_name, function_type, return_address)
         self.scope_stack.append(function_name)
         func_info = self.func_dir.get(function_name)
         for param_type, param_name in function_parameters:
@@ -192,7 +201,7 @@ class Parser:
                         | while_loop
                         | for_loop
                         | break
-                        | return
+                        | return SEMICOLON
         """
 
     def p_while_loop(self, p):
@@ -285,8 +294,33 @@ class Parser:
 
     def p_return(self, p):
         """
-        return  : RETURN expr SEMICOLON
+        return  : RETURN expr
         """
+        expr_type, expr_address = p[2]
+        scope = self.scope_stack[-1]
+        if (func_info := self.func_dir.get(scope)) is not None:
+            if func_info["type"] is Types.VOID:
+                raise Exception("Can't return from a void function.")
+            elif (
+                func_info["return_address"] is not None
+                and expr_type is func_info["type"]
+            ):
+                self.quads.add(
+                    (
+                        Operations.ASSIGNOP,
+                        expr_address,
+                        None,
+                        func_info["return_address"],
+                    )
+                )
+                self.quads.add((Operations.ENDSUB, None, None, None))
+                func_info["has_return_statement"] = True
+            else:
+                raise TypeError(
+                    f'Expected return type {func_info["type"]} but received {expr_type}.'
+                )
+        else:
+            raise Exception("Can't return from outside a function.")
 
     def p_params(self, p):
         """
