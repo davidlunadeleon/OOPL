@@ -11,21 +11,22 @@ int largest(int x, int y)[]
 	}
 }
 
+int largest;
+
 void one()[]
 {
 	print("One", 1);
 }
-
-int largest;
 
 int main()
 [
 	int two;
 ]
 {
+	largest = 100;
 	one();
 	read(two);
-	largest = largest(1, two);
-	print(largest);
+	largest(1, two);
+	print(largest, two);
 	return 1;
 }
