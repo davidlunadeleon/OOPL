@@ -26,5 +26,5 @@ int main()
 	}else{
 		y = 1/2;
 	}
-
+	return 1;
 }
