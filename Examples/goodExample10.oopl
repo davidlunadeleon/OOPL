@@ -11,6 +11,18 @@ int largest(int x, int y)[]
 	}
 }
 
+void check()
+[
+	float x;
+]{
+	x = 5.0;
+	while (x < 10) {
+		if (x == 5.0) {
+			break;
+		}	
+	}
+}
+
 int largest;
 
 void one()[]
