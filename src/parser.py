@@ -12,6 +12,8 @@ from .utils.types import TokenList
 from .var_table import VarTable
 from .quadruple_list import QuadrupleList
 from .memory import Memory
+from .nodes.constant import Constant
+from .nodes.expression import Expression
 
 
 class Parser:
@@ -97,7 +99,7 @@ class Parser:
             ):
                 raise Exception("Missing return statement for non void function.")
             func_info["resources"] = self.function_memory.describe_resources()
-        
+
         # Only add if there is no return after and it is the end of the function
         if self.quads[self.quads.ptr - 1][0] != Operations.ENDSUB:
             self.quads.add((Operations.ENDSUB, None, None, None))
@@ -133,7 +135,7 @@ class Parser:
                 func_info["param_table"].add(param_name, param_type, address)
             else:
                 raise Exception("The function information table was not found.")
-    
+
     def p_empty_list(self, p):
         """
         function_parameters : LPAREN RPAREN
@@ -344,7 +346,7 @@ class Parser:
         function_header    : simple_type_id function_parameters register_function_header SEMICOLON
                            | void_id function_parameters register_function_header SEMICOLON
         """
-    
+
     def p_register_function_header(self, p):
         """
         register_function_header   :
@@ -364,7 +366,6 @@ class Parser:
                 func_info["param_table"].add(param_name, param_type, address)
             else:
                 raise Exception("The function information table was not found.")
-
 
     def p_call(self, p):
         """
@@ -400,7 +401,7 @@ class Parser:
                             raise TypeError(
                                 f"Wrong parameter {param_name} in call to {func_name}. Expected {param_type} but received {arg_type}."
                             )
-                    
+
                     self.quads.add(
                         (Operations.GOSUB, func_name, None, func_info["start_quad"])
                     )
@@ -440,10 +441,17 @@ class Parser:
         """
         read : READ LPAREN variable RPAREN SEMICOLON
         """
-        if(p[3] is not None):
-            expr_type, expr_addr = p[3] 
+        if p[3] is not None:
+            expr_type, expr_addr = p[3]
             scope = self.scope_stack[-1]
-            if ((func_info := self.func_dir.get(scope)) is not None and (var_info := func_info["var_table"].get_from_address(expr_addr)) is not None) or (var_info := self.global_var_table.get_from_address(expr_addr) is not None):   
+            if (
+                (func_info := self.func_dir.get(scope)) is not None
+                and (var_info := func_info["var_table"].get_from_address(expr_addr))
+                is not None
+            ) or (
+                var_info := self.global_var_table.get_from_address(expr_addr)
+                is not None
+            ):
                 self.quads.add((Operations.READ, expr_addr, None, None))
         else:
             raise Exception(f"No variable found with the id {p[3]}.")
@@ -521,17 +529,9 @@ class Parser:
         term        : term DIVIDES factor
                     | term TIMES factor
         """
-        l_type, l_addr = p[1]
-        r_type, r_addr = p[3]
-        operation = Operations(p[2])
-        result_type = self.semantic_cube.get(l_type, operation, r_type)
-        if operation is Operations.ASSIGNOP:
-            self.quads.add((operation, r_addr, None, l_addr))
-            p[0] = (result_type, l_addr)
-        else:
-            mem_address = self.function_memory.reserve(result_type)
-            self.quads.add((operation, l_addr, r_addr, mem_address))
-            p[0] = (result_type, mem_address)
+        p[0] = Expression(
+            p[1], Operations(p[2]), p[3], self.function_memory, self.quads
+        ).get()
 
     def p_identity(self, p):
         """
@@ -564,41 +564,25 @@ class Parser:
         bool_constant   : BOOL_CONSTANT_TRUE
                         | BOOL_CONSTANT_FALSE
         """
-        val = True if p[1] == "True" else False
-        address = self.global_memory.find(val)
-        if address is None:
-            address = self.global_memory.append(val)
-        p[0] = (Types.BOOL, address)
+        p[0] = Constant(p[1], Types.BOOL, self.global_memory).get()
 
     def p_string_constant(self, p):
         """
         string_constant : STRING_CONSTANT
         """
-        val = str(p[1])
-        address = self.global_memory.find(val)
-        if address is None:
-            address = self.global_memory.append(val)
-        p[0] = (Types.STRING, address)
+        p[0] = Constant(p[1], Types.STRING, self.global_memory).get()
 
     def p_float_constant(self, p):
         """
         float_constant  : FLOAT_CONSTANT
         """
-        val = float(p[1])
-        address = self.global_memory.find(val)
-        if address is None:
-            address = self.global_memory.append(val)
-        p[0] = (Types.FLOAT, address)
+        p[0] = Constant(p[1], Types.FLOAT, self.global_memory).get()
 
     def p_int_constant(self, p):
         """
         int_constant    : INT_CONSTANT
         """
-        val = int(p[1])
-        address = self.global_memory.find(val)
-        if address is None:
-            address = self.global_memory.append(val)
-        p[0] = (Types.INT, address)
+        p[0] = Constant(p[1], Types.INT, self.global_memory).get()
 
     def p_error(self, p):
         # print(f'Syntax error at {p.value!r} in line {p.lineno}')
