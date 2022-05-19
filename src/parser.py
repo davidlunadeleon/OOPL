@@ -1,12 +1,10 @@
 # OOPL parser
 
 # Import libraries
-from webbrowser import Opera
 from .libs.ply import yacc
 
 from .func_dir import FuncDir
 from .lexer import Lexer
-from .semantic_cube import SemanticCube
 from .utils.enums import Types, Operations
 from .utils.types import TokenList
 from .var_table import VarTable
@@ -21,7 +19,6 @@ class Parser:
     global_var_table: VarTable
     lexer: Lexer
     scope_stack: list[str]
-    semantic_cube: SemanticCube
     tokens: TokenList
     quads: QuadrupleList
     global_memory: Memory
@@ -35,7 +32,6 @@ class Parser:
         self.func_dir = FuncDir()
         self.global_var_table = VarTable()
         self.scope_stack = ["global"]
-        self.semantic_cube = SemanticCube()
         self.quads = QuadrupleList()
         self.global_memory = Memory(0)
         self.function_memory = Memory(4000)
