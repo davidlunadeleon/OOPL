@@ -1,4 +1,4 @@
-from typing import TypedDict, Union
+from typing import TypedDict
 
 from .utils.types import MemoryAddress
 from .utils.enums import Types
@@ -30,7 +30,7 @@ class VarTable:
         else:
             self.table[name] = {"name": name, "type": var_type, "address": address}
 
-    def get(self, name: str) -> Union[VarInfo, None]:
+    def get(self, name: str) -> VarInfo:
         """
         Get a variable in the table.
 
@@ -38,24 +38,27 @@ class VarTable:
         name: str -- Variable to get.
 
         Returns:
-        Union[VarInfo, None] -- None, if the variable is not found.
+        VarInfo -- Information about the variable.
         """
-        return self.table.get(name)
+        if (var_info := self.table[name]) is not None:
+            return var_info
+        else:
+            raise Exception(f"Can't retrieve variable with name {name}.")
 
-    def get_from_address(self, address: str) -> Union[VarInfo, None]:
+    def get_from_address(self, address: MemoryAddress) -> VarInfo:
         """
         Get a variable in the table.
 
         Arguments:
-        addr: str -- Variable to get.
+        addr: MemoryAddress -- Variable to get.
 
         Returns:
-        Union[VarInfo, None] -- None, if the variable is not found.
+        VarInfo -- Information about the variable.
         """
         for k, v in self.table.items():
             if v["address"] == address:
                 return v
-        return None
+        raise Exception(f"Can't retrieve variable with address {address}.")
 
     def has(self, name: str) -> bool:
         """
