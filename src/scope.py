@@ -1,17 +1,15 @@
 from .memory import Memory
 from .var_table import VarTable
 from .utils.types import TypeAddress
-from .utils.enums import ScopeTypes, Types
+from .utils.enums import Types
 
 
 class Scope:
     var_table: VarTable
     mem: Memory
-    type: ScopeTypes
 
-    def __init__(self, type: ScopeTypes, mem: Memory) -> None:
+    def __init__(self, mem: Memory) -> None:
         self.mem = mem
-        self.type = type
         self.var_table = VarTable()
 
     def has(self, var_name: str) -> bool:
