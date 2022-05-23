@@ -519,7 +519,7 @@ class Parser:
 
     def p_operators(self, p):
         """
-        expr        : expr ASSIGNOP or_expr
+        expr        : or_expr ASSIGNOP expr
         or_expr     : or_expr OR and_expr
         and_expr    : and_expr AND comp_expr
         comp_expr   : comp_expr COMPOP rel_expr
