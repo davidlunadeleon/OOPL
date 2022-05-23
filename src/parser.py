@@ -12,30 +12,33 @@ from .quadruple_list import QuadrupleList
 from .memory import Memory
 from .nodes.constant import Constant
 from .nodes.expression import Expression
+from .scope_stack import ScopeStack
+from .scope import Scope
 
 
 class Parser:
     func_dir: FuncDir
-    global_var_table: VarTable
-    lexer: Lexer
-    scope_stack: list[str]
-    tokens: TokenList
-    quads: QuadrupleList
-    global_memory: Memory
     function_memory: Memory
+    function_stack: list[str]
+    global_memory: Memory
     jump_stack: list[int]
+    lexer: Lexer
+    quads: QuadrupleList
+    scope_stack: ScopeStack
+    tokens: TokenList
 
     def __init__(self, lexer):
         self.lexer = lexer
         self.tokens = lexer.tokens
         self.parser = yacc.yacc(module=self)
         self.func_dir = FuncDir()
-        self.global_var_table = VarTable()
-        self.scope_stack = ["global"]
-        self.quads = QuadrupleList()
-        self.global_memory = Memory(0)
         self.function_memory = Memory(4000)
+        self.function_stack = []
+        self.global_memory = Memory(0)
         self.jump_stack = []
+        self.quads = QuadrupleList()
+        self.scope_stack = ScopeStack()
+        self.scope_stack.push(Scope(self.global_memory))
 
     def parse(self, p):
         self.parser.parse(p)
@@ -58,8 +61,6 @@ class Parser:
         """
         finish  :
         """
-        self.global_var_table.print("Global variable table")
-        print("\n")
         self.func_dir.print()
         self.quads.print()
         self.global_memory.print()
@@ -87,8 +88,9 @@ class Parser:
         function    : simple_type_id function_parameters register_function LBRACK function_variables RBRACK mark_function_begin block
                     | void_id function_parameters register_function LBRACK function_variables RBRACK mark_function_begin block
         """
-        scope = self.scope_stack.pop()
-        if (func_info := self.func_dir.get(scope)) is not None:
+        func_name = self.function_stack.pop()
+        self.scope_stack.pop()
+        if (func_info := self.func_dir.get(func_name)) is not None:
             if (
                 func_info["type"] is not Types.VOID
                 and not func_info["has_return_statement"]
@@ -99,6 +101,7 @@ class Parser:
         # Only add if there is no return after and it is the end of the function
         if self.quads[self.quads.ptr - 1][0] != Operations.ENDSUB:
             self.quads.add((Operations.ENDSUB, None, None, None))
+        print(func_name)
         self.function_memory.print()
         self.function_memory.clear()
 
@@ -106,8 +109,8 @@ class Parser:
         """
         mark_function_begin :
         """
-        scope = self.scope_stack[-1]
-        func_info = self.func_dir.get(scope)
+        func_name = self.function_stack[-1]
+        func_info = self.func_dir.get(func_name)
         if func_info is not None:
             func_info["start_quad"] = self.quads.ptr
 
@@ -115,22 +118,19 @@ class Parser:
         """
         register_function   :
         """
-        function_type, function_name = p[-2]
-        function_parameters = p[-1]
+        func_type, func_name = p[-2]
+        func_params = p[-1]
         return_address = (
-            None
-            if function_type is Types.VOID
-            else self.global_memory.reserve(function_type)
+            None if func_type is Types.VOID else self.global_memory.reserve(func_type)
         )
-        self.func_dir.add(function_name, True, function_type, return_address)
-        self.scope_stack.append(function_name)
-        func_info = self.func_dir.get(function_name)
-        for param_type, param_name in function_parameters:
-            if func_info is not None:
-                address = self.function_memory.reserve(Types(param_type))
-                func_info["param_table"].add(param_name, param_type, address)
-            else:
-                raise Exception("The function information table was not found.")
+        func_info = self.func_dir.add(
+            func_name, True, func_type, return_address, self.function_memory
+        )
+        self.function_stack.append(func_name)
+        self.scope_stack.push(Scope(self.function_memory))
+        for param_type, param_name in func_params:
+            _, var_address = self.scope_stack.add_var(param_name, param_type)
+            func_info["param_table"].add(param_name, param_type, var_address)
 
     def p_empty_list(self, p):
         """
@@ -290,8 +290,8 @@ class Parser:
         return  : RETURN expr
         """
         expr_type, expr_address = p[2]
-        scope = self.scope_stack[-1]
-        if (func_info := self.func_dir.get(scope)) is not None:
+        func_name = self.function_stack[-1]
+        if (func_info := self.func_dir.get(func_name)) is not None:
             if func_info["type"] is Types.VOID:
                 raise Exception("Can't return from a void function.")
             elif (
@@ -347,21 +347,19 @@ class Parser:
         """
         register_function_header   :
         """
-        function_type, function_name = p[-2]
-        function_parameters = p[-1]
+        func_type, func_name = p[-2]
+        func_parameters = p[-1]
         return_address = (
-            None
-            if function_type is Types.VOID
-            else self.global_memory.reserve(function_type)
+            None if func_type is Types.VOID else self.global_memory.reserve(func_type)
         )
-        self.func_dir.add(function_name, False, function_type, return_address)
-        func_info = self.func_dir.get(function_name)
-        for param_type, param_name in function_parameters:
-            if func_info is not None:
-                address = self.function_memory.reserve(Types(param_type))
-                func_info["param_table"].add(param_name, param_type, address)
-            else:
-                raise Exception("The function information table was not found.")
+        func_info = self.func_dir.add(
+            func_name, False, func_type, return_address, self.function_memory
+        )
+        self.scope_stack.push(func_info["scope"])
+        for param_type, param_name in func_parameters:
+            _, var_address = self.scope_stack.add_var(param_name, param_type)
+            func_info["param_table"].add(param_name, param_type, var_address)
+        self.scope_stack.pop()
 
     def p_call(self, p):
         """
@@ -381,7 +379,9 @@ class Parser:
                 self.quads.add((Operations.ERAS, None, None, func_strings))
                 param_table = func_info["param_table"]
                 if len(func_args) != len(param_table.table.items()):
-                    raise Exception(f"Argument mismatch when calling {func_name}.")
+                    raise Exception(
+                        f"Arg, self.function_memoryument mismatch when calling {func_name}."
+                    )
                 else:
                     for arg, param in zip(func_args, param_table.table.items()):
                         _, param_info = param
@@ -414,16 +414,9 @@ class Parser:
                     | ID
         """
         if len(p) == 2:
-            scope = self.scope_stack[-1]
-            var_info = None
-            if (func_info := self.func_dir.get(scope)) is not None:
-                var_info = func_info["var_table"].get(p[1]) or func_info[
-                    "param_table"
-                ].get(p[1])
-            if var_info is None:
-                var_info = self.global_var_table.get(p[1])
+            var_info = self.scope_stack.get_var(p[1])
             if var_info is not None:
-                p[0] = (var_info["type"], var_info["address"])
+                p[0] = var_info
         else:
             pass
 
@@ -438,17 +431,8 @@ class Parser:
         read : READ LPAREN variable RPAREN SEMICOLON
         """
         if p[3] is not None:
-            expr_type, expr_addr = p[3]
-            scope = self.scope_stack[-1]
-            if (
-                (func_info := self.func_dir.get(scope)) is not None
-                and (var_info := func_info["var_table"].get_from_address(expr_addr))
-                is not None
-            ) or (
-                var_info := self.global_var_table.get_from_address(expr_addr)
-                is not None
-            ):
-                self.quads.add((Operations.READ, expr_addr, None, None))
+            _, expr_addr = p[3]
+            self.quads.add((Operations.READ, expr_addr, None, None))
         else:
             raise Exception(f"No variable found with the id {p[3]}.")
 
@@ -470,19 +454,8 @@ class Parser:
         """
         var_type = p[1]
         var_names = [p[2], *p[3]]
-        scope = self.scope_stack[-1]
-        if scope == "global":
-            for var_name in var_names:
-                address = self.global_memory.reserve(Types(var_type))
-                self.global_var_table.add(var_name, var_type, address)
-        else:
-            func_info = self.func_dir.get(scope)
-            if func_info is not None:
-                for var_name in var_names:
-                    address = self.function_memory.reserve(Types(var_type))
-                    func_info["var_table"].add(var_name, var_type, address)
-            else:
-                raise Exception("The function information table was not found.")
+        for var_name in var_names:
+            self.scope_stack.add_var(var_name, var_type)
 
     def p_id_list(self, p):
         """
