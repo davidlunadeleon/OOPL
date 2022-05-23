@@ -484,7 +484,7 @@ class Parser:
         read : READ LPAREN variable RPAREN SEMICOLON
         """
         if p[3] is not None:
-            _, expr_addr = p[3]
+            _, expr_addr, _ = p[3]
             self.quads.add((Operations.READ, expr_addr, None, None))
         else:
             raise Exception(f"No variable found with the id {p[3]}.")
