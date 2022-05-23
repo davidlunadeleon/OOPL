@@ -181,7 +181,7 @@ class Parser:
 
     def p_no_action(self, p):
         """
-        block               : LCURBR block_content RCURBR
+        block               : LCURBR push_scope block_content RCURBR pop_scope
         block_content       : statement block_content
                             |
         statement           : expr SEMICOLON
@@ -194,6 +194,18 @@ class Parser:
                             | return SEMICOLON
                             | var_decl
         """
+
+    def p_push_scope(self, p):
+        """
+        push_scope  :
+        """
+        self.scope_stack.push(Scope(self.function_memory))
+
+    def p_pop_scope(self, p):
+        """
+        pop_scope   :
+        """
+        self.scope_stack.pop()
 
     def p_while_loop(self, p):
         """
