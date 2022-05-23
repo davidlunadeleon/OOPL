@@ -145,7 +145,7 @@ class Parser:
         self.function_stack.append(func_name)
         self.scope_stack.push(func_info["scope"])
         for param_type, param_name in func_params:
-            _, var_address = self.scope_stack.add_var(param_name, param_type)
+            _, var_address, _ = self.scope_stack.add_var(param_name, param_type)
             func_info["param_table"].add(param_name, param_type, var_address)
 
     def p_function_header(self, p):
@@ -168,7 +168,7 @@ class Parser:
         )
         self.scope_stack.push(func_info["scope"])
         for param_type, param_name in func_parameters:
-            _, var_address = self.scope_stack.add_var(param_name, param_type)
+            _, var_address, _ = self.scope_stack.add_var(param_name, param_type)
             func_info["param_table"].add(param_name, param_type, var_address)
         self.scope_stack.pop()
 
@@ -212,7 +212,7 @@ class Parser:
         """
         loop_expr  :
         """
-        expr_type, expr_addr = p[-1]
+        expr_type, expr_addr, _ = p[-1]
         if expr_type is Types.BOOL:
             self.jump_stack.append(self.quads.ptr)
             self.quads.add((Operations.GOTOF, expr_addr, None, None))
@@ -282,7 +282,7 @@ class Parser:
         """
         if_statement_neural_point_1    :
         """
-        expr_type, expr_addr = p[-1]
+        expr_type, expr_addr, _ = p[-1]
         if expr_type is Types.BOOL:
             self.quads.add((Operations.GOTOF, expr_addr, None, None))
             self.jump_stack.append(self.quads.ptr - 1)
@@ -308,7 +308,7 @@ class Parser:
         """
         if_alternative_neural_point_3  :
         """
-        expr_type, expr_addr = p[-1]
+        expr_type, expr_addr, _ = p[-1]
         if expr_type is Types.BOOL:
             self.quads.add((Operations.GOTOF, expr_addr, None, None))
             self.jump_stack.append(self.quads.ptr - 1)
@@ -348,7 +348,7 @@ class Parser:
         """
         return  : RETURN expr
         """
-        expr_type, expr_address = p[2]
+        expr_type, expr_address, _ = p[2]
         func_name = self.function_stack[-1]
         if (func_info := self.func_dir.get(func_name)) is not None:
             if func_info["type"] is Types.VOID:
@@ -420,7 +420,7 @@ class Parser:
                         param_type = param_info["type"]
                         param_addr = param_info["address"]
                         param_name = param_info["name"]
-                        arg_type, arg_addr = arg
+                        arg_type, arg_addr, _ = arg
                         if param_type is arg_type:
                             self.quads.add(
                                 (Operations.PARAM, arg_addr, None, param_addr)
@@ -433,7 +433,7 @@ class Parser:
                     self.quads.add(
                         (Operations.GOSUB, func_name, None, func_info["start_quad"])
                     )
-                    p[0] = (func_info["type"], func_info["return_address"])
+                    p[0] = (func_info["type"], func_info["return_address"], None)
             else:
                 raise Exception(f"Function {func_name} has not been declared.")
         else:
@@ -519,8 +519,7 @@ class Parser:
 
     def p_operators(self, p):
         """
-        expr        : variable ASSIGNOP expr
-                    | variable ASSIGNOP or_expr
+        expr        : expr ASSIGNOP or_expr
         or_expr     : or_expr OR and_expr
         and_expr    : and_expr AND comp_expr
         comp_expr   : comp_expr COMPOP rel_expr
@@ -531,7 +530,12 @@ class Parser:
                     | term TIMES factor
         """
         p[0] = Expression(
-            p[1], Operations(p[2]), p[3], self.function_memory, self.quads
+            p[1],
+            Operations(p[2]),
+            p[3],
+            self.function_memory,
+            self.quads,
+            self.scope_stack,
         ).get()
 
     def p_identity(self, p):
