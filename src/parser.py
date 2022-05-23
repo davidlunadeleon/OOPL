@@ -7,7 +7,6 @@ from .func_dir import FuncDir
 from .lexer import Lexer
 from .utils.enums import Types, Operations
 from .utils.types import TokenList
-from .var_table import VarTable
 from .quadruple_list import QuadrupleList
 from .memory import Memory
 from .nodes.constant import Constant
@@ -61,6 +60,23 @@ class Parser:
         """
         finish  :
         """
+        for index, quad in enumerate(self.quads.quads):
+            op, func_name, _, _ = quad
+            if op is Operations.GOSUB:
+                if (
+                    isinstance(func_name, str)
+                    and self.func_dir.has(func_name)
+                    and (func_info := self.func_dir.get(func_name))["body_defined"]
+                ):
+                    bools, floats, ints, strings = func_info["resources"]
+                    self.quads[index - 4] = (Operations.ERAB, None, None, bools)
+                    self.quads[index - 3] = (Operations.ERAF, None, None, floats)
+                    self.quads[index - 2] = (Operations.ERAI, None, None, ints)
+                    self.quads[index - 1] = (Operations.ERAS, None, None, strings)
+                else:
+                    raise Exception(
+                        f"Function {func_name} was called but its body was not defined."
+                    )
         self.func_dir.print()
         self.quads.print()
         self.global_memory.print()
@@ -379,14 +395,11 @@ class Parser:
         if len(p) == 3:
             func_name = p[1]
             func_args = p[2]
-            if (func_info := self.func_dir.get(func_name)) is not None and (
-                func_resources := func_info["resources"]
-            ) is not None:
-                func_bools, func_floats, func_ints, func_strings = func_resources
-                self.quads.add((Operations.ERAB, None, None, func_bools))
-                self.quads.add((Operations.ERAF, None, None, func_floats))
-                self.quads.add((Operations.ERAI, None, None, func_ints))
-                self.quads.add((Operations.ERAS, None, None, func_strings))
+            if (func_info := self.func_dir.get(func_name)) is not None:
+                self.quads.add((Operations.ERAB, None, None, None))
+                self.quads.add((Operations.ERAF, None, None, None))
+                self.quads.add((Operations.ERAI, None, None, None))
+                self.quads.add((Operations.ERAS, None, None, None))
                 param_table = func_info["param_table"]
                 if len(func_args) != len(param_table.table.items()):
                     raise Exception(
