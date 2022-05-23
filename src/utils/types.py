@@ -10,4 +10,4 @@ MemoryAddress = int | str | None
 MemoryType = bool | float | int | str
 Quadruple = Tuple[Operations, MemoryAddress | str, MemoryAddress, MemoryAddress]
 FunctionResources = Tuple[int, int, int, int]
-TypeAddress = Tuple[Types, MemoryAddress]
+TypeAddress = Tuple[Types, MemoryAddress, str | None]

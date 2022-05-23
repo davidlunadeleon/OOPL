@@ -1,6 +1,6 @@
 from .scope import Scope
 from .utils.types import TypeAddress
-from .utils.enums import Types
+from .utils.enums import Types, ScopeTypes
 
 
 class ScopeStack:
@@ -29,3 +29,9 @@ class ScopeStack:
 
     def add_var(self, var_name: str, var_type: Types) -> TypeAddress:
         return self.scope_stack[-1].add(var_name, var_type)
+
+    def is_in_loop(self) -> bool:
+        for scope in reversed(self.scope_stack):
+            if scope.type is ScopeTypes.LOOP:
+                return True
+        return False
