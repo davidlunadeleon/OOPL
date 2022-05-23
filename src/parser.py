@@ -162,7 +162,7 @@ class Parser:
 
     def p_for_loop_assign(self, p):
         """
-        for_loop_assign : assign
+        for_loop_assign : expr
                         |
         """
         self.jump_stack.append(self.quads.ptr)
@@ -184,8 +184,7 @@ class Parser:
         block               : LCURBR block_content RCURBR
         block_content       : statement block_content
                             |
-        statement           : assign SEMICOLON
-                            | expr SEMICOLON
+        statement           : expr SEMICOLON
                             | read
                             | write
                             | if_statement
@@ -486,12 +485,12 @@ class Parser:
 
     def p_operators(self, p):
         """
-        assign      : variable ASSIGNOP assign
-                    | variable ASSIGNOP expr
-        expr        : expr OR t_expr
-        t_expr      : t_expr AND comp_expr
-        comp_expr   : comp_expr COMPOP g_expr
-        g_expr      : g_expr RELOP m_expr
+        expr        : variable ASSIGNOP expr
+                    | variable ASSIGNOP or_expr
+        or_expr     : or_expr OR and_expr
+        and_expr    : and_expr AND comp_expr
+        comp_expr   : comp_expr COMPOP rel_expr
+        rel_expr    : rel_expr RELOP m_expr
         m_expr      : m_expr PLUS term
                     | m_expr MINUS term
         term        : term DIVIDES factor
@@ -503,10 +502,11 @@ class Parser:
 
     def p_identity(self, p):
         """
-        expr            : t_expr
-        t_expr          : comp_expr
-        comp_expr       : g_expr
-        g_expr          : m_expr
+        expr            : or_expr
+        or_expr         : and_expr
+        and_expr        : comp_expr
+        comp_expr       : rel_expr
+        rel_expr        : m_expr
         m_expr          : term
         term            : factor
         constant        : int_constant
