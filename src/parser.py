@@ -25,6 +25,8 @@ class Parser:
     quads: QuadrupleList
     scope_stack: ScopeStack
     tokens: TokenList
+    break_controller: list[int]
+    break_jump_stack: list[int]
 
     def __init__(self, lexer):
         self.lexer = lexer
@@ -38,6 +40,8 @@ class Parser:
         self.quads = QuadrupleList()
         self.scope_stack = ScopeStack()
         self.scope_stack.push(Scope(self.global_memory))
+        self.break_controller = []
+        self.break_jump_stack = []
 
     def parse(self, p):
         self.parser.parse(p)
@@ -184,7 +188,7 @@ class Parser:
 
     def p_for_loop(self, p):
         """
-        for_loop    : FOR LPAREN for_loop_assign SEMICOLON ptr_to_jump_stack expr loop_expr SEMICOLON ptr_to_jump_stack for_loop_assign RPAREN ptr_to_jump_stack block
+        for_loop    : FOR add_new_to_break_controller LPAREN for_loop_assign SEMICOLON ptr_to_jump_stack expr loop_expr SEMICOLON ptr_to_jump_stack for_loop_assign RPAREN ptr_to_jump_stack block
         """
         before_block = self.jump_stack.pop()
         second_assign = self.jump_stack.pop()
@@ -198,8 +202,18 @@ class Parser:
         op_code, _, _, _ = self.quads[first_assign]
         self.quads[first_assign] = (op_code, None, None, before_block)
         op_code, addr, _, _ = self.quads[after_expr]
-        self.quads[after_expr] = (op_code, addr, None, self.quads.ptr)
-
+        end = self.quads.ptr
+        self.quads[after_expr] = (op_code, addr, None, end)
+        if self.break_controller[-1] == 0:
+            self.break_controller.pop()
+        else:
+            for i in range(self.break_controller[-1], -1, -1):
+                if i > 0:
+                    break_expr = self.break_jump_stack.pop()
+                    self.quads[break_expr] = (Operations.BREAK, None, None, end)
+                else:
+                    self.break_controller.pop()
+        
     def p_for_loop_assign(self, p):
         """
         for_loop_assign : expr
@@ -249,19 +263,47 @@ class Parser:
 
     def p_while_loop(self, p):
         """
-        while_loop  : WHILE LPAREN ptr_to_jump_stack expr loop_expr RPAREN block
+        while_loop  : WHILE add_new_to_break_controller LPAREN ptr_to_jump_stack expr loop_expr RPAREN block
         """
         after_expr = self.jump_stack.pop()
         before_expr = self.jump_stack.pop()
         self.quads.add((Operations.GOTO, None, None, before_expr))
         op_code, addr, _, _ = self.quads[after_expr]
-        self.quads[after_expr] = (op_code, addr, None, self.quads.ptr)
+        end = self.quads.ptr
+        self.quads[after_expr] = (op_code, addr, None, end)
+        if self.break_controller[-1] == 0:
+            self.break_controller.pop()
+        else:
+            for i in range(self.break_controller[-1], -1, -1):
+                if i > 0:
+                    break_expr = self.break_jump_stack.pop()
+                    self.quads[break_expr] = (Operations.BREAK, None, None, end)
+                else:
+                    self.break_controller.pop()
 
     def p_ptr_to_jump_stack(self, p):
         """
         ptr_to_jump_stack  :
         """
         self.jump_stack.append(self.quads.ptr)
+    
+    def p_ptr_to_break_jump_stack(self, p):
+        """
+        ptr_to_break_jump_stack  :
+        """
+        self.break_jump_stack.append(self.quads.ptr)
+    
+    def p_add_new_to_break_controller(self, p):
+        """
+        add_new_to_break_controller  :
+        """
+        self.break_controller.append(0)
+    
+    def p_increase_count_to_break_controller(self, p):
+        """
+        increase_count_to_break_controller  :
+        """
+        self.break_controller[-1] += 1
 
     def p_if_statement(self, p):
         """
@@ -332,9 +374,10 @@ class Parser:
 
     def p_break(self, p):
         """
-        break   : BREAK SEMICOLON
+        break   : BREAK ptr_to_break_jump_stack increase_count_to_break_controller SEMICOLON
         """
-
+        self.quads.add((Operations.BREAK, None, None, None))
+        
     def p_return(self, p):
         """
         return  : RETURN expr

@@ -2,7 +2,7 @@ void one();
 
 int largest(int x, int y);
 
-int largest(int x, int y)[]
+int largest(int x, int y)
 {
 	if (x > y) {
 		return x;
@@ -12,12 +12,14 @@ int largest(int x, int y)[]
 }
 
 void check()
-[
+{
 	float x;
-]{
 	x = 5.0;
 	while (x < 10) {
 		if (x == 5.0) {
+			x = 32.444;
+			break;
+		} else {
 			break;
 		}	
 	}
@@ -25,16 +27,14 @@ void check()
 
 int largest;
 
-void one()[]
+void one()
 {
 	print("One", 1);
 }
 
 int main()
-[
-	int two;
-]
 {
+	int two;
 	largest = 100;
 	one();
 	read(two);
