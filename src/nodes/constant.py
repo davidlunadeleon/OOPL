@@ -23,4 +23,4 @@ class Constant:
         self.address = memory.append(self.val)
 
     def get(self) -> TypeAddress:
-        return (self.type, self.address)
+        return (self.type, self.address, None)
