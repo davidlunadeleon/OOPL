@@ -25,6 +25,8 @@ class Parser:
     quads: QuadrupleList
     scope_stack: ScopeStack
     tokens: TokenList
+    break_counter: list[int]
+    break_stack: list[int]
 
     def __init__(self, lexer):
         self.lexer = lexer
@@ -35,9 +37,11 @@ class Parser:
         self.function_stack = []
         self.global_memory = Memory(0)
         self.jump_stack = []
+        self.break_stack = []
         self.quads = QuadrupleList()
         self.scope_stack = ScopeStack()
         self.scope_stack.push(Scope(ScopeTypes.GLOBAL, self.global_memory))
+        self.break_counter = []
 
     def parse(self, p):
         self.parser.parse(p)
@@ -222,7 +226,7 @@ class Parser:
     def p_no_action(self, p):
         """
         block           : LCURBR push_scope block_content RCURBR pop_scope
-        loop_block      : LCURBR push_loop_scope block_content RCURBR pop_scope
+        loop_block      : LCURBR push_loop_scope block_content RCURBR pop_loop_scope
         block_content   : statement block_content
                         |
         statement       : expr SEMICOLON
@@ -247,6 +251,20 @@ class Parser:
         push_loop_scope :
         """
         self.scope_stack.push(Scope(ScopeTypes.LOOP, self.function_memory))
+        self.break_counter.append(0)
+
+    def p_pop_loop_scope(self, p):
+        """
+        pop_loop_scope   :
+        """
+        self.scope_stack.pop()
+        for _ in range(self.break_counter.pop()):
+            self.quads[self.break_stack.pop()] = (
+                Operations.GOTO,
+                None,
+                None,
+                self.quads.ptr,
+            )
 
     def p_pop_scope(self, p):
         """
@@ -343,6 +361,9 @@ class Parser:
         """
         if not self.scope_stack.is_in_loop():
             raise Exception("Can't use break statement outside a loop.")
+        self.break_stack.append(self.quads.ptr)
+        self.quads.add((Operations.GOTO, None, None, None))
+        self.break_counter[-1] += 1
 
     def p_return(self, p):
         """
