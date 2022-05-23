@@ -85,8 +85,8 @@ class Parser:
 
     def p_function(self, p):
         """
-        function    : simple_type_id function_parameters register_function LBRACK function_variables RBRACK mark_function_begin block
-                    | void_id function_parameters register_function LBRACK function_variables RBRACK mark_function_begin block
+        function    : simple_type_id function_parameters register_function mark_function_begin block
+                    | void_id function_parameters register_function mark_function_begin block
         """
         func_name = self.function_stack.pop()
         self.scope_stack.pop()
@@ -193,8 +193,7 @@ class Parser:
                             | for_loop
                             | break
                             | return SEMICOLON
-        function_variables  : var_decl function_variables
-                            |
+                            | var_decl
         """
 
     def p_while_loop(self, p):
