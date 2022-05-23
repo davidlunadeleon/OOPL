@@ -1,22 +1,18 @@
-int two()[]
-{
+int two() {
 	return 1 + 1;
 }
 
-int add(int x, int y)[]
-{
+int add(int x, int y) {
 	return x + y;
 }
 
-int main()
-[
+int main() {
 	int x, y;
 	bool b1, b2;
 	float a;
 	string str;
-]
-{
 	x = 1;
+	x = add(1, 2);
 	while (x < 10) {
 		x = x + 1;
 	}
