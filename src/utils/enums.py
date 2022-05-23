@@ -35,3 +35,10 @@ class Operations(enum.Enum):
     TIMES = "*"
     PRINT = "PRINT"
     READ = "READ"
+
+
+class ScopeTypes(enum.Enum):
+    GLOBAL = "global"
+    FUNCTION = "function"
+    LOOP = "loop"
+    GENERIC = "generic"
