@@ -27,5 +27,5 @@ class ScopeStack:
                 return scope.get(var_name)
         raise Exception(f"Could not find {var_name}.")
 
-    def add_var(self, var_name: str, var_type: Types) -> None:
-        self.scope_stack[-1].add(var_name, var_type)
+    def add_var(self, var_name: str, var_type: Types) -> TypeAddress:
+        return self.scope_stack[-1].add(var_name, var_type)

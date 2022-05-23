@@ -19,5 +19,6 @@ class Scope:
         var_info = self.var_table.get(var_name)
         return (var_info["type"], var_info["address"])
 
-    def add(self, var_name: str, var_type: Types):
-        self.var_table.add(var_name, var_type, self.mem.reserve(var_type))
+    def add(self, var_name: str, var_type: Types) -> TypeAddress:
+        var_info = self.var_table.add(var_name, var_type, self.mem.reserve(var_type))
+        return var_info["type"], var_info["address"]

@@ -16,7 +16,7 @@ class VarTable:
     def __init__(self) -> None:
         self.table = {}
 
-    def add(self, name: str, var_type: Types, address: MemoryAddress) -> None:
+    def add(self, name: str, var_type: Types, address: MemoryAddress) -> VarInfo:
         """
         Insert a new variable to the table.
 
@@ -29,6 +29,7 @@ class VarTable:
             raise Exception(f"The variable {name} is already in the table.")
         else:
             self.table[name] = {"name": name, "type": var_type, "address": address}
+            return self.table[name]
 
     def get(self, name: str) -> VarInfo:
         """
