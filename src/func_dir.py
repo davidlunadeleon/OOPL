@@ -13,7 +13,7 @@ from typing import TypedDict, Union
 
 from .memory import Memory
 from .scope import Scope
-from .utils.enums import Types
+from .utils.enums import Types, ScopeTypes
 from .utils.types import FunctionResources, MemoryAddress
 from .var_table import VarTable
 
@@ -60,7 +60,7 @@ class FuncDir:
                 "param_table": VarTable(),
                 "resources": (0, 0, 0, 0),
                 "return_address": return_address,
-                "scope": Scope(mem),
+                "scope": Scope(ScopeTypes.FUNCTION, mem),
                 "start_quad": None,
                 "type": return_type,
             }

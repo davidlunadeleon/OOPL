@@ -5,7 +5,7 @@ from .libs.ply import yacc
 
 from .func_dir import FuncDir
 from .lexer import Lexer
-from .utils.enums import Types, Operations
+from .utils.enums import Types, Operations, ScopeTypes
 from .utils.types import TokenList
 from .quadruple_list import QuadrupleList
 from .memory import Memory
@@ -37,7 +37,7 @@ class Parser:
         self.jump_stack = []
         self.quads = QuadrupleList()
         self.scope_stack = ScopeStack()
-        self.scope_stack.push(Scope(self.global_memory))
+        self.scope_stack.push(Scope(ScopeTypes.GLOBAL, self.global_memory))
 
     def parse(self, p):
         self.parser.parse(p)
@@ -184,7 +184,7 @@ class Parser:
 
     def p_for_loop(self, p):
         """
-        for_loop    : FOR LPAREN for_loop_assign SEMICOLON ptr_to_jump_stack expr loop_expr SEMICOLON ptr_to_jump_stack for_loop_assign RPAREN ptr_to_jump_stack block
+        for_loop    : FOR LPAREN for_loop_assign SEMICOLON ptr_to_jump_stack expr loop_expr SEMICOLON ptr_to_jump_stack for_loop_assign RPAREN ptr_to_jump_stack loop_block
         """
         before_block = self.jump_stack.pop()
         second_assign = self.jump_stack.pop()
@@ -221,25 +221,32 @@ class Parser:
 
     def p_no_action(self, p):
         """
-        block               : LCURBR push_scope block_content RCURBR pop_scope
-        block_content       : statement block_content
-                            |
-        statement           : expr SEMICOLON
-                            | read
-                            | write
-                            | if_statement
-                            | while_loop
-                            | for_loop
-                            | break
-                            | return SEMICOLON
-                            | var_decl
+        block           : LCURBR push_scope block_content RCURBR pop_scope
+        loop_block      : LCURBR push_loop_scope block_content RCURBR pop_scope
+        block_content   : statement block_content
+                        |
+        statement       : expr SEMICOLON
+                        | read
+                        | write
+                        | if_statement
+                        | while_loop
+                        | for_loop
+                        | break
+                        | return SEMICOLON
+                        | var_decl
         """
 
     def p_push_scope(self, p):
         """
-        push_scope  :
+        push_scope :
         """
-        self.scope_stack.push(Scope(self.function_memory))
+        self.scope_stack.push(Scope(ScopeTypes.GENERIC, self.function_memory))
+
+    def p_push_loop_scope(self, p):
+        """
+        push_loop_scope :
+        """
+        self.scope_stack.push(Scope(ScopeTypes.LOOP, self.function_memory))
 
     def p_pop_scope(self, p):
         """
@@ -249,7 +256,7 @@ class Parser:
 
     def p_while_loop(self, p):
         """
-        while_loop  : WHILE LPAREN ptr_to_jump_stack expr loop_expr RPAREN block
+        while_loop  : WHILE LPAREN ptr_to_jump_stack expr loop_expr RPAREN loop_block
         """
         after_expr = self.jump_stack.pop()
         before_expr = self.jump_stack.pop()
@@ -334,6 +341,8 @@ class Parser:
         """
         break   : BREAK SEMICOLON
         """
+        if not self.scope_stack.is_in_loop():
+            raise Exception("Can't use break statement outside a loop.")
 
     def p_return(self, p):
         """
