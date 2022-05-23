@@ -11,20 +11,22 @@
 
 from typing import TypedDict, Union
 
-from .var_table import VarTable
-from .utils.types import FunctionResources, MemoryAddress
+from .memory import Memory
+from .scope import Scope
 from .utils.enums import Types
+from .utils.types import FunctionResources, MemoryAddress
+from .var_table import VarTable
 
 
 class FuncInfo(TypedDict):
+    body_defined: bool
+    has_return_statement: bool
     param_table: VarTable
     resources: FunctionResources
     return_address: MemoryAddress
+    scope: Scope
     start_quad: int | None
     type: Types
-    var_table: VarTable
-    has_return_statement: bool
-    body_defined : bool
 
 
 class FuncDir:
@@ -33,7 +35,14 @@ class FuncDir:
     def __init__(self):
         self.func_dir = {}
 
-    def add(self, name: str, body_defined: bool, return_type: Types, return_address: MemoryAddress) -> None:
+    def add(
+        self,
+        name: str,
+        body_defined: bool,
+        return_type: Types,
+        return_address: MemoryAddress,
+        mem: Memory,
+    ) -> FuncInfo:
         """
         Insert a new function to the directory.
 
@@ -42,19 +51,20 @@ class FuncDir:
         body_defined: bool -- Whether the function body was registered before (for header definition control).
         return_type: str -- Return type of the function.
         """
-        if name in self.func_dir and self.func_dir.get(name)["body_defined"]:
+        if name in self.func_dir and self.func_dir[name]["body_defined"]:
             raise Exception(f"The function {name} is already in the directory.")
         else:
             self.func_dir[name] = {
+                "body_defined": body_defined,
+                "has_return_statement": False,
                 "param_table": VarTable(),
                 "resources": None,
                 "return_address": return_address,
+                "scope": Scope(mem),
                 "start_quad": None,
                 "type": return_type,
-                "var_table": VarTable(),
-                "has_return_statement": False,
-                "body_defined": body_defined
             }
+            return self.func_dir[name]
 
     def get(self, name: str) -> Union[FuncInfo, None]:
         """
@@ -90,6 +100,4 @@ class FuncDir:
             print(f'Start quadruple: {value["start_quad"]}\n')
             print(f'Return address: {value["return_address"]}\n')
             value["param_table"].print("Parameters table")
-            print("\n")
-            value["var_table"].print("Variables table")
             print("\n")
