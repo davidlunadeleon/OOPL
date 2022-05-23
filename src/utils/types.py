@@ -8,6 +8,6 @@ TokenList = list[str]
 # Quadruple handling
 MemoryAddress = int | str | None
 MemoryType = bool | float | int | str
-Quadruple = Tuple[Operations, MemoryAddress, MemoryAddress, MemoryAddress]
-FunctionResources = Tuple[int, int, int, int] | None
+Quadruple = Tuple[Operations, MemoryAddress | str, MemoryAddress, MemoryAddress]
+FunctionResources = Tuple[int, int, int, int]
 TypeAddress = Tuple[Types, MemoryAddress]

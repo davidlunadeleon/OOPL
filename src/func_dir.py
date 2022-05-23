@@ -58,7 +58,7 @@ class FuncDir:
                 "body_defined": body_defined,
                 "has_return_statement": False,
                 "param_table": VarTable(),
-                "resources": None,
+                "resources": (0, 0, 0, 0),
                 "return_address": return_address,
                 "scope": Scope(mem),
                 "start_quad": None,
@@ -66,7 +66,7 @@ class FuncDir:
             }
             return self.func_dir[name]
 
-    def get(self, name: str) -> Union[FuncInfo, None]:
+    def get(self, name: str) -> FuncInfo:
         """
         Get a function in the directory.
 
@@ -74,9 +74,12 @@ class FuncDir:
         name: str -- Name of the function.
 
         Returns
-        Union[FuncInfo, None] -- None, if the function is not found.
+        FuncInfo -- Information about the function.
         """
-        return self.func_dir.get(name)
+        if (func_info := self.func_dir.get(name)) is not None:
+            return func_info
+        else:
+            raise Exception(f"Couldn't retrieve the information of function {name}.")
 
     def has(self, name: str) -> bool:
         """
