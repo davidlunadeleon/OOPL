@@ -127,10 +127,34 @@ class Parser:
             func_name, True, func_type, return_address, self.function_memory
         )
         self.function_stack.append(func_name)
-        self.scope_stack.push(Scope(self.function_memory))
+        self.scope_stack.push(func_info["scope"])
         for param_type, param_name in func_params:
             _, var_address = self.scope_stack.add_var(param_name, param_type)
             func_info["param_table"].add(param_name, param_type, var_address)
+
+    def p_function_header(self, p):
+        """
+        function_header    : simple_type_id function_parameters register_function_header SEMICOLON
+                           | void_id function_parameters register_function_header SEMICOLON
+        """
+
+    def p_register_function_header(self, p):
+        """
+        register_function_header   :
+        """
+        func_type, func_name = p[-2]
+        func_parameters = p[-1]
+        return_address = (
+            None if func_type is Types.VOID else self.global_memory.reserve(func_type)
+        )
+        func_info = self.func_dir.add(
+            func_name, False, func_type, return_address, self.function_memory
+        )
+        self.scope_stack.push(func_info["scope"])
+        for param_type, param_name in func_parameters:
+            _, var_address = self.scope_stack.add_var(param_name, param_type)
+            func_info["param_table"].add(param_name, param_type, var_address)
+        self.scope_stack.pop()
 
     def p_empty_list(self, p):
         """
@@ -346,30 +370,6 @@ class Parser:
         id_type = p[1]
         id = p[2]
         p[0] = (id_type, id)
-
-    def p_function_header(self, p):
-        """
-        function_header    : simple_type_id function_parameters register_function_header SEMICOLON
-                           | void_id function_parameters register_function_header SEMICOLON
-        """
-
-    def p_register_function_header(self, p):
-        """
-        register_function_header   :
-        """
-        func_type, func_name = p[-2]
-        func_parameters = p[-1]
-        return_address = (
-            None if func_type is Types.VOID else self.global_memory.reserve(func_type)
-        )
-        func_info = self.func_dir.add(
-            func_name, False, func_type, return_address, self.function_memory
-        )
-        self.scope_stack.push(func_info["scope"])
-        for param_type, param_name in func_parameters:
-            _, var_address = self.scope_stack.add_var(param_name, param_type)
-            func_info["param_table"].add(param_name, param_type, var_address)
-        self.scope_stack.pop()
 
     def p_call(self, p):
         """
