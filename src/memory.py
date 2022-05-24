@@ -11,9 +11,14 @@ class MemoryList(Generic[T]):
     values: list[T]
     start_address: int
 
-    def __init__(self, start: int) -> None:
+    def __init__(
+        self, start: int, size: Optional[int] = None, default_value: Optional[T] = None
+    ) -> None:
         self.start_address = start
-        self.values = []
+        if size is None or default_value is None:
+            self.values = []
+        else:
+            self.values = [default_value for _ in range(size)]
 
 
 class Memory:
@@ -23,12 +28,23 @@ class Memory:
     ints: MemoryList[int | None]
     strings: MemoryList[str | None]
 
-    def __init__(self, base_address: int, chunk_size: int = 1000) -> None:
+    def __init__(
+        self,
+        base_address: int,
+        chunk_size: int = 1000,
+        resources: Optional[FunctionResources] = None,
+    ) -> None:
         self.chunk_size = chunk_size
-        self.bools = MemoryList(base_address)
-        self.floats = MemoryList(base_address + self.chunk_size)
-        self.ints = MemoryList(base_address + self.chunk_size * 2)
-        self.strings = MemoryList(base_address + self.chunk_size * 3)
+        if resources is None:
+            self.bools = MemoryList(base_address)
+            self.floats = MemoryList(base_address + self.chunk_size)
+            self.ints = MemoryList(base_address + self.chunk_size * 2)
+            self.strings = MemoryList(base_address + self.chunk_size * 3)
+        else:
+            self.bools = MemoryList(base_address, resources[0])
+            self.floats = MemoryList(base_address + self.chunk_size, resources[1])
+            self.ints = MemoryList(base_address + self.chunk_size * 2, resources[2])
+            self.strings = MemoryList(base_address + self.chunk_size * 3, resources[3])
 
     def __get_list_from_index(self, index: int) -> MemoryList:
         if index < self.floats.start_address:
@@ -114,15 +130,11 @@ class Memory:
         )
 
     def print(self):
-        print("bools")
         for index, item in enumerate(self.bools.values):
-            print(f"{index + self.bools.start_address}\t{item}")
-        print("floats")
+            print(f"{index + self.bools.start_address},{item}")
         for index, item in enumerate(self.floats.values):
-            print(f"{index + self.floats.start_address}\t{item}")
-        print("ints")
+            print(f"{index + self.floats.start_address},{item}")
         for index, item in enumerate(self.ints.values):
-            print(f"{index + self.ints.start_address}\t{item}")
-        print("strings")
+            print(f"{index + self.ints.start_address},{item}")
         for index, item in enumerate(self.strings.values):
-            print(f"{index + self.strings.start_address}\t{item}")
+            print(f"{index + self.strings.start_address},{item}")
