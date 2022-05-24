@@ -20,7 +20,10 @@ class Constant:
             self.val = const_val
         else:
             raise TypeError("Invalid type passed to Constant constructor.")
-        self.address = memory.append(self.val)
+        if (address := memory.find(self.val)) is not None:
+            self.address = address
+        else:
+            self.address = memory.append(self.val)
 
     def get(self) -> TypeAddress:
         return (self.type, self.address, None)
