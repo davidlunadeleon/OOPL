@@ -1,17 +1,15 @@
 # Explanation: The function main is defined twice.
 
-int main()[] {
+int main() {
 	print("Fail!");
 }
 
 int main()
-[
+{
 	int x, y, i, j;
 	float z;
 	string f;
 	int mat[2][2];
-]
-{
 	x = 1;
 	z = x + 2.5;
 	y = z;
@@ -31,4 +29,5 @@ int main()
 			}
 		}
 	}
+	return 0;
 }

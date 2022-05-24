@@ -14,10 +14,8 @@ class Carro {
 }
 
 void main()
-[
-	Carro audi;
-]
 {
+	Carro audi;
 	audi.llantas = i;
 	audi.presion_aire = 20.0;
 	# Undeclared class property
