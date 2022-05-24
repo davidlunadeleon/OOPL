@@ -25,7 +25,7 @@ class Lexer:
         "read": "READ",
         "return": "RETURN",
         "string": "STRING",
-        "this": "THIS",
+        #        "this": "THIS",
         "void": "VOID",
         "while": "WHILE",
         "True": "BOOL_CONSTANT_TRUE",

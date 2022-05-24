@@ -410,9 +410,9 @@ class Parser:
     def p_type_id(self, p):
         """
         simple_type_id      : simple_type ID
-        composite_type_id   : composite_type ID
         void_id             : void ID
         """
+        # composite_type_id   : composite_type ID
         id_type = p[1]
         id = p[2]
         p[0] = (id_type, id)
