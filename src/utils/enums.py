@@ -1,7 +1,7 @@
-import enum
+from enum import Enum
 
 
-class Types(enum.Enum):
+class Types(Enum):
     BOOL = "bool"
     FLOAT = "float"
     INT = "int"
@@ -9,7 +9,7 @@ class Types(enum.Enum):
     VOID = "void"
 
 
-class Operations(enum.Enum):
+class Operations(Enum):
     AND = "&&"
     ASSIGNOP = "="
     DIFF = "!="
@@ -37,8 +37,14 @@ class Operations(enum.Enum):
     READ = "READ"
 
 
-class ScopeTypes(enum.Enum):
+class ScopeTypes(Enum):
     GLOBAL = "global"
     FUNCTION = "function"
     LOOP = "loop"
     GENERIC = "generic"
+
+
+class Segments(Enum):
+    GLOBAL_MEMORY = "%%global_memory"
+    FUNCTIONS = "%%functions"
+    QUADRUPLES = "%%quadruples"
