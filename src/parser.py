@@ -5,7 +5,7 @@ from .libs.ply import yacc
 
 from .func_dir import FuncDir
 from .lexer import Lexer
-from .utils.enums import Types, Operations, ScopeTypes
+from .utils.enums import Types, Operations, ScopeTypes, Segments
 from .utils.types import TokenList
 from .quadruple_list import QuadrupleList
 from .memory import Memory
@@ -27,8 +27,9 @@ class Parser:
     tokens: TokenList
     break_counter: list[int]
     break_stack: list[int]
+    verbose: bool
 
-    def __init__(self, lexer):
+    def __init__(self, lexer, verbose: bool):
         self.lexer = lexer
         self.tokens = lexer.tokens
         self.parser = yacc.yacc(module=self)
@@ -42,6 +43,7 @@ class Parser:
         self.scope_stack = ScopeStack()
         self.scope_stack.push(Scope(ScopeTypes.GLOBAL, self.global_memory))
         self.break_counter = []
+        self.verbose = verbose
 
     def parse(self, p):
         self.parser.parse(p)
@@ -81,9 +83,12 @@ class Parser:
                     raise Exception(
                         f"Function {func_name} was called but its body was not defined."
                     )
-        self.func_dir.print()
-        self.quads.print()
-        self.global_memory.print()
+        print(Segments.GLOBAL_MEMORY.value)
+        self.global_memory.print(self.verbose)
+        print(Segments.FUNCTIONS.value)
+        self.func_dir.print(self.verbose)
+        print(Segments.QUADRUPLES.value)
+        self.quads.print(self.verbose)
 
     def p_class(self, p):
         """
@@ -121,8 +126,10 @@ class Parser:
         # Only add if there is no return after and it is the end of the function
         if self.quads[self.quads.ptr - 1][0] != Operations.ENDSUB:
             self.quads.add((Operations.ENDSUB, None, None, None))
-        print(func_name)
-        self.function_memory.print()
+        if self.verbose:
+            print(f"# Function: {func_name}")
+            print(f"# Memory map:")
+            self.function_memory.print(True, True)
         self.function_memory.clear()
 
     def p_mark_function_begin(self, p):

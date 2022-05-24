@@ -17,12 +17,6 @@ from src.lexer import Lexer
 from src.parser import Parser
 
 
-# Build the lexer object
-lexer = Lexer()
-
-# Build the parser
-parser = Parser(lexer)
-
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser()
     argparser.add_argument("file", help="OOPL source file")
@@ -37,6 +31,12 @@ if __name__ == "__main__":
     )
     args = argparser.parse_args()
     # To execute lexer and parser, user will add the file to be tested as an argument
+
+    # Build the lexer object
+    lexer = Lexer()
+
+    # Build the parser
+    parser = Parser(lexer, args.verbose)
     try:
         with open(args.file, "r") as file:
             file_content = file.read()
