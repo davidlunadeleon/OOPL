@@ -19,9 +19,11 @@ class QuadrupleList:
     def __setitem__(self, index: int, quad: Quadruple) -> None:
         self.quads[index] = quad
 
-    def print(self) -> None:
+    def print(self, verbose: bool) -> None:
         for index, quad in enumerate(self.quads):
-            print(index, "\t", quad)
+            if verbose:
+                print(f"# {index}")
+            print(f"{quad[0].value},{quad[1]},{quad[2]},{quad[3]}")
 
     def reset_ptr(self) -> None:
         self.ptr = 0

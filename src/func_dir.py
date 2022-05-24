@@ -93,14 +93,15 @@ class FuncDir:
         """
         return False if self.func_dir.get(name) is None else True
 
-    def print(self) -> None:
+    def print(self, verbose: bool) -> None:
         """
         Print the function directory.
         """
         for key, value in self.func_dir.items():
-            print(f'Function: {key} with return type: {value["type"]}\n')
-            print(f'Resources: {value["resources"]}\n')
-            print(f'Start quadruple: {value["start_quad"]}\n')
-            print(f'Return address: {value["return_address"]}\n')
-            value["param_table"].print("Parameters table")
-            print("\n")
+            if verbose:
+                print(f'# Function: {key} with return type: {value["type"]}')
+                print(f'# Resources: {value["resources"]}')
+                print(f'# Start quadruple: {value["start_quad"]}')
+                print(f'# Return address: {value["return_address"]}')
+                value["param_table"].print("Parameters table", True)
+            print(f"{key},{value['start_quad']},{value['resources']}")

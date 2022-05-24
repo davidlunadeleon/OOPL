@@ -73,7 +73,7 @@ class VarTable:
         """
         return False if self.table.get(name) is None else True
 
-    def print(self, table_name: str) -> None:
+    def print(self, table_name: str, verbose: bool) -> None:
         """
         Print the VarTable
 
@@ -86,15 +86,16 @@ class VarTable:
         template_string = f"|{{:^{column_lenght}}}|{{:^{column_lenght}}}|{{:^{column_lenght}}}|{{:^{char_length - column_lenght * 3 - 2}}}|"
         bar = "".join(["-" * char_length])
         template_header = f"|{{:^{char_length - 2}}}|"
-        print(bar)
-        print(template_header.format(table_name))
-        print(bar)
-        print(template_string.format("Variable name", "Type", "Name", "Address"))
-        if len(self.table.items()) > 0:
-            for key, value in self.table.items():
-                print(
-                    template_string.format(
-                        key, value["type"], value["name"], str(value["address"])
+        if verbose:
+            print(f"# {bar}")
+            print(f"# {template_header.format(table_name)}")
+            print(f"# {bar}")
+            print(
+                f'# {template_string.format("Variable name", "Type", "Name", "Address")}'
+            )
+            if len(self.table.items()) > 0:
+                for key, value in self.table.items():
+                    print(
+                        f'# { template_string.format( key, value["type"], value["name"], str(value["address"]))}'
                     )
-                )
-        print(bar)
+            print(f"# {bar}")

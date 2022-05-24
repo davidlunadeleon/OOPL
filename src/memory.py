@@ -129,12 +129,22 @@ class Memory:
             len(self.strings.values),
         )
 
-    def print(self):
+    def print(self, verbose: bool, comment: bool = False):
         for index, item in enumerate(self.bools.values):
-            print(f"{index + self.bools.start_address},{item}")
+            if verbose:
+                print("# bools")
+            print(f"{'#' if comment else ''}{index + self.bools.start_address},{item}")
         for index, item in enumerate(self.floats.values):
-            print(f"{index + self.floats.start_address},{item}")
+            if verbose:
+                print("# floats")
+            print(f"{'#' if comment else ''}{index + self.floats.start_address},{item}")
         for index, item in enumerate(self.ints.values):
-            print(f"{index + self.ints.start_address},{item}")
+            if verbose:
+                print("# ints")
+            print(f"{'#' if comment else ''}{index + self.ints.start_address},{item}")
         for index, item in enumerate(self.strings.values):
-            print(f"{index + self.strings.start_address},{item}")
+            if verbose:
+                print("# strings")
+            print(
+                f"{'#' if comment else ''}{index + self.strings.start_address},{item}"
+            )
