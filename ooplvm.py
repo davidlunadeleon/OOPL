@@ -1,7 +1,7 @@
 import argparse
 
-from .src.vm import VM
-from .src.utils.enums import Segments
+from src.vm import VM
+from src.utils.enums import Segments
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
