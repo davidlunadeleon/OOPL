@@ -10,7 +10,7 @@
 #
 
 # Libraries
-import sys
+import argparse
 
 # Internal modules
 from src.lexer import Lexer
@@ -24,17 +24,23 @@ lexer = Lexer()
 parser = Parser(lexer)
 
 if __name__ == "__main__":
+    argparser = argparse.ArgumentParser()
+    argparser.add_argument("file", help="OOPL source file")
+    argparser.add_argument(
+        "-o", "--output", help="object file to generate", default="a.ooplobj"
+    )
+    argparser.add_argument(
+        "-v",
+        "--verbose",
+        help="show additional information of the compilation process",
+        action="store_true",
+    )
+    args = argparser.parse_args()
     # To execute lexer and parser, user will add the file to be tested as an argument
-    if len(sys.argv) == 2:
-        name = sys.argv[1]
-        try:
-            with open(name, "r") as file:
-                file_content = file.read()
-                # Parse an expression
-                parser.parse(file_content)
-        except (EOFError, FileNotFoundError) as e:
-            print(e)
-    else:
-        print(
-            "Error: Incorrect argument list. Only one filename should be added for testing besides the file that contains the lexer and parser."
-        )
+    try:
+        with open(args.file, "r") as file:
+            file_content = file.read()
+            # Parse an expression
+            parser.parse(file_content)
+    except (EOFError, FileNotFoundError) as e:
+        print(e)
