@@ -22,3 +22,17 @@ class QuadrupleList:
     def print(self) -> None:
         for index, quad in enumerate(self.quads):
             print(index, "\t", quad)
+
+    def reset_ptr(self) -> None:
+        self.ptr = 0
+
+    def __iter__(self):
+        self.reset_ptr()
+        return self
+
+    def __next__(self):
+        if self.ptr < len(self.quads):
+            self.ptr += 1
+            return self.quads[self.ptr - 1]
+        else:
+            raise StopIteration
