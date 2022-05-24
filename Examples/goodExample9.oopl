@@ -1,9 +1,9 @@
-int two()[]
+int two()
 {
 	return 1 + 1;
 }
 
-int add_or_sub(int x, int y)[]
+int add_or_sub(int x, int y)
 {
 	if (x > y) {
 		return x + y;
@@ -13,12 +13,10 @@ int add_or_sub(int x, int y)[]
 }
 
 int main()
-[
+{
 	string str;
 	int two;
 	int test;
-]
-{
 	two = two();
 	test = add_or_sub(1, 2);
 	str = "Hello!";

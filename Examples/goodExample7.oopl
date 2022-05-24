@@ -1,22 +1,21 @@
-int two()[]
+int two()
 {
 	return 1 + 1;
 }
 
-int add(int x, int y)[]
+int add(int x, int y)
 {
 	return x + y;
 }
 
 int main()
-[
+{
 	int x, y;
 	bool b1, b2;
 	float a;
 	string str;
-]
-{
 	str = "Hello!";
+	
 	for (x = y = 1; x < 10; x = x + 1) {
 		b1 = True;
 		b2 = b1 || True;

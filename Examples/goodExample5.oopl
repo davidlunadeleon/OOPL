@@ -1,21 +1,19 @@
-int two()[]
+int two()
 {
 	return 1 + 1;
 }
 
-int add(int x, int y)[]
+int add(int x, int y)
 {
 	return x + y;
 }
 
 int main()
-[
+{
 	int x, y;
 	bool b1, b2;
 	float a;
 	string str;
-]
-{
 	x = 1;
 	x = 1 + 2 * 3;
 	x = 1 - 2 + 1 / 3;

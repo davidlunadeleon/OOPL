@@ -15,10 +15,8 @@ class CarroLujo : Carro {
 }
 
 void main()
-[
-	CarroLujo ferrari;
-]
 {
+	CarroLujo ferrari;
 	ferrari.quemacocos = True;
 	ferrari.asientos_piel = False;
 	ferrari.presion_aire = 25.0;

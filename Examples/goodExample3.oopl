@@ -1,14 +1,14 @@
 int main()
-[
+{
 	int x, y, i, j;
 	float z;
 	string f;
 	# int mat[2][2];
-]
-{
+
 	x = 1;
 	z = x + 2.5;
 	y = z;
+
 	if (x == y) {
 		while (x < 10) {
 			x = x + 1;
@@ -25,4 +25,5 @@ int main()
 			}
 		}
 	}
+	return 0;
 }
