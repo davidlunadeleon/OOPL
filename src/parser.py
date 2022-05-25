@@ -1,7 +1,6 @@
 # OOPL parser
 
 # Import libraries
-from array import array
 from .libs.ply import yacc
 
 from .array_info import ArrayInfo
@@ -206,6 +205,7 @@ class Parser:
         id_list             :
         simple_id_list      :
         dimension           :
+        constant_dimension  :
         """
         p[0] = []
 
@@ -480,14 +480,14 @@ class Parser:
         """
         variable    : ID DOT ID
                     | ID dimension
-                    | ID
         """
-        if len(p) == 2:
-            var_info = self.scope_stack.get_var(p[1])
-            if var_info is not None:
-                p[0] = var_info
-        else:
+        if len(p) == 4:
             pass
+        else:
+            if len(p[2]) == 0:
+                p[0] = self.scope_stack.get_var(p[1])
+            else:
+                var_info = self.scope_stack.get_var(p[1])
 
     def p_read(self, p):
         """
@@ -513,7 +513,7 @@ class Parser:
     def p_var_decl(self, p):
         """
         var_decl : composite_type ID id_list SEMICOLON
-                 | simple_type ID dimension simple_id_list SEMICOLON
+                 | simple_type ID constant_dimension simple_id_list SEMICOLON
         """
         var_type = p[1]
         if len(p) == 5:
@@ -532,7 +532,13 @@ class Parser:
 
     def p_dimension(self, p):
         """
-        dimension   : LBRACK int_constant RBRACK dimension
+        dimension   : LBRACK expr RBRACK dimension
+        """
+        p[0] = [p[2], *p[4]]
+
+    def p_constant_dimension(self, p):
+        """
+        constant_dimension  : LBRACK int_constant RBRACK constant_dimension
         """
         p[0] = [p[2], *p[4]]
 
@@ -544,7 +550,7 @@ class Parser:
 
     def p_simple_id_list(self, p):
         """
-        simple_id_list  :   COMMA ID dimension simple_id_list
+        simple_id_list  :   COMMA ID constant_dimension simple_id_list
         """
         p[0] = [(p[2], p[3]), *p[4]]
 
