@@ -1,6 +1,7 @@
 from typing import Tuple
 
 from .enums import Operations, Types
+from ..array_info import ArrayInfo
 
 # Parsing and lexing
 TokenList = list[str]
@@ -10,4 +11,4 @@ MemoryAddress = int | None
 MemoryType = bool | float | int | str
 Quadruple = Tuple[Operations, MemoryAddress, MemoryAddress, MemoryAddress | str]
 FunctionResources = Tuple[int, int, int, int]
-TypeAddress = Tuple[Types, MemoryAddress, str | None]
+TypeAddress = Tuple[Types, MemoryAddress, str | None, ArrayInfo]
