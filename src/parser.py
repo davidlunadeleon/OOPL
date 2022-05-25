@@ -37,12 +37,12 @@ class Parser:
         self.parser = yacc.yacc(module=self)
         self.break_counter = []
         self.break_stack = []
-        self.func_dir = CFuncDir()
         self.function_memory = Memory(4000)
         self.function_stack = []
         self.global_memory = Memory(0)
         self.jump_stack = []
         self.scope_stack = ScopeStack()
+        self.func_dir = CFuncDir()
         self.scope_stack.push(Scope(ScopeTypes.GLOBAL, self.global_memory))
         self.verbose = verbose
 
@@ -165,8 +165,8 @@ class Parser:
         self.function_stack.append(func_name)
         self.scope_stack.push(func_info["scope"])
         for param_type, param_name in func_params:
-            _, var_address, _ = self.scope_stack.add_var(param_name, param_type)
-            func_info["param_table"].add(param_name, param_type, var_address)
+            _, var_address, _ = self.scope_stack.add_var(param_name, param_type, None)
+            func_info["param_table"].add(param_name, param_type, var_address, None)
 
     def p_function_header(self, p):
         """
@@ -190,8 +190,13 @@ class Parser:
         )
         self.scope_stack.push(func_info["scope"])
         for param_type, param_name in func_parameters:
-            _, var_address, _ = self.scope_stack.add_var(param_name, param_type)
-            func_info["param_table"].add(param_name, param_type, var_address)
+            array_info = ArrayInfo()
+            _, var_address, _ = self.scope_stack.add_var(
+                param_name, param_type, array_info
+            )
+            func_info["param_table"].add(
+                param_name, param_type, var_address, array_info
+            )
         self.scope_stack.pop()
 
     def p_empty_list(self, p):
@@ -454,17 +459,14 @@ class Parser:
                 else:
                     for arg, param in zip(func_args, param_table.table.items()):
                         _, param_info = param
-                        param_type = param_info["type"]
-                        param_addr = param_info["address"]
-                        param_name = param_info["name"]
                         arg_type, arg_addr, _ = arg
-                        if param_type is arg_type:
+                        if param_info.type is arg_type:
                             self.quads.add(
-                                (Operations.PARAM, arg_addr, None, param_addr)
+                                (Operations.PARAM, arg_addr, None, param_info.address)
                             )
                         else:
                             raise TypeError(
-                                f"Wrong parameter {param_name} in call to {func_name}. Expected {param_type} but received {arg_type}."
+                                f"Wrong parameter {param_info.name} in call to {func_name}. Expected {param_info.type} but received {arg_type}."
                             )
 
                     self.quads.add((Operations.GOSUB, None, None, func_name))
@@ -521,11 +523,12 @@ class Parser:
         else:
             var_names = [(p[2], p[3]), *p[4]]
             for var_name, dimensions in var_names:
-                var_info = self.scope_stack.add_var(var_name, var_type, ArrayInfo())
+                array_info = ArrayInfo()
                 for _, index, _ in dimensions:
                     value = int(self.global_memory[index])
-                    var_info[3].add_dim(value)
-                var_info[3].update_dims()
+                    array_info.add_dim(value)
+                array_info.update_dims()
+                self.scope_stack.add_var(var_name, var_type, array_info)
 
     def p_dimension(self, p):
         """
