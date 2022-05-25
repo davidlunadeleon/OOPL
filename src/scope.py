@@ -15,6 +15,7 @@ class Scope:
     def __init__(self, type: ScopeTypes, mem: Memory) -> None:
         self.mem = mem
         self.type = type
+        self.var_table = VarTable()
 
     def has(self, var_name: str) -> bool:
         return self.var_table.has(var_name)

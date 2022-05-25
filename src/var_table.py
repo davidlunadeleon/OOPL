@@ -63,6 +63,7 @@ class VarTable:
         Print the VarTable
         """
         if verbose:
+            print(f"# {table_name}")
             var_string_list = self.__str__().split("\n")
             for value in var_string_list:
                 print(f"# {value}")
