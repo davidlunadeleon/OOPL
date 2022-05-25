@@ -10,8 +10,10 @@ class VM:
     quads: QuadrupleList
 
     def __init__(self) -> None:
-        self.global_memory = Memory(0)
         self.quads = QuadrupleList()
+
+    def init_global_memory(self, global_resources: FunctionResources) -> None:
+        self.global_memory = Memory(0, 1000, global_resources)
 
     def add_function(self, name: str, resources: FunctionResources, start_quad: int):
         pass
@@ -19,7 +21,7 @@ class VM:
     def add_quadruple(self, quad: Quadruple):
         self.quads.add(quad)
 
-    def add_global_variable(self, addr: int, val: MemoryType):
+    def set_global_variable(self, addr: int, val: MemoryType):
         self.global_memory[addr] = val
 
     def run(self):
