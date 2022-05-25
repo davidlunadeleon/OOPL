@@ -18,10 +18,6 @@ class Operations(Enum):
     EQ = "=="
     EQGT = ">="
     EQLT = "<="
-    ERAB = "ERAB"
-    ERAF = "ERAF"
-    ERAI = "ERAI"
-    ERAS = "ERAS"
     GOSUB = "GOSUB"
     GOTO = "GOTO"
     GOTOF = "GOTOF"
@@ -32,20 +28,20 @@ class Operations(Enum):
     OR = "||"
     PARAM = "PARAM"
     PLUS = "+"
-    TIMES = "*"
     PRINT = "PRINT"
     READ = "READ"
+    TIMES = "*"
 
 
 class ScopeTypes(Enum):
-    GLOBAL = "global"
     FUNCTION = "function"
-    LOOP = "loop"
     GENERIC = "generic"
+    GLOBAL = "global"
+    LOOP = "loop"
 
 
 class Segments(Enum):
-    GLOBAL_MEMORY = "%%global_memory"
     FUNCTIONS = "%%functions"
-    QUADRUPLES = "%%quadruples"
+    GLOBAL_MEMORY = "%%global_memory"
     GLOBAL_RESOURCES = "%%global_resources"
+    QUADRUPLES = "%%quadruples"

@@ -45,11 +45,7 @@ class Parser:
         self.verbose = verbose
 
         self.quads = QuadrupleList()
-        self.quads.add((Operations.ERAB, None, None, None))
-        self.quads.add((Operations.ERAF, None, None, None))
-        self.quads.add((Operations.ERAI, None, None, None))
-        self.quads.add((Operations.ERAS, None, None, None))
-        self.quads.add((Operations.GOSUB, "main", None, None))
+        self.quads.add((Operations.GOSUB, None, None, "main"))
 
     def parse(self, p):
         self.parser.parse(p)
@@ -72,26 +68,14 @@ class Parser:
         """
         finish  :
         """
-        for index, quad in enumerate(self.quads.quads):
-            op, func_name, _, _ = quad
+        for quad in self.quads:
+            op, _, _, func_name = quad
             if op is Operations.GOSUB:
-                if (
+                if not (
                     isinstance(func_name, str)
                     and self.func_dir.has(func_name)
-                    and (func_info := self.func_dir.get(func_name))["body_defined"]
+                    and self.func_dir.get(func_name)["body_defined"]
                 ):
-                    bools, floats, ints, strings = func_info["resources"]
-                    self.quads[index - 4] = (Operations.ERAB, None, None, bools)
-                    self.quads[index - 3] = (Operations.ERAF, None, None, floats)
-                    self.quads[index - 2] = (Operations.ERAI, None, None, ints)
-                    self.quads[index - 1] = (Operations.ERAS, None, None, strings)
-                    self.quads[index] = (
-                        Operations.GOSUB,
-                        func_name,
-                        None,
-                        func_info["start_quad"],
-                    )
-                else:
                     raise Exception(
                         f"Function {func_name} was called but its body was not defined."
                     )
@@ -460,10 +444,6 @@ class Parser:
             if func_name == "main":
                 raise Exception(f"Main function cannot be called.")
             if (func_info := self.func_dir.get(func_name)) is not None:
-                self.quads.add((Operations.ERAB, None, None, None))
-                self.quads.add((Operations.ERAF, None, None, None))
-                self.quads.add((Operations.ERAI, None, None, None))
-                self.quads.add((Operations.ERAS, None, None, None))
                 param_table = func_info["param_table"]
                 if len(func_args) != len(param_table.table.items()):
                     raise Exception(
@@ -485,7 +465,7 @@ class Parser:
                                 f"Wrong parameter {param_name} in call to {func_name}. Expected {param_type} but received {arg_type}."
                             )
 
-                    self.quads.add((Operations.GOSUB, func_name, None, None))
+                    self.quads.add((Operations.GOSUB, None, None, func_name))
                     p[0] = (func_info["type"], func_info["return_address"], None)
             else:
                 raise Exception(f"Function {func_name} has not been declared.")

@@ -6,8 +6,8 @@ from .enums import Operations, Types
 TokenList = list[str]
 
 # Quadruple handling
-MemoryAddress = int | str | None
+MemoryAddress = int | None
 MemoryType = bool | float | int | str
-Quadruple = Tuple[Operations, MemoryAddress | str, MemoryAddress, MemoryAddress]
+Quadruple = Tuple[Operations, MemoryAddress, MemoryAddress, MemoryAddress | str]
 FunctionResources = Tuple[int, int, int, int]
 TypeAddress = Tuple[Types, MemoryAddress, str | None]
