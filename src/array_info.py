@@ -41,7 +41,6 @@ class ArrayInfo:
         """
         Update the values of the m arguments of each node and array final size.
         """
-        print(type(self.table))
         if len(self.table) >= 1:
             self.size = self.table[-1].R
             for i, dim in enumerate(self.table):
@@ -51,4 +50,4 @@ class ArrayInfo:
                     self.table[i].m = int(self.table[i - 1].m / dim.lim_s)
 
     def __str__(self) -> str:
-        return f"<size:{self.size},table:{self.table}>"
+        return f"<size:{self.size},table:{[dim_info.__str__() for dim_info in self.table]}>"
