@@ -115,9 +115,11 @@ class Memory:
         l = self.__get_list_from_type(value)
         return self.__append(l, value)
 
-    def reserve(self, t: Types) -> MemoryAddress:
+    def reserve(self, t: Types, size: int = 1) -> MemoryAddress:
         l = self.__get_list_from_t(t)
-        return self.__append(l, None)
+        initial_address = self.__append(l, None)
+        [self.__append(l, None) for _ in range(size - 1)]
+        return initial_address
 
     def find(self, value: MemoryType) -> MemoryAddress:
         l = self.__get_list_from_type(value)
