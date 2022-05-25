@@ -3,8 +3,8 @@ int main()
 	int x, y, i, j;
 	float z;
 	string f;
-	int mat[2][2];
-	float f1[1][3], f2[6][10];
+	int arr[5];
+	float mat[4][8], mat2[6][10];
 
 	x = 1;
 	z = x + 2.5;

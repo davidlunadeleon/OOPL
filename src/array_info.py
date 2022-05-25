@@ -16,11 +16,11 @@ class DimInfo():
         self.m = m
 
 class ArrayInfo:
-    table: list()
+    table: list[DimInfo]
     size: int
 
     def __init__(self) -> None:
-        self.table = list()
+        self.table = []
         self.size = 0
 
     def add_dim(self, lim_s: int) -> DimInfo:

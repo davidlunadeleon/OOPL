@@ -1,6 +1,7 @@
 # OOPL parser
 
 # Import libraries
+from array import array
 from .libs.ply import yacc
 
 from .func_dir import CFuncDir
@@ -28,6 +29,8 @@ class Parser:
     scope_stack: ScopeStack
     tokens: TokenList
     verbose: bool
+    multiple_var_type: Types
+    array_contoller: str
 
     def __init__(self, lexer, verbose: bool):
         self.lexer = lexer
@@ -43,6 +46,8 @@ class Parser:
         self.scope_stack = ScopeStack()
         self.scope_stack.push(Scope(ScopeTypes.GLOBAL, self.global_memory))
         self.verbose = verbose
+        self.multiple_var_type = None
+        self.array_contoller = None
 
         self.quads = QuadrupleList()
         self.quads.add((Operations.GOSUB, None, None, "main"))
@@ -514,42 +519,76 @@ class Parser:
 
     def p_var_decl(self, p):
         """
-        var_decl : composite_type ID id_list SEMICOLON
-                 | simple_type ID matrix_row SEMICOLON
+        var_decl : composite_type multiple_var_type_defined ID add_var_to_scope id_list SEMICOLON
+                 | simple_type multiple_var_type_defined ID add_var_to_scope matrix_row SEMICOLON
         """
-        var_type = p[1]
-        var_names = [p[2], *p[3]]
-        for var_name in var_names:
-            # If it is an array, calculate array nodes for dimensions
-            self.scope_stack.add_var(var_name, var_type)
+        # var_type = p[1]
+        # var_names = [p[2], *p[4]]
+        # for var_name in var_names:
+        #     self.scope_stack.add_var(var_name, var_type, None)
+    
+    def p_multiple_var_type_defined(self, p):
+        """
+        multiple_var_type_defined :
+        """
+        self.multiple_var_type = p[-1]
+    
+    def p_add_var_to_scope(self, p):
+        """
+        add_var_to_scope :
+        """
+        var_type = self.multiple_var_type
+        var_name = p[-1]
+        self.scope_stack.add_var(var_name, var_type, None)
 
     def p_id_list(self, p):
         """
-        id_list : COMMA ID id_list
+        id_list : COMMA ID add_var_to_scope id_list
         """
-        p[0] = [p[2], *p[3]]
+        # p[0] = [p[2], *p[3]]
 
     def p_matrix_row(self, p):
         """
-        matrix_row  : LBRACK INT_CONSTANT RBRACK matrix_column
+        matrix_row  : LBRACK array_controller_defined int_constant add_dimension_to_array RBRACK matrix_column
                     | simple_id_list
         """
-        if len(p) == 5:
-            p[0] = p[4]
-        else:
-            p[0] = p[1]
+        # if len(p) == 5:
+        #     p[0] = p[4]
+        # else:
+        #     p[0] = p[1]
+    
+    def p_array_controller_defined(self, p):
+        """
+        array_controller_defined :
+        """
+        self.array_contoller = p[-3]
+    
+    def p_add_dimension_to_array(self, p):
+        """
+        add_dimension_to_array :
+        """
+        print('HEEEREEE')
+        print(p[-1])
+        print(self.function_memory[p[-1][1]])
+        self.scope_stack.add_dimension_to_array(self.array_contoller, p[-1])
+    
+    def p_update_array_info(self, p):
+        """
+        update_array_info :
+        """
+        self.scope_stack.update_array_info(self.array_contoller)
 
     def p_matrix_column(self, p):
         """
-        matrix_column   :  LBRACK INT_CONSTANT RBRACK simple_id_list
+        matrix_column   :  LBRACK int_constant add_dimension_to_array RBRACK simple_id_list
         """
-        p[0] = p[4]
+        # p[0] = p[4]
 
     def p_simple_id_list(self, p):
         """
-        simple_id_list  :   COMMA ID matrix_row
+        simple_id_list  :   COMMA ID add_var_to_scope matrix_row
         """
-        p[0] = [p[2], *p[3]]
+        # p[0] = [p[2], *p[3]]
 
     def p_operators(self, p):
         """
