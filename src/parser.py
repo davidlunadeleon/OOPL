@@ -497,7 +497,7 @@ class Parser:
         """
         if p[3] is not None:
             _, expr_addr, _ = p[3]
-            self.quads.add((Operations.READ, expr_addr, None, None))
+            self.quads.add((Operations.READ, None, None, expr_addr))
         else:
             raise Exception(f"No variable found with the id {p[3]}.")
 
