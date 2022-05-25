@@ -16,6 +16,8 @@ from .scope import Scope
 
 
 class Parser:
+    break_counter: list[int]
+    break_stack: list[int]
     func_dir: FuncDir
     function_memory: Memory
     function_stack: list[str]
@@ -25,25 +27,29 @@ class Parser:
     quads: QuadrupleList
     scope_stack: ScopeStack
     tokens: TokenList
-    break_counter: list[int]
-    break_stack: list[int]
     verbose: bool
 
     def __init__(self, lexer, verbose: bool):
         self.lexer = lexer
         self.tokens = lexer.tokens
         self.parser = yacc.yacc(module=self)
+        self.break_counter = []
+        self.break_stack = []
         self.func_dir = FuncDir()
         self.function_memory = Memory(4000)
         self.function_stack = []
         self.global_memory = Memory(0)
         self.jump_stack = []
-        self.break_stack = []
-        self.quads = QuadrupleList()
         self.scope_stack = ScopeStack()
         self.scope_stack.push(Scope(ScopeTypes.GLOBAL, self.global_memory))
-        self.break_counter = []
         self.verbose = verbose
+
+        self.quads = QuadrupleList()
+        self.quads.add((Operations.ERAB, None, None, None))
+        self.quads.add((Operations.ERAF, None, None, None))
+        self.quads.add((Operations.ERAI, None, None, None))
+        self.quads.add((Operations.ERAS, None, None, None))
+        self.quads.add((Operations.GOSUB, "main", None, None))
 
     def parse(self, p):
         self.parser.parse(p)
@@ -79,6 +85,12 @@ class Parser:
                     self.quads[index - 3] = (Operations.ERAF, None, None, floats)
                     self.quads[index - 2] = (Operations.ERAI, None, None, ints)
                     self.quads[index - 1] = (Operations.ERAS, None, None, strings)
+                    self.quads[index] = (
+                        Operations.GOSUB,
+                        func_name,
+                        None,
+                        func_info["start_quad"],
+                    )
                 else:
                     raise Exception(
                         f"Function {func_name} was called but its body was not defined."
@@ -147,6 +159,11 @@ class Parser:
         """
         func_type, func_name = p[-2]
         func_params = p[-1]
+        if func_name == "main":
+            if func_type is not Types.INT:
+                raise Exception("Return type of main function must be int.")
+            if len(func_params) > 0:
+                raise Exception("Main function can't take any parameters.")
         return_address = (
             None if func_type is Types.VOID else self.global_memory.reserve(func_type)
         )
@@ -171,6 +188,8 @@ class Parser:
         """
         func_type, func_name = p[-2]
         func_parameters = p[-1]
+        if func_name == "main":
+            raise Exception("Can't declare main via forward definition.")
         return_address = (
             None if func_type is Types.VOID else self.global_memory.reserve(func_type)
         )
@@ -432,6 +451,8 @@ class Parser:
         if len(p) == 3:
             func_name = p[1]
             func_args = p[2]
+            if func_name == "main":
+                raise Exception(f"Main function cannot be called.")
             if (func_info := self.func_dir.get(func_name)) is not None:
                 self.quads.add((Operations.ERAB, None, None, None))
                 self.quads.add((Operations.ERAF, None, None, None))
@@ -458,9 +479,7 @@ class Parser:
                                 f"Wrong parameter {param_name} in call to {func_name}. Expected {param_type} but received {arg_type}."
                             )
 
-                    self.quads.add(
-                        (Operations.GOSUB, func_name, None, func_info["start_quad"])
-                    )
+                    self.quads.add((Operations.GOSUB, func_name, None, None))
                     p[0] = (func_info["type"], func_info["return_address"], None)
             else:
                 raise Exception(f"Function {func_name} has not been declared.")
