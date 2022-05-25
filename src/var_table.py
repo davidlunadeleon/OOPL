@@ -1,15 +1,7 @@
-from typing import TypedDict
-
 from .array_info import ArrayInfo
 from .utils.enums import Types
 from .utils.types import MemoryAddress
-
-
-class VarInfo(TypedDict):
-    name: str
-    type: Types
-    address: MemoryAddress
-    array_info: ArrayInfo
+from .var_info import VarInfo
 
 
 class VarTable:
@@ -23,34 +15,18 @@ class VarTable:
     ) -> VarInfo:
         """
         Insert a new variable to the table.
-
-        Arguments:
-        name: str -- Name of the variable.
-        var_type: str -- Type of the variable.
-        address: MemoryAddress -- Address of the variable.
         """
         if name in self.table:
             raise Exception(f"The variable {name} is already in the table.")
         else:
-            self.table[name] = {
-                "name": name,
-                "type": var_type,
-                "address": address,
-                "array_info": array_info,
-            }
+            self.table[name] = VarInfo(name, var_type, address, array_info)
             return self.table[name]
 
     def get(self, name: str) -> VarInfo:
         """
         Get a variable in the table.
-
-        Arguments:
-        name: str -- Variable to get.
-
-        Returns:
-        VarInfo -- Information about the variable.
         """
-        if (var_info := self.table[name]) is not None:
+        if (var_info := self.table.get(name)) is not None:
             return var_info
         else:
             raise Exception(f"Can't retrieve variable with name {name}.")
@@ -58,36 +34,21 @@ class VarTable:
     def get_from_address(self, address: MemoryAddress) -> VarInfo:
         """
         Get a variable in the table.
-
-        Arguments:
-        addr: MemoryAddress -- Variable to get.
-
-        Returns:
-        VarInfo -- Information about the variable.
         """
-        for k, v in self.table.items():
-            if v["address"] == address:
-                return v
+        for var_info in self.table.values():
+            if var_info.address == address:
+                return var_info
         raise Exception(f"Can't retrieve variable with address {address}.")
 
     def has(self, name: str) -> bool:
         """
         Check whether a variable is contained in the table.
-
-        Arguments:
-        name: str -- Name of the variable to check.
-
-        Returns:
-        bool: True, if it exists, otherwise, False.
         """
         return False if self.table.get(name) is None else True
 
     def print(self, table_name: str, verbose: bool) -> None:
         """
         Print the VarTable
-
-        Arguments:
-        table_name: str -- Name to print in the table header.
         """
         # TODO: Look for a better printing method. This thing is UGLY!
         char_length = 100
