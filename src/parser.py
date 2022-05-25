@@ -534,6 +534,7 @@ class Parser:
         var_type = p[1]
         var_names = [p[2], *p[3]]
         for var_name in var_names:
+            # If it is an array, calculate array nodes for dimensions
             self.scope_stack.add_var(var_name, var_type)
 
     def p_id_list(self, p):
