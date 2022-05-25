@@ -1,7 +1,7 @@
 import argparse
 
 from src.vm import VM
-from src.utils.enums import Segments
+from src.utils.enums import Segments, Operations
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -38,12 +38,19 @@ if __name__ == "__main__":
                     )
                     pass
                 elif segment is Segments.QUADRUPLES:
-                    pass
+                    addr1 = None if line[1] == "None" else int(line[1])
+                    addr2 = None if line[2] == "None" else int(line[2])
+                    try:
+                        addr3 = None if line[3] == "None" else int(line[3])
+                    except ValueError:
+                        addr3 = line[3]
+                    vm.add_quadruple((Operations(line[0]), addr1, addr2, addr3))
                 elif segment is Segments.GLOBAL_RESOURCES:
                     vm.init_global_memory(
                         (int(line[0]), int(line[1]), int(line[2]), int(line[3]))
                     )
-        vm.func_dir.print(True)
         vm.run()
+        vm.global_memory.print(True)
+        vm.function_memory.print(True)
     except (EOFError, FileNotFoundError) as e:
         print(e)
