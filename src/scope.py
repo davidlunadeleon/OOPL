@@ -1,8 +1,8 @@
-from src.array_info import ArrayInfo
+from .array_info import ArrayInfo
 from .memory import Memory
-from .var_table import VarTable
-from .utils.types import TypeAddress
 from .utils.enums import Types, ScopeTypes
+from .utils.types import TypeAddress
+from .var_table import VarTable
 
 
 class Scope:
@@ -20,8 +20,20 @@ class Scope:
 
     def get(self, var_name: str) -> TypeAddress:
         var_info = self.var_table.get(var_name)
-        return var_info["type"], var_info["address"], var_info["name"], var_info["array_info"]
+        return (
+            var_info["type"],
+            var_info["address"],
+            var_info["name"],
+            var_info["array_info"],
+        )
 
     def add(self, var_name: str, var_type: Types, array_info: ArrayInfo) -> TypeAddress:
-        var_info = self.var_table.add(var_name, var_type, self.mem.reserve(var_type), array_info)
-        return var_info["type"], var_info["address"], var_info["name"], var_info["array_info"]
+        var_info = self.var_table.add(
+            var_name, var_type, self.mem.reserve(var_type), array_info
+        )
+        return (
+            var_info["type"],
+            var_info["address"],
+            var_info["name"],
+            var_info["array_info"],
+        )

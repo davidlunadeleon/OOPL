@@ -30,7 +30,7 @@ class Parser:
     tokens: TokenList
     verbose: bool
     multiple_var_type: Types
-    array_contoller: str
+    array_controller: str
 
     def __init__(self, lexer, verbose: bool):
         self.lexer = lexer
@@ -47,7 +47,7 @@ class Parser:
         self.scope_stack.push(Scope(ScopeTypes.GLOBAL, self.global_memory))
         self.verbose = verbose
         self.multiple_var_type = None
-        self.array_contoller = None
+        self.array_controller = None
 
         self.quads = QuadrupleList()
         self.quads.add((Operations.GOSUB, None, None, "main"))
@@ -526,13 +526,13 @@ class Parser:
         # var_names = [p[2], *p[4]]
         # for var_name in var_names:
         #     self.scope_stack.add_var(var_name, var_type, None)
-    
+
     def p_multiple_var_type_defined(self, p):
         """
         multiple_var_type_defined :
         """
         self.multiple_var_type = p[-1]
-    
+
     def p_add_var_to_scope(self, p):
         """
         add_var_to_scope :
@@ -556,27 +556,27 @@ class Parser:
         #     p[0] = p[4]
         # else:
         #     p[0] = p[1]
-    
+
     def p_array_controller_defined(self, p):
         """
         array_controller_defined :
         """
-        self.array_contoller = p[-3]
-    
+        self.array_controller = p[-3]
+
     def p_add_dimension_to_array(self, p):
         """
         add_dimension_to_array :
         """
-        print('HEEEREEE')
+        print("HEEEREEE")
         print(p[-1])
         print(self.function_memory[p[-1][1]])
-        self.scope_stack.add_dimension_to_array(self.array_contoller, p[-1])
-    
+        self.scope_stack.add_dimension_to_array(self.array_controller, p[-1])
+
     def p_update_array_info(self, p):
         """
         update_array_info :
         """
-        self.scope_stack.update_array_info(self.array_contoller)
+        self.scope_stack.update_array_info(self.array_controller)
 
     def p_matrix_column(self, p):
         """
