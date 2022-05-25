@@ -4,7 +4,7 @@ from .utils.types import MemoryType, MemoryAddress
 from .utils.enums import Types
 from .utils.types import FunctionResources
 
-T = TypeVar("T")
+T = TypeVar("T", None, bool | None, float | None, int | None, str | None)
 
 
 class MemoryList(Generic[T]):
@@ -15,7 +15,7 @@ class MemoryList(Generic[T]):
         self, start: int, size: Optional[int] = None, default_value: Optional[T] = None
     ) -> None:
         self.start_address = start
-        if size is None or default_value is None:
+        if size is None:
             self.values = []
         else:
             self.values = [default_value for _ in range(size)]
@@ -89,6 +89,16 @@ class Memory:
 
     def __setitem__(self, index: int, value: MemoryType) -> None:
         l = self.__get_list_from_index(index)
+
+        if l == self.bools:
+            value = True if value == "True" else False
+        elif l == self.floats:
+            value = float(value)
+        elif l == self.ints:
+            value = int(value)
+        else:
+            value = str(value)
+
         index -= l.start_address
         l.values[index] = value
 

@@ -48,3 +48,4 @@ class Segments(Enum):
     GLOBAL_MEMORY = "%%global_memory"
     FUNCTIONS = "%%functions"
     QUADRUPLES = "%%quadruples"
+    GLOBAL_RESOURCES = "%%global_resources"

@@ -16,18 +16,28 @@ if __name__ == "__main__":
     try:
         with open(args.file, "r") as file:
             for line in file.readlines():
+                line = line.removesuffix("\n")
+
                 if line[0] == "#":
                     # Skip comments and debug information.
                     continue
                 if line in segments:
                     segment = Segments(line)
-                print(line)
+                    continue
+                else:
+                    line = line.removeprefix("(").removesuffix(")").split(",")
+
                 if segment is Segments.GLOBAL_MEMORY:
-                    pass
+                    if line[1] != "None":
+                        vm.set_global_variable(int(line[0]), line[1])
                 elif segment is Segments.FUNCTIONS:
                     pass
                 elif segment is Segments.QUADRUPLES:
                     pass
+                elif segment is Segments.GLOBAL_RESOURCES:
+                    vm.init_global_memory(
+                        (int(line[0]), int(line[1]), int(line[2]), int(line[3]))
+                    )
         vm.run()
     except (EOFError, FileNotFoundError) as e:
         print(e)

@@ -95,6 +95,8 @@ class Parser:
                     raise Exception(
                         f"Function {func_name} was called but its body was not defined."
                     )
+        print(Segments.GLOBAL_RESOURCES.value)
+        print(self.global_memory.describe_resources())
         print(Segments.GLOBAL_MEMORY.value)
         self.global_memory.print(self.verbose)
         print(Segments.FUNCTIONS.value)
