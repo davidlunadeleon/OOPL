@@ -20,7 +20,7 @@ class VM:
 
     def init_global_memory(self, global_resources: FunctionResources) -> None:
         self.global_memory = Memory(0, 1000, global_resources)
-        self.function_memory = Memory(4000, 1000, (20, 20, 20, 20))
+        self.function_memory = Memory(4000, 1000, (1000, 1000, 1000, 1000))
 
     def add_function(self, name: str, start_quad: int, resources: FunctionResources):
         self.func_dir.add(name, start_quad, resources)
@@ -41,7 +41,6 @@ class VM:
     def run(self):
         quads_iter = iter(self.quads)
         for quad in quads_iter:
-            print(quad)
             op_code, addr1, addr2, addr3 = quad
             mem1 = self.__get_memory(addr1)
             mem2 = self.__get_memory(addr2)

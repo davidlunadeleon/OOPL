@@ -50,7 +50,5 @@ if __name__ == "__main__":
                         (int(line[0]), int(line[1]), int(line[2]), int(line[3]))
                     )
         vm.run()
-        vm.global_memory.print(True)
-        vm.function_memory.print(True)
     except (EOFError, FileNotFoundError) as e:
         print(e)
