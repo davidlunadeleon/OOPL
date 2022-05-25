@@ -4,31 +4,28 @@ from .array_info import ArrayInfo
 from .utils.enums import Types
 from .utils.types import MemoryAddress
 from .var_info import VarInfo
-from .memory import Memory
 
 
 class VarTable:
     table: dict[str, VarInfo]
-    mem: Memory
 
-    def __init__(self, mem: Memory) -> None:
-        self.mem = mem
+    def __init__(self) -> None:
         self.table = {}
 
     def add(
-        self, name: str, var_type: Types, array_info: Optional[ArrayInfo] = None
+        self,
+        name: str,
+        var_type: Types,
+        address: MemoryAddress,
+        array_info: Optional[ArrayInfo] = None,
     ) -> VarInfo:
         """
         Insert a new variable to the table.
         """
         if name in self.table:
             raise Exception(f"The variable {name} is already in the table.")
-        elif array_info is None:
-            self.table[name] = VarInfo(name, var_type, self.mem.reserve(var_type), None)
         else:
-            self.table[name] = VarInfo(
-                name, var_type, self.mem.reserve(var_type, array_info.size), array_info
-            )
+            self.table[name] = VarInfo(name, var_type, address, array_info)
         return self.table[name]
 
     def get(self, name: str) -> VarInfo:
