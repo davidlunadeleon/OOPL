@@ -91,7 +91,8 @@ class Memory:
         l = self.__get_list_from_index(index)
 
         if l == self.bools:
-            value = True if value == "True" else False
+            if not isinstance(value, bool):
+                value = True if value == "True" else False
         elif l == self.floats:
             value = float(value)
         elif l == self.ints:
