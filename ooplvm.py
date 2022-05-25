@@ -31,7 +31,11 @@ if __name__ == "__main__":
                     if line[1] != "None":
                         vm.set_global_variable(int(line[0]), line[1])
                 elif segment is Segments.FUNCTIONS:
-                    print(line)
+                    vm.add_function(
+                        line[0],
+                        int(line[1]),
+                        (int(line[2]), int(line[3]), int(line[4]), int(line[5])),
+                    )
                     pass
                 elif segment is Segments.QUADRUPLES:
                     pass
@@ -39,6 +43,7 @@ if __name__ == "__main__":
                     vm.init_global_memory(
                         (int(line[0]), int(line[1]), int(line[2]), int(line[3]))
                     )
+        vm.func_dir.print(True)
         vm.run()
     except (EOFError, FileNotFoundError) as e:
         print(e)
