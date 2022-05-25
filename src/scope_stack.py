@@ -18,6 +18,9 @@ class ScopeStack:
     def pop(self) -> Scope:
         return self.scope_stack.pop()
 
+    def top(self) -> Scope:
+        return self.scope_stack[-1]
+
     def has_var(self, var_name: str) -> bool:
         for scope in reversed(self.scope_stack):
             if scope.has(var_name):
