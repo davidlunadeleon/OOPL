@@ -3,7 +3,7 @@
 # Import libraries
 from .libs.ply import yacc
 
-from .func_dir import FuncDir
+from .func_dir import CFuncDir
 from .lexer import Lexer
 from .utils.enums import Types, Operations, ScopeTypes, Segments
 from .utils.types import TokenList
@@ -18,7 +18,7 @@ from .scope import Scope
 class Parser:
     break_counter: list[int]
     break_stack: list[int]
-    func_dir: FuncDir
+    func_dir: CFuncDir
     function_memory: Memory
     function_stack: list[str]
     global_memory: Memory
@@ -35,7 +35,7 @@ class Parser:
         self.parser = yacc.yacc(module=self)
         self.break_counter = []
         self.break_stack = []
-        self.func_dir = FuncDir()
+        self.func_dir = CFuncDir()
         self.function_memory = Memory(4000)
         self.function_stack = []
         self.global_memory = Memory(0)
