@@ -17,7 +17,7 @@ class Constant:
         elif self.type is Types.INT:
             self.val = int(const_val)
         elif self.type is Types.STRING:
-            self.val = const_val
+            self.val = str(const_val).removeprefix('"').removesuffix('"')
         else:
             raise TypeError("Invalid type passed to Constant constructor.")
         if (address := memory.find(self.val)) is not None:
