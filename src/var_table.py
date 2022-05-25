@@ -1,26 +1,35 @@
+from typing import Optional
+
 from .array_info import ArrayInfo
 from .utils.enums import Types
 from .utils.types import MemoryAddress
 from .var_info import VarInfo
+from .memory import Memory
 
 
 class VarTable:
     table: dict[str, VarInfo]
+    mem: Memory
 
-    def __init__(self) -> None:
+    def __init__(self, mem: Memory) -> None:
+        self.mem = mem
         self.table = {}
 
     def add(
-        self, name: str, var_type: Types, address: MemoryAddress, array_info: ArrayInfo
+        self, name: str, var_type: Types, array_info: Optional[ArrayInfo] = None
     ) -> VarInfo:
         """
         Insert a new variable to the table.
         """
         if name in self.table:
             raise Exception(f"The variable {name} is already in the table.")
+        elif array_info is None:
+            self.table[name] = VarInfo(name, var_type, self.mem.reserve(var_type), None)
         else:
-            self.table[name] = VarInfo(name, var_type, address, array_info)
-            return self.table[name]
+            self.table[name] = VarInfo(
+                name, var_type, self.mem.reserve(var_type, array_info.size), array_info
+            )
+        return self.table[name]
 
     def get(self, name: str) -> VarInfo:
         """
@@ -46,26 +55,17 @@ class VarTable:
         """
         return False if self.table.get(name) is None else True
 
+    def __str__(self) -> str:
+        var_string = ""
+        for key, value in self.table.items():
+            var_string += f"<var_name:{key},var_info:{value}>\n"
+        return var_string
+
     def print(self, table_name: str, verbose: bool) -> None:
         """
         Print the VarTable
         """
-        # TODO: Look for a better printing method. This thing is UGLY!
-        char_length = 100
-        column_lenght = (char_length - 5) / 4
-        template_string = f"|{{:^{column_lenght}}}|{{:^{column_lenght}}}|{{:^{column_lenght}}}|{{:^{char_length - column_lenght * 3 - 2}}}|"
-        bar = "".join(["-" * char_length])
-        template_header = f"|{{:^{char_length - 2}}}|"
         if verbose:
-            print(f"# {bar}")
-            print(f"# {template_header.format(table_name)}")
-            print(f"# {bar}")
-            print(
-                f'# {template_string.format("Variable name", "Type", "Name", "Address")}'
-            )
-            if len(self.table.items()) > 0:
-                for key, value in self.table.items():
-                    print(
-                        f'# { template_string.format( key, value["type"], value["name"], str(value["address"]))}'
-                    )
-            print(f"# {bar}")
+            var_string_list = self.__str__().split("\n")
+            for value in var_string_list:
+                print(f"# {value}")
