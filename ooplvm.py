@@ -25,12 +25,13 @@ if __name__ == "__main__":
                     segment = Segments(line)
                     continue
                 else:
-                    line = line.removeprefix("(").removesuffix(")").split(",")
+                    line = line.split(",")
 
                 if segment is Segments.GLOBAL_MEMORY:
                     if line[1] != "None":
                         vm.set_global_variable(int(line[0]), line[1])
                 elif segment is Segments.FUNCTIONS:
+                    print(line)
                     pass
                 elif segment is Segments.QUADRUPLES:
                     pass

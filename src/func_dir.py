@@ -104,4 +104,6 @@ class FuncDir:
                 print(f'# Start quadruple: {value["start_quad"]}')
                 print(f'# Return address: {value["return_address"]}')
                 value["param_table"].print("Parameters table", True)
-            print(f"{key},{value['start_quad']},{value['resources']}")
+            print(
+                f"{key},{value['start_quad']},{str(value['resources']).removeprefix('(').removesuffix(')')}"
+            )
