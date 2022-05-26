@@ -329,26 +329,15 @@ class Parser:
 
     def p_if_statement(self, p):
         """
-        if_statement    : IF LPAREN expr if_statement_neural_point_1 RPAREN block if_alternative
+        if_statement    : IF LPAREN expr loop_expr RPAREN block push_loop_scope if_alternative pop_loop_scope
         """
         end = self.jump_stack.pop()
         op_code, addr, _, _ = self.quads[end]
         self.quads[end] = (op_code, addr, None, self.quads.ptr_address())
 
-    def p_if_statement_neural_point_1(self, p):
-        """
-        if_statement_neural_point_1    :
-        """
-        expr_type, expr_addr, _ = p[-1]
-        if expr_type is Types.BOOL:
-            self.quads.add((Operations.GOTOF, expr_addr, None, None))
-            self.jump_stack.append(self.quads.ptr_address(-1))
-        else:
-            raise TypeError("Type-mismatch of operands.")
-
     def p_if_alternative(self, p):
         """
-        if_alternative  : ELSEIF LPAREN if_alternative_neural_point_2 expr if_alternative_neural_point_3 RPAREN block if_alternative
+        if_alternative  : ELSEIF LPAREN if_alternative_neural_point_2 expr loop_expr RPAREN block if_alternative
                         | ELSE if_alternative_neural_point_4 block
                         |
         """
@@ -357,20 +346,12 @@ class Parser:
         """
         if_alternative_neural_point_2  :
         """
+        self.break_counter[-1] += 1
+        self.break_stack.append(self.quads.ptr_address())
+        self.quads.add((Operations.GOTO, None, None, None))
         false = self.jump_stack.pop()
         op_code, addr, _, _ = self.quads[false]
         self.quads[false] = (op_code, addr, None, self.quads.ptr_address())
-
-    def p_if_alternative_neural_point_3(self, p):
-        """
-        if_alternative_neural_point_3  :
-        """
-        expr_type, expr_addr, _ = p[-1]
-        if expr_type is Types.BOOL:
-            self.quads.add((Operations.GOTOF, expr_addr, None, None))
-            self.jump_stack.append(self.quads.ptr_address(-1))
-        else:
-            raise TypeError("Type-mismatch of operands.")
 
     def p_if_alternative_neural_point_4(self, p):
         """
