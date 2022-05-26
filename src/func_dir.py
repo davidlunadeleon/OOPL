@@ -9,30 +9,56 @@
 #
 #
 
-from typing import TypedDict, Generic, TypeVar
+from typing import Generic, TypeVar
 from abc import ABC, abstractmethod
 
-from .memory import Memory
 from .scope import Scope
-from .utils.enums import Types, ScopeTypes
+from .utils.enums import Types
 from .utils.types import FunctionResources, MemoryAddress
 from .var_table import VarTable
 
 
-class CFuncInfo(TypedDict):
-    body_defined: bool
-    has_return_statement: bool
-    param_table: VarTable
-    resources: FunctionResources
-    return_address: MemoryAddress
-    scope: Scope
-    start_quad: int | None
-    type: Types
-
-
-class VMFuncInfo(TypedDict):
+class FuncInfo:
     start_quad: int
     resources: FunctionResources
+    name: str
+
+    def __init__(self, name: str) -> None:
+        self.name = name
+
+
+class CFuncInfo(FuncInfo):
+    is_body_defined: bool
+    has_return: bool
+    param_table: VarTable
+    return_address: MemoryAddress
+    scope: Scope
+    type: Types
+
+    def __init__(
+        self,
+        name: str,
+        return_address: MemoryAddress,
+        scope: Scope,
+        type: Types,
+    ) -> None:
+        super().__init__(name)
+        self.has_return = False
+        self.is_body_defined = False
+        self.param_table = VarTable()
+        self.resources = (0, 0, 0, 0)
+        self.return_address = return_address
+        self.scope = scope
+        self.type = type
+
+
+class VMFuncInfo(FuncInfo):
+    def __init__(
+        self, name: str, start_quad: int, resources: FunctionResources
+    ) -> None:
+        super().__init__(name)
+        self.start_quad = start_quad
+        self.resources = resources
 
 
 T = TypeVar("T", CFuncInfo, VMFuncInfo)
@@ -81,36 +107,31 @@ class CFuncDir(FuncDir[CFuncInfo]):
     def add(
         self,
         name: str,
-        body_defined: bool,
         return_type: Types,
         return_address: MemoryAddress,
-        mem: Memory,
+        scope: Scope,
     ) -> CFuncInfo:
-        if name in self.func_dir and self.func_dir[name]["body_defined"]:
+        if name in self.func_dir and self.func_dir[name].is_body_defined:
             raise Exception(f"The function {name} is already in the directory.")
         else:
-            self.func_dir[name] = {
-                "body_defined": body_defined,
-                "has_return_statement": False,
-                "param_table": VarTable(),
-                "resources": (0, 0, 0, 0),
-                "return_address": return_address,
-                "scope": Scope(ScopeTypes.FUNCTION, mem),
-                "start_quad": None,
-                "type": return_type,
-            }
+            self.func_dir[name] = CFuncInfo(
+                name,
+                return_address,
+                scope,
+                return_type,
+            )
             return self.func_dir[name]
 
     def print(self, verbose: bool) -> None:
         for key, value in self.func_dir.items():
             if verbose:
-                print(f'# Function: {key} with return type: {value["type"]}')
-                print(f'# Resources: {value["resources"]}')
-                print(f'# Start quadruple: {value["start_quad"]}')
-                print(f'# Return address: {value["return_address"]}')
-                value["param_table"].print("Parameters table", True)
+                print(f"# Function: {key} with return type: {value.type}")
+                print(f"# Resources: {value.resources}")
+                print(f"# Start quadruple: {value.start_quad}")
+                print(f"# Return address: {value.return_address}")
+                value.param_table.print("Parameters table", True)
             print(
-                f"{key},{value['start_quad']},{str(value['resources']).removeprefix('(').removesuffix(')')}"
+                f"{key},{value.start_quad},{str(value.resources).removeprefix('(').removesuffix(')')}"
             )
 
 
@@ -127,19 +148,16 @@ class VMFuncDir(FuncDir[VMFuncInfo]):
         if name in self.func_dir:
             raise Exception(f"The function {name} is already in the directory.")
         else:
-            self.func_dir[name] = {
-                "resources": resources,
-                "start_quad": start_quad,
-            }
+            self.func_dir[name] = VMFuncInfo(name, start_quad, resources)
             return self.func_dir[name]
 
     def print(self, verbose: bool) -> None:
         for key, value in self.func_dir.items():
             if verbose:
                 print(f"# Function: {key}")
-                print(f'# Resources: {value["resources"]}')
-                print(f'# Start quadruple: {value["start_quad"]}')
+                print(f"# Resources: {value.resources}")
+                print(f"# Start quadruple: {value.start_quad}")
             else:
                 print(
-                    f"# {key},{value['start_quad']},{str(value['resources']).removeprefix('(').removesuffix(')')}"
+                    f"# {key},{value.start_quad},{str(value.resources).removeprefix('(').removesuffix(')')}"
                 )

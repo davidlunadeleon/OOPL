@@ -75,7 +75,7 @@ class Parser:
                 if not (
                     isinstance(func_name, str)
                     and self.func_dir.has(func_name)
-                    and self.func_dir.get(func_name)["body_defined"]
+                    and self.func_dir.get(func_name).is_body_defined
                 ):
                     raise Exception(
                         f"Function {func_name} was called but its body was not defined."
@@ -119,12 +119,9 @@ class Parser:
         func_name = self.function_stack.pop()
         self.scope_stack.pop()
         if (func_info := self.func_dir.get(func_name)) is not None:
-            if (
-                func_info["type"] is not Types.VOID
-                and not func_info["has_return_statement"]
-            ):
+            if func_info.type is not Types.VOID and not func_info.has_return:
                 raise Exception("Missing return statement for non void function.")
-            func_info["resources"] = self.function_memory.describe_resources()
+            func_info.resources = self.function_memory.describe_resources()
 
         # Only add if there is no return after and it is the end of the function
         if self.quads[self.quads.ptr - 1][0] != Operations.ENDSUB:
@@ -142,7 +139,7 @@ class Parser:
         func_name = self.function_stack[-1]
         func_info = self.func_dir.get(func_name)
         if func_info is not None:
-            func_info["start_quad"] = self.quads.ptr
+            func_info.start_quad = self.quads.ptr
 
     def p_register_function(self, p):
         """
@@ -162,10 +159,10 @@ class Parser:
             func_name, True, func_type, return_address, self.function_memory
         )
         self.function_stack.append(func_name)
-        self.scope_stack.push(func_info["scope"])
+        self.scope_stack.push(func_info.scope)
         for param_type, param_name in func_params:
             _, var_address, _ = self.scope_stack.add_var(param_name, param_type, None)
-            func_info["param_table"].add(param_name, param_type, var_address, None)
+            func_info.param_table.add(param_name, param_type, var_address, None)
 
     def p_function_header(self, p):
         """
@@ -187,15 +184,13 @@ class Parser:
         func_info = self.func_dir.add(
             func_name, False, func_type, return_address, self.function_memory
         )
-        self.scope_stack.push(func_info["scope"])
+        self.scope_stack.push(func_info.scope)
         for param_type, param_name in func_parameters:
             array_info = ArrayInfo()
             _, var_address, _ = self.scope_stack.add_var(
                 param_name, param_type, array_info
             )
-            func_info["param_table"].add(
-                param_name, param_type, var_address, array_info
-            )
+            func_info.param_table.add(param_name, param_type, var_address, array_info)
         self.scope_stack.pop()
 
     def p_empty_list(self, p):
@@ -395,25 +390,22 @@ class Parser:
         expr_type, expr_address, _ = p[2]
         func_name = self.function_stack[-1]
         if (func_info := self.func_dir.get(func_name)) is not None:
-            if func_info["type"] is Types.VOID:
+            if func_info.type is Types.VOID:
                 raise Exception("Can't return from a void function.")
-            elif (
-                func_info["return_address"] is not None
-                and expr_type is func_info["type"]
-            ):
+            elif func_info.return_address is not None and expr_type is func_info.type:
                 self.quads.add(
                     (
                         Operations.ASSIGNOP,
                         expr_address,
                         None,
-                        func_info["return_address"],
+                        func_info.return_address,
                     )
                 )
                 self.quads.add((Operations.ENDSUB, None, None, None))
-                func_info["has_return_statement"] = True
+                func_info.has_return = True
             else:
                 raise TypeError(
-                    f'Expected return type {func_info["type"]} but received {expr_type}.'
+                    f"Expected return type {func_info.type} but received {expr_type}."
                 )
         else:
             raise Exception("Can't return from outside a function.")
@@ -451,7 +443,7 @@ class Parser:
             if func_name == "main":
                 raise Exception(f"Main function cannot be called.")
             if (func_info := self.func_dir.get(func_name)) is not None:
-                param_table = func_info["param_table"]
+                param_table = func_info.param_table
                 if len(func_args) != len(param_table.table.items()):
                     raise Exception(
                         f"Arg, self.function_memoryument mismatch when calling {func_name}."
@@ -470,7 +462,7 @@ class Parser:
                             )
 
                     self.quads.add((Operations.GOSUB, None, None, func_name))
-                    p[0] = (func_info["type"], func_info["return_address"], None)
+                    p[0] = (func_info.type, func_info.return_address, None)
             else:
                 raise Exception(f"Function {func_name} has not been declared.")
         else:
