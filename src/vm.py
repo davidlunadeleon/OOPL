@@ -1,3 +1,5 @@
+from typing import Tuple
+from copy import copy
 import sys
 
 from .func_dir import VMFuncDir
@@ -11,11 +13,13 @@ class VM:
     function_memory: Memory
     func_dir: VMFuncDir
     global_memory: Memory
-    memory_stack: list[Memory]
+    temp_memory: Memory
+    memory_stack: list[Tuple[Memory, int]]
     quads: QuadrupleList
 
     def __init__(self) -> None:
         self.func_dir = VMFuncDir()
+        self.memory_stack = []
 
     def init_global_memory(self, global_resources: FunctionResources) -> None:
         self.global_memory = Memory(0, 1000, global_resources)
@@ -39,14 +43,19 @@ class VM:
         )
 
     def run(self):
-        quads_iter = iter(self.quads)
-        for quad in quads_iter:
+        for quad in self.quads:
             op_code, addr1, addr2, addr3 = quad
             mem1 = self.__get_memory(addr1)
             mem2 = self.__get_memory(addr2)
 
             if op_code is Operations.GOSUB:
-                continue
+                self.memory_stack.append((copy(self.function_memory), self.quads.ptr))
+                self.function_memory = self.temp_memory
+                self.quads.ptr = mem1[self.func_dir.get(addr3).start_quad]
+            elif op_code is Operations.ERA:
+                self.temp_memory = Memory(
+                    4000, 1000, self.func_dir.get(addr3).resources
+                )
 
             if isinstance(addr3, str) or addr3 is None:
                 addr3 = 0
@@ -61,7 +70,10 @@ class VM:
             elif op_code is Operations.DIVIDES:
                 mem3[addr3] = mem1[addr1] / mem2[addr2]
             elif op_code is Operations.ENDSUB:
-                pass
+                self.temp_memory.clear()
+                self.function_memory, self.quads.ptr = self.memory_stack.pop()
+                if len(self.memory_stack) == 0:
+                    return
             elif op_code is Operations.EQ:
                 mem3[addr3] = mem1[addr1] == mem2[addr2]
             elif op_code is Operations.EQGT:
@@ -85,7 +97,7 @@ class VM:
             elif op_code is Operations.OR:
                 mem3[addr3] = mem1[addr1] or mem2[addr2]
             elif op_code is Operations.PARAM:
-                pass
+                self.temp_memory[addr3] = mem1[addr1]
             elif op_code is Operations.PLUS:
                 mem3[addr3] = mem1[addr1] + mem2[addr2]
             elif op_code is Operations.PRINT:
