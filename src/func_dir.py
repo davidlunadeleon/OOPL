@@ -14,8 +14,7 @@ from abc import ABC, abstractmethod
 
 from .scope import Scope
 from .utils.enums import Types
-from .utils.types import FunctionResources, MemoryAddress
-from .var_table import VarTable
+from .utils.types import FunctionResources, MemoryAddress, ParamList
 
 
 class FuncInfo:
@@ -30,7 +29,7 @@ class FuncInfo:
 class CFuncInfo(FuncInfo):
     is_body_defined: bool
     has_return: bool
-    param_table: VarTable
+    param_list: ParamList
     return_address: MemoryAddress
     scope: Scope
     type: Types
@@ -45,7 +44,7 @@ class CFuncInfo(FuncInfo):
         super().__init__(name)
         self.has_return = False
         self.is_body_defined = False
-        self.param_table = VarTable()
+        self.param_list = []
         self.resources = (0, 0, 0, 0)
         self.return_address = return_address
         self.scope = scope
@@ -129,7 +128,7 @@ class CFuncDir(FuncDir[CFuncInfo]):
                 print(f"# Resources: {value.resources}")
                 print(f"# Start quadruple: {value.start_quad}")
                 print(f"# Return address: {value.return_address}")
-                value.param_table.print("Parameters table", True)
+                print(f"# Parameters list: {[param for param in value.param_list]}")
             print(
                 f"{key},{value.start_quad},{str(value.resources).removeprefix('(').removesuffix(')')}"
             )
