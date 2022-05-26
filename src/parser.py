@@ -57,7 +57,6 @@ class Parser:
         """
         program : class program
                 | function program
-                | function_header program
                 | var_decl program
                 | COMMENT program
                 | call SEMICOLON program
@@ -115,13 +114,24 @@ class Parser:
         """
         function    : simple_type_id function_parameters register_function mark_function_begin block
                     | void_id function_parameters register_function mark_function_begin block
+                    | simple_type_id function_parameters register_function SEMICOLON
+                    | void_id function_parameters register_function SEMICOLON
+
         """
         func_name = self.function_stack.pop()
         self.scope_stack.pop()
-        if (func_info := self.func_dir.get(func_name)) is not None:
-            if func_info.type is not Types.VOID and not func_info.has_return:
-                raise Exception("Missing return statement for non void function.")
-            func_info.resources = self.function_memory.describe_resources()
+
+        func_info = self.func_dir.get(func_name)
+
+        if len(p) == 6:
+            func_info.is_body_defined = True
+        elif len(p) == 5 and func_name == "main":
+            # Special logic for main function.
+            raise Exception("Main function cannot be declared via forward declaration.")
+
+        if func_info.type is not Types.VOID and not func_info.has_return:
+            raise Exception("Missing return statement for non void function.")
+        func_info.resources = self.function_memory.describe_resources()
 
         # Only add if there is no return after and it is the end of the function
         if self.quads[self.quads.ptr - 1][0] != Operations.ENDSUB:
@@ -147,51 +157,25 @@ class Parser:
         """
         func_type, func_name = p[-2]
         func_params = p[-1]
+
+        # Special logic for main function.
         if func_name == "main":
             if func_type is not Types.INT:
                 raise Exception("Return type of main function must be int.")
             if len(func_params) > 0:
                 raise Exception("Main function can't take any parameters.")
+
         return_address = (
             None if func_type is Types.VOID else self.global_memory.reserve(func_type)
         )
-        func_info = self.func_dir.add(
-            func_name, True, func_type, return_address, self.function_memory
-        )
+        func_scope = Scope(ScopeTypes.FUNCTION, self.function_memory)
+        func_info = self.func_dir.add(func_name, func_type, return_address, func_scope)
+        self.scope_stack.push(func_scope)
         self.function_stack.append(func_name)
-        self.scope_stack.push(func_info.scope)
+
         for param_type, param_name in func_params:
             _, var_address, _ = self.scope_stack.add_var(param_name, param_type, None)
             func_info.param_table.add(param_name, param_type, var_address, None)
-
-    def p_function_header(self, p):
-        """
-        function_header    : simple_type_id function_parameters register_function_header SEMICOLON
-                           | void_id function_parameters register_function_header SEMICOLON
-        """
-
-    def p_register_function_header(self, p):
-        """
-        register_function_header   :
-        """
-        func_type, func_name = p[-2]
-        func_parameters = p[-1]
-        if func_name == "main":
-            raise Exception("Can't declare main via forward definition.")
-        return_address = (
-            None if func_type is Types.VOID else self.global_memory.reserve(func_type)
-        )
-        func_info = self.func_dir.add(
-            func_name, False, func_type, return_address, self.function_memory
-        )
-        self.scope_stack.push(func_info.scope)
-        for param_type, param_name in func_parameters:
-            array_info = ArrayInfo()
-            _, var_address, _ = self.scope_stack.add_var(
-                param_name, param_type, array_info
-            )
-            func_info.param_table.add(param_name, param_type, var_address, array_info)
-        self.scope_stack.pop()
 
     def p_empty_list(self, p):
         """
