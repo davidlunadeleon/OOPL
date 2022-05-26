@@ -1,5 +1,4 @@
 from typing import Tuple
-from copy import copy
 import sys
 
 from .func_dir import VMFuncDir
@@ -49,7 +48,7 @@ class VM:
             mem2 = self.__get_memory(addr2)
 
             if op_code is Operations.GOSUB:
-                self.memory_stack.append((copy(self.function_memory), self.quads.ptr))
+                self.memory_stack.append((self.function_memory, self.quads.ptr))
                 self.function_memory = self.temp_memory
                 self.quads.ptr = mem1[self.func_dir.get(addr3).start_quad]
             elif op_code is Operations.ERA:
