@@ -18,6 +18,7 @@ class Operations(Enum):
     EQ = "=="
     EQGT = ">="
     EQLT = "<="
+    ERA = "ERA"
     GOSUB = "GOSUB"
     GOTO = "GOTO"
     GOTOF = "GOTOF"

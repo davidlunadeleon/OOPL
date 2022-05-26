@@ -46,6 +46,7 @@ class Parser:
         self.verbose = verbose
 
         self.quads = QuadrupleList(self.global_memory)
+        self.quads.add((Operations.ERA, None, None, "main"))
         self.quads.add((Operations.GOSUB, None, None, "main"))
 
     def parse(self, p):
@@ -471,6 +472,7 @@ class Parser:
                         f"Arg, self.function_memoryument mismatch when calling {func_name}."
                     )
                 else:
+                    self.quads.add((Operations.ERA, None, None, func_name))
                     for arg, param in zip(func_args, param_list):
                         p_type, p_addr, p_name = param
                         arg_type, arg_addr, _ = arg
