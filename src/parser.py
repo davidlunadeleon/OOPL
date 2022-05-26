@@ -393,7 +393,8 @@ class Parser:
         """
         expr_type, expr_address, _ = p[2]
         func_name = self.function_stack[-1]
-        if (func_info := self.func_dir.get(func_name)) is not None:
+        if self.func_dir.has(func_name):
+            func_info = self.func_dir.get(func_name)
             if func_info.type is Types.VOID:
                 raise Exception("Can't return from a void function.")
             elif func_info.return_address is not None and expr_type is func_info.type:
