@@ -215,7 +215,8 @@ class Parser:
         before_block = self.jump_stack.pop()
         second_assign = self.jump_stack.pop()
         before_second_assign = self.jump_stack.pop()
-        after_expr = self.jump_stack.pop()
+        after_expr_true = self.jump_stack.pop()
+        after_expr_false = self.jump_stack.pop()
         before_expr = self.jump_stack.pop()
         first_assign = self.jump_stack.pop()
         self.quads.add((Operations.GOTO, None, None, before_second_assign))
@@ -223,8 +224,10 @@ class Parser:
         self.quads[second_assign] = (op_code, None, None, before_expr)
         op_code, _, _, _ = self.quads[first_assign]
         self.quads[first_assign] = (op_code, None, None, before_block)
-        op_code, addr, _, _ = self.quads[after_expr]
-        self.quads[after_expr] = (op_code, addr, None, self.quads.ptr_address())
+        op_code, addr, _, _ = self.quads[after_expr_false]
+        self.quads[after_expr_false] = (op_code, addr, None, self.quads.ptr_address())
+        op_code, addr, _, _ = self.quads[after_expr_true]
+        self.quads[after_expr_true] = (op_code, addr, None, before_block)
 
     def p_for_loop_assign(self, p):
         """
@@ -242,6 +245,8 @@ class Parser:
         if expr_type is Types.BOOL:
             self.jump_stack.append(self.quads.ptr_address())
             self.quads.add((Operations.GOTOF, expr_addr, None, None))
+            self.jump_stack.append(self.quads.ptr_address())
+            self.quads.add((Operations.GOTOT, expr_addr, None, None))
         else:
             raise TypeError("Non boolean expression found in loop.")
 
@@ -285,7 +290,7 @@ class Parser:
                 Operations.GOTO,
                 None,
                 None,
-                self.quads.ptr_address(),
+                self.quads.ptr_address(1),
             )
 
     def p_pop_scope(self, p):
