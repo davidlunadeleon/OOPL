@@ -13,7 +13,7 @@ from .quadruple_list import QuadrupleList
 from .scope import Scope
 from .scope_stack import ScopeStack
 from .utils.enums import Types, Operations, ScopeTypes, Segments
-from .utils.types import TokenList
+from .utils.types import TokenList, MemoryAddress
 
 
 class Parser:
@@ -23,7 +23,7 @@ class Parser:
     function_memory: Memory
     function_stack: list[str]
     global_memory: Memory
-    jump_stack: list[int]
+    jump_stack: list[MemoryAddress]
     lexer: Lexer
     quads: QuadrupleList
     scope_stack: ScopeStack
@@ -45,7 +45,7 @@ class Parser:
         self.scope_stack.push(Scope(ScopeTypes.GLOBAL, self.global_memory))
         self.verbose = verbose
 
-        self.quads = QuadrupleList()
+        self.quads = QuadrupleList(self.global_memory)
         self.quads.add((Operations.GOSUB, None, None, "main"))
 
     def parse(self, p):
@@ -130,7 +130,7 @@ class Parser:
             func_info.resources = self.function_memory.describe_resources()
 
             # Only add if there is no return after and it is the end of the function
-            if self.quads[self.quads.ptr - 1][0] != Operations.ENDSUB:
+            if self.quads[self.quads.ptr_address(-1)][0] != Operations.ENDSUB:
                 self.quads.add((Operations.ENDSUB, None, None, None))
             if self.verbose:
                 print(f"# Function: {func_name}")
@@ -146,7 +146,7 @@ class Parser:
         mark_function_begin :
         """
         func_name = self.function_stack[-1]
-        self.func_dir.get(func_name).start_quad = self.quads.ptr
+        self.func_dir.get(func_name).start_quad = self.quads.ptr_address()
 
     def p_register_function(self, p):
         """
@@ -224,14 +224,14 @@ class Parser:
         op_code, _, _, _ = self.quads[first_assign]
         self.quads[first_assign] = (op_code, None, None, before_block)
         op_code, addr, _, _ = self.quads[after_expr]
-        self.quads[after_expr] = (op_code, addr, None, self.quads.ptr)
+        self.quads[after_expr] = (op_code, addr, None, self.quads.ptr_address())
 
     def p_for_loop_assign(self, p):
         """
         for_loop_assign : expr
                         |
         """
-        self.jump_stack.append(self.quads.ptr)
+        self.jump_stack.append(self.quads.ptr_address())
         self.quads.add((Operations.GOTO, None, None, None))
 
     def p_loop_expr(self, p):
@@ -240,7 +240,7 @@ class Parser:
         """
         expr_type, expr_addr, _ = p[-1]
         if expr_type is Types.BOOL:
-            self.jump_stack.append(self.quads.ptr)
+            self.jump_stack.append(self.quads.ptr_address())
             self.quads.add((Operations.GOTOF, expr_addr, None, None))
         else:
             raise TypeError("Non boolean expression found in loop.")
@@ -285,7 +285,7 @@ class Parser:
                 Operations.GOTO,
                 None,
                 None,
-                self.quads.ptr,
+                self.quads.ptr_address(),
             )
 
     def p_pop_scope(self, p):
@@ -302,13 +302,13 @@ class Parser:
         before_expr = self.jump_stack.pop()
         self.quads.add((Operations.GOTO, None, None, before_expr))
         op_code, addr, _, _ = self.quads[after_expr]
-        self.quads[after_expr] = (op_code, addr, None, self.quads.ptr)
+        self.quads[after_expr] = (op_code, addr, None, self.quads.ptr_address())
 
     def p_ptr_to_jump_stack(self, p):
         """
         ptr_to_jump_stack  :
         """
-        self.jump_stack.append(self.quads.ptr)
+        self.jump_stack.append(self.quads.ptr_address())
 
     def p_if_statement(self, p):
         """
@@ -316,7 +316,7 @@ class Parser:
         """
         end = self.jump_stack.pop()
         op_code, addr, _, _ = self.quads[end]
-        self.quads[end] = (op_code, addr, None, self.quads.ptr)
+        self.quads[end] = (op_code, addr, None, self.quads.ptr_address())
 
     def p_if_statement_neural_point_1(self, p):
         """
@@ -325,7 +325,7 @@ class Parser:
         expr_type, expr_addr, _ = p[-1]
         if expr_type is Types.BOOL:
             self.quads.add((Operations.GOTOF, expr_addr, None, None))
-            self.jump_stack.append(self.quads.ptr - 1)
+            self.jump_stack.append(self.quads.ptr_address(-1))
         else:
             raise TypeError("Type-mismatch of operands.")
 
@@ -342,7 +342,7 @@ class Parser:
         """
         false = self.jump_stack.pop()
         op_code, addr, _, _ = self.quads[false]
-        self.quads[false] = (op_code, addr, None, self.quads.ptr)
+        self.quads[false] = (op_code, addr, None, self.quads.ptr_address())
 
     def p_if_alternative_neural_point_3(self, p):
         """
@@ -351,7 +351,7 @@ class Parser:
         expr_type, expr_addr, _ = p[-1]
         if expr_type is Types.BOOL:
             self.quads.add((Operations.GOTOF, expr_addr, None, None))
-            self.jump_stack.append(self.quads.ptr - 1)
+            self.jump_stack.append(self.quads.ptr_address(-1))
         else:
             raise TypeError("Type-mismatch of operands.")
 
@@ -361,9 +361,9 @@ class Parser:
         """
         self.quads.add((Operations.GOTO, None, None, None))
         false = self.jump_stack.pop()
-        self.jump_stack.append(self.quads.ptr - 1)
+        self.jump_stack.append(self.quads.ptr_address(-1))
         op_code, addr, _, _ = self.quads[false]
-        self.quads[false] = (op_code, addr, None, self.quads.ptr)
+        self.quads[false] = (op_code, addr, None, self.quads.ptr_address())
 
     def p_type(self, p):
         """
@@ -383,7 +383,7 @@ class Parser:
         """
         if not self.scope_stack.is_in_loop():
             raise Exception("Can't use break statement outside a loop.")
-        self.break_stack.append(self.quads.ptr)
+        self.break_stack.append(self.quads.ptr_address())
         self.quads.add((Operations.GOTO, None, None, None))
         self.break_counter[-1] += 1
 
