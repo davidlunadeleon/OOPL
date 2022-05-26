@@ -23,7 +23,7 @@ class VM:
 
     def init_global_memory(self, global_resources: FunctionResources) -> None:
         self.global_memory = Memory(0, 1000, global_resources)
-        self.function_memory = Memory(4000, 1000, (1000, 1000, 1000, 1000))
+        self.function_memory = Memory(4000, 1000, (0, 0, 0, 0))
         self.quads = QuadrupleList(self.global_memory)
 
     def add_function(self, name: str, start_quad: int, resources: FunctionResources):
