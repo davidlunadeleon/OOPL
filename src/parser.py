@@ -210,7 +210,7 @@ class Parser:
 
     def p_for_loop(self, p):
         """
-        for_loop    : FOR LPAREN for_loop_assign SEMICOLON ptr_to_jump_stack expr loop_expr SEMICOLON ptr_to_jump_stack for_loop_assign RPAREN ptr_to_jump_stack loop_block
+        for_loop    : FOR LPAREN for_loop_assign SEMICOLON ptr_to_jump_stack expr for_loop_expr SEMICOLON ptr_to_jump_stack for_loop_assign RPAREN ptr_to_jump_stack loop_block
         """
         before_block = self.jump_stack.pop()
         second_assign = self.jump_stack.pop()
@@ -240,6 +240,17 @@ class Parser:
     def p_loop_expr(self, p):
         """
         loop_expr  :
+        """
+        expr_type, expr_addr, _ = p[-1]
+        if expr_type is Types.BOOL:
+            self.jump_stack.append(self.quads.ptr_address())
+            self.quads.add((Operations.GOTOF, expr_addr, None, None))
+        else:
+            raise TypeError("Non boolean expression found in loop.")
+
+    def p_for_loop_expr(self, p):
+        """
+        for_loop_expr  :
         """
         expr_type, expr_addr, _ = p[-1]
         if expr_type is Types.BOOL:
