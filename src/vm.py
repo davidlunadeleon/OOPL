@@ -71,7 +71,7 @@ class VM:
             elif op_code is Operations.GOTO:
                 self.quads.ptr = mem3[addr3]
             elif op_code is Operations.GOTOF:
-                if not (mem1[addr1]):
+                if not mem1[addr1]:
                     self.quads.ptr = mem3[addr3]
             elif op_code is Operations.GOTOT:
                 if mem1[addr1]:
