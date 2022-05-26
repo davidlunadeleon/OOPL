@@ -125,21 +125,20 @@ class Parser:
 
         if len(p) == 6:
             func_info.is_body_defined = True
+            if func_info.type is not Types.VOID and not func_info.has_return:
+                raise Exception("Missing return statement for non void function.")
+            func_info.resources = self.function_memory.describe_resources()
+
+            # Only add if there is no return after and it is the end of the function
+            if self.quads[self.quads.ptr - 1][0] != Operations.ENDSUB:
+                self.quads.add((Operations.ENDSUB, None, None, None))
+            if self.verbose:
+                print(f"# Function: {func_name}")
+                print(f"# Memory map:")
+                self.function_memory.print(True, True)
         elif len(p) == 5 and func_name == "main":
             # Special logic for main function.
             raise Exception("Main function cannot be declared via forward declaration.")
-
-        if func_info.type is not Types.VOID and not func_info.has_return:
-            raise Exception("Missing return statement for non void function.")
-        func_info.resources = self.function_memory.describe_resources()
-
-        # Only add if there is no return after and it is the end of the function
-        if self.quads[self.quads.ptr - 1][0] != Operations.ENDSUB:
-            self.quads.add((Operations.ENDSUB, None, None, None))
-        if self.verbose:
-            print(f"# Function: {func_name}")
-            print(f"# Memory map:")
-            self.function_memory.print(True, True)
         self.function_memory.clear()
 
     def p_mark_function_begin(self, p):
@@ -147,9 +146,7 @@ class Parser:
         mark_function_begin :
         """
         func_name = self.function_stack[-1]
-        func_info = self.func_dir.get(func_name)
-        if func_info is not None:
-            func_info.start_quad = self.quads.ptr
+        self.func_dir.get(func_name).start_quad = self.quads.ptr
 
     def p_register_function(self, p):
         """
@@ -165,17 +162,40 @@ class Parser:
             if len(func_params) > 0:
                 raise Exception("Main function can't take any parameters.")
 
-        return_address = (
-            None if func_type is Types.VOID else self.global_memory.reserve(func_type)
-        )
-        func_scope = Scope(ScopeTypes.FUNCTION, self.function_memory)
-        func_info = self.func_dir.add(func_name, func_type, return_address, func_scope)
-        self.scope_stack.push(func_scope)
-        self.function_stack.append(func_name)
+        if self.func_dir.has(func_name):
+            func_info = self.func_dir.get(func_name)
+            if func_type is not func_info.type:
+                raise Exception(
+                    f"The new function signature of {func_name} does not match the previously defined signature."
+                )
 
-        for param_type, param_name in func_params:
-            _, var_address, _ = self.scope_stack.add_var(param_name, param_type, None)
-            func_info.param_table.add(param_name, param_type, var_address, None)
+            for saved_param, new_param in zip(func_info.param_list, func_params):
+                sp_type, sp_addr, sp_name = saved_param
+                np_type, np_name = new_param
+                if sp_type is not np_type or np_name != sp_name:
+                    raise Exception(
+                        f"The new function signature of {func_name} does not match the previously defined signature."
+                    )
+                else:
+                    self.function_memory.reserve(sp_type)
+            self.scope_stack.push(func_info.scope)
+        else:
+            return_address = (
+                None
+                if func_type is Types.VOID
+                else self.global_memory.reserve(func_type)
+            )
+            func_scope = Scope(ScopeTypes.FUNCTION, self.function_memory)
+            func_info = self.func_dir.add(
+                func_name, func_type, return_address, func_scope
+            )
+            self.scope_stack.push(func_scope)
+            for param_type, param_name in func_params:
+                _, var_address, _ = self.scope_stack.add_var(
+                    param_name, param_type, None
+                )
+                func_info.param_list.append((param_type, var_address, param_name))
+        self.function_stack.append(func_name)
 
     def p_empty_list(self, p):
         """
@@ -426,23 +446,22 @@ class Parser:
             func_args = p[2]
             if func_name == "main":
                 raise Exception(f"Main function cannot be called.")
-            if (func_info := self.func_dir.get(func_name)) is not None:
-                param_table = func_info.param_table
-                if len(func_args) != len(param_table.table.items()):
+            if self.func_dir.has(func_name):
+                func_info = self.func_dir.get(func_name)
+                param_list = func_info.param_list
+                if len(func_args) != len(param_list):
                     raise Exception(
                         f"Arg, self.function_memoryument mismatch when calling {func_name}."
                     )
                 else:
-                    for arg, param in zip(func_args, param_table.table.items()):
-                        _, param_info = param
+                    for arg, param in zip(func_args, param_list):
+                        p_type, p_addr, p_name = param
                         arg_type, arg_addr, _ = arg
-                        if param_info.type is arg_type:
-                            self.quads.add(
-                                (Operations.PARAM, arg_addr, None, param_info.address)
-                            )
+                        if p_type is arg_type:
+                            self.quads.add((Operations.PARAM, arg_addr, None, p_addr))
                         else:
                             raise TypeError(
-                                f"Wrong parameter {param_info.name} in call to {func_name}. Expected {param_info.type} but received {arg_type}."
+                                f"Wrong parameter {p_name} in call to {func_name}. Expected {p_type} but received {arg_type}."
                             )
 
                     self.quads.add((Operations.GOSUB, None, None, func_name))
