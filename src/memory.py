@@ -121,7 +121,7 @@ class Memory:
         [self.__append(l, None) for _ in range(size - 1)]
         return initial_address
 
-    def find(self, value: MemoryType) -> MemoryAddress:
+    def find(self, value: MemoryType) -> MemoryAddress | None:
         l = self.__get_list_from_type(value)
         try:
             return l.values.index(value) + l.start_address

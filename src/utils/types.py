@@ -6,9 +6,11 @@ from .enums import Operations, Types
 TokenList = list[str]
 
 # Quadruple handling
-MemoryAddress = int | None
+MemoryAddress: TypeAlias = int
 MemoryType = bool | float | int | str
-Quadruple = Tuple[Operations, MemoryAddress, MemoryAddress, MemoryAddress | str]
+Quadruple = Tuple[
+    Operations, MemoryAddress | None, MemoryAddress | None, MemoryAddress | str | None
+]
 FunctionResources = Tuple[int, int, int, int]
 TypeAddress = Tuple[Types, MemoryAddress, str | None]
 

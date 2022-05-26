@@ -30,14 +30,14 @@ class CFuncInfo(FuncInfo):
     is_body_defined: bool
     has_return: bool
     param_list: ParamList
-    return_address: MemoryAddress
+    return_address: MemoryAddress | None
     scope: Scope
     type: Types
 
     def __init__(
         self,
         name: str,
-        return_address: MemoryAddress,
+        return_address: MemoryAddress | None,
         scope: Scope,
         type: Types,
     ) -> None:
@@ -107,7 +107,7 @@ class CFuncDir(FuncDir[CFuncInfo]):
         self,
         name: str,
         return_type: Types,
-        return_address: MemoryAddress,
+        return_address: MemoryAddress | None,
         scope: Scope,
     ) -> CFuncInfo:
         if name in self.func_dir and self.func_dir[name].is_body_defined:
