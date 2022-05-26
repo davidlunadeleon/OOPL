@@ -482,9 +482,21 @@ class Parser:
                             raise TypeError(
                                 f"Wrong parameter {p_name} in call to {func_name}. Expected {p_type} but received {arg_type}."
                             )
-
                     self.quads.add((Operations.GOSUB, None, None, func_name))
-                    p[0] = (func_info.type, func_info.return_address, None)
+                    if func_info.type is not Types.VOID:
+                        var_addr = self.function_memory.reserve(func_info.type)
+                        self.quads.add(
+                            (
+                                Operations.ASSIGNOP,
+                                func_info.return_address,
+                                None,
+                                var_addr,
+                            )
+                        )
+                        print(func_info.type, var_addr, func_info.return_address)
+                    else:
+                        var_addr = func_info.return_address
+                    p[0] = (func_info.type, var_addr, None)
             else:
                 raise Exception(f"Function {func_name} has not been declared.")
         else:
