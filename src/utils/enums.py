@@ -7,6 +7,7 @@ class Types(Enum):
     INT = "int"
     STRING = "string"
     VOID = "void"
+    PTR = "ptr"
 
 
 class Operations(Enum):
@@ -32,6 +33,7 @@ class Operations(Enum):
     PRINT = "PRINT"
     READ = "READ"
     TIMES = "*"
+    VER = "VER"
 
 
 class ScopeTypes(Enum):

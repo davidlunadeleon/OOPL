@@ -4,7 +4,9 @@ from .utils.types import MemoryType, MemoryAddress
 from .utils.enums import Types
 from .utils.types import FunctionResources
 
-T = TypeVar("T", None, bool | None, float | None, int | None, str | None)
+T = TypeVar(
+    "T", None, bool | None, float | None, int | None, str | None, MemoryAddress | None
+)
 
 
 class MemoryList(Generic[T]):
@@ -27,6 +29,7 @@ class Memory:
     floats: MemoryList[float | None]
     ints: MemoryList[int | None]
     strings: MemoryList[str | None]
+    ptrs: MemoryList[MemoryAddress | None]
 
     def __init__(
         self,
@@ -40,11 +43,13 @@ class Memory:
             self.floats = MemoryList(base_address + self.chunk_size)
             self.ints = MemoryList(base_address + self.chunk_size * 2)
             self.strings = MemoryList(base_address + self.chunk_size * 3)
+            self.ptrs = MemoryList(base_address + self.chunk_size * 4)
         else:
             self.bools = MemoryList(base_address, resources[0])
             self.floats = MemoryList(base_address + self.chunk_size, resources[1])
             self.ints = MemoryList(base_address + self.chunk_size * 2, resources[2])
             self.strings = MemoryList(base_address + self.chunk_size * 3, resources[3])
+            self.ptrs = MemoryList(base_address + self.chunk_size * 4, resources[4])
 
     def __get_list_from_index(self, index: int) -> MemoryList:
         if index < self.floats.start_address:
@@ -53,32 +58,27 @@ class Memory:
             return self.floats
         elif index < self.strings.start_address:
             return self.ints
-        else:
-            return self.strings
-
-    def __get_list_from_type(self, value: MemoryType) -> MemoryList:
-        if isinstance(value, bool):
-            return self.bools
-        elif isinstance(value, float):
-            return self.floats
-        elif isinstance(value, int):
-            return self.ints
-        elif isinstance(value, str):
+        elif index < self.ptrs.start_address:
             return self.strings
         else:
-            raise TypeError("Can't retrieve a list from invalid type.")
+            return self.ptrs
 
     def __get_list_from_t(self, t: Types) -> MemoryList:
-        if t == Types.BOOL:
-            return self.bools
-        elif t == Types.FLOAT:
-            return self.floats
-        elif t == Types.INT:
-            return self.ints
-        elif t == Types.STRING:
-            return self.strings
-        else:
-            raise TypeError("Can't retrieve a list from invalid type.")
+        match t:
+            case Types.BOOL:
+                return self.bools
+            case Types.FLOAT:
+                return self.floats
+            case Types.FLOAT:
+                return self.floats
+            case Types.INT:
+                return self.ints
+            case Types.STRING:
+                return self.strings
+            case Types.PTR:
+                return self.ptrs
+            case _:
+                raise TypeError("Can't retrieve a list from invalid type.")
 
     def __getitem__(self, index: MemoryAddress) -> MemoryType:
         if isinstance(index, int):
@@ -111,8 +111,8 @@ class Memory:
         else:
             return l_len + l.start_address
 
-    def append(self, value: MemoryType) -> MemoryAddress:
-        l = self.__get_list_from_type(value)
+    def append(self, type: Types, value: MemoryType) -> MemoryAddress:
+        l = self.__get_list_from_t(type)
         return self.__append(l, value)
 
     def reserve(self, t: Types, size: int = 1) -> MemoryAddress:
@@ -121,8 +121,8 @@ class Memory:
         [self.__append(l, None) for _ in range(size - 1)]
         return initial_address
 
-    def find(self, value: MemoryType) -> MemoryAddress | None:
-        l = self.__get_list_from_type(value)
+    def find(self, type: Types, value: MemoryType) -> MemoryAddress | None:
+        l = self.__get_list_from_t(type)
         try:
             return l.values.index(value) + l.start_address
         except ValueError:
@@ -140,6 +140,7 @@ class Memory:
             len(self.floats.values),
             len(self.ints.values),
             len(self.strings.values),
+            len(self.ptrs.values),
         )
 
     def print(self, verbose: bool, comment: bool = False):
