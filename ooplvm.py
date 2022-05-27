@@ -29,6 +29,7 @@ if __name__ == "__main__":
                     case Segments.GLOBAL_MEMORY:
                         index = line.find(",")
                         line = [line[:index], line[index + 1 :]]
+                        line[1] = line[1].replace("\\n", "\n").replace("\\t", "\t")
                         if line[1] != "None":
                             vm.set_global_variable(int(line[0]), line[1])
                     case Segments.FUNCTIONS:
