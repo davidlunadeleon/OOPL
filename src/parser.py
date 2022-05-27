@@ -36,7 +36,7 @@ class Parser:
         self.parser = yacc.yacc(module=self)
         self.break_counter = []
         self.break_stack = []
-        self.function_memory = Memory(4000)
+        self.function_memory = Memory(5000)
         self.function_stack = []
         self.global_memory = Memory(0)
         self.jump_stack = []
@@ -205,7 +205,7 @@ class Parser:
                 func_type,
                 return_address,
                 func_scope,
-                self.global_memory.append(func_name),
+                self.global_memory.append(Types.STRING, func_name),
             )
             self.scope_stack.push(func_scope)
             for param_type, param_name in func_params:
@@ -507,10 +507,18 @@ class Parser:
         if len(p) == 4:
             pass
         else:
-            if len(p[2]) == 0:
-                p[0] = self.scope_stack.get_var(p[1])
+            var_info = self.scope_stack.get_var(p[1])
+            if len(p[2]) == 0 and var_info.array_info is None:
+                p[0] = (var_info.type, var_info.address, var_info.name)
+            elif (array_info := var_info.array_info) is not None and len(p[2]) == len(
+                array_info.table
+            ):
+                pass
             else:
-                var_info = self.scope_stack.get_var(p[1])
+                # Variable has dimensions there's a mismatch with the dimensions passed.
+                raise Exception(
+                    f"Wrong indexing when trying to access {var_info.name}."
+                )
 
     def p_read(self, p):
         """
@@ -551,7 +559,9 @@ class Parser:
                     value = int(self.global_memory[index])
                     array_info.add_dim(value)
                 array_info.update_dims()
-                self.scope_stack.add_var(var_name, var_type, array_info)
+                self.scope_stack.add_var(
+                    var_name, var_type, None if array_info.size == 0 else array_info
+                )
 
     def p_dimension(self, p):
         """

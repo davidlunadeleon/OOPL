@@ -22,7 +22,7 @@ class VM:
 
     def init_global_memory(self, global_resources: FunctionResources) -> None:
         self.global_memory = Memory(0, 1000, global_resources)
-        self.function_memory = Memory(4000, 1000, (0, 0, 0, 0))
+        self.function_memory = Memory(5000, 1000, (0, 0, 0, 0, 0))
         self.quads = QuadrupleList(self.global_memory)
 
     def add_function(self, name: str, start_quad: int, resources: FunctionResources):
@@ -37,13 +37,13 @@ class VM:
     def __get_memory(self, address: MemoryAddress | None):
         return (
             self.function_memory
-            if address is not None and address >= 4000
+            if address is not None and address >= 5000
             else self.global_memory
         )
 
     def __reserve_memory(self, func_address: MemoryAddress) -> None:
         self.temp_memory = Memory(
-            4000,
+            5000,
             1000,
             self.func_dir.get(str(self.global_memory[func_address])).resources,
         )

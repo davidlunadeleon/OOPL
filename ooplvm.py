@@ -37,7 +37,13 @@ if __name__ == "__main__":
                         vm.add_function(
                             line[0],
                             int(line[1]),
-                            (int(line[2]), int(line[3]), int(line[4]), int(line[5])),
+                            (
+                                int(line[2]),
+                                int(line[3]),
+                                int(line[4]),
+                                int(line[5]),
+                                int(line[6]),
+                            ),
                         )
                         pass
                     case Segments.QUADRUPLES:
@@ -49,7 +55,13 @@ if __name__ == "__main__":
                     case Segments.GLOBAL_RESOURCES:
                         line = line.split(",")
                         vm.init_global_memory(
-                            (int(line[0]), int(line[1]), int(line[2]), int(line[3]))
+                            (
+                                int(line[0]),
+                                int(line[1]),
+                                int(line[2]),
+                                int(line[3]),
+                                int(line[4]),
+                            )
                         )
         vm.run()
     except (EOFError, FileNotFoundError) as e:

@@ -48,7 +48,7 @@ class CFuncInfo(FuncInfo):
         self.has_return = False
         self.is_body_defined = False
         self.param_list = []
-        self.resources = (0, 0, 0, 0)
+        self.resources = (0, 0, 0, 0, 0)
         self.return_address = return_address
         self.scope = scope
         self.type = type
