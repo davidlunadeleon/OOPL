@@ -41,69 +41,88 @@ class VM:
             else self.global_memory
         )
 
+    def __reserve_memory(self, func_address: MemoryAddress) -> None:
+        self.temp_memory = Memory(
+            4000, 1000, self.func_dir.get(self.global_memory[func_address]).resources
+        )
+
+    def __restore_state(self) -> bool:
+        self.temp_memory.clear()
+        self.function_memory, self.quads.ptr = self.memory_stack.pop()
+        if len(self.memory_stack) == 0:
+            return True
+        else:
+            return False
+
+    def __save_state(self, func_address: MemoryAddress, mem: Memory) -> None:
+        self.memory_stack.append((self.function_memory, self.quads.ptr))
+        self.function_memory = self.temp_memory
+        self.quads.ptr = mem[
+            self.func_dir.get(self.global_memory[func_address]).start_quad
+        ]
+
     def run(self):
         for quad in self.quads:
             op_code, addr1, addr2, addr3 = quad
             mem1 = self.__get_memory(addr1)
             mem2 = self.__get_memory(addr2)
-
-            match op_code:
-                case Operations.GOSUB:
-                    self.memory_stack.append((self.function_memory, self.quads.ptr))
-                    self.function_memory = self.temp_memory
-                    self.quads.ptr = mem1[self.func_dir.get(addr3).start_quad]
-                case Operations.ERA:
-                    self.temp_memory = Memory(
-                        4000, 1000, self.func_dir.get(addr3).resources
-                    )
-
-            if isinstance(addr3, str) or addr3 is None:
-                addr3 = 0
             mem3 = self.__get_memory(addr3)
 
-            match op_code:
-                case Operations.AND:
-                    mem3[addr3] = mem1[addr1] and mem2[addr2]
-                case Operations.ASSIGNOP:
-                    mem3[addr3] = mem1[addr1]
-                case Operations.DIFF:
-                    mem3[addr3] = mem1[addr1] != mem2[addr2]
-                case Operations.DIVIDES:
-                    mem3[addr3] = mem1[addr1] / mem2[addr2]
-                case Operations.ENDSUB:
-                    self.temp_memory.clear()
-                    self.function_memory, self.quads.ptr = self.memory_stack.pop()
-                    if len(self.memory_stack) == 0:
-                        return
-                case Operations.EQ:
-                    mem3[addr3] = mem1[addr1] == mem2[addr2]
-                case Operations.EQGT:
-                    mem3[addr3] = mem1[addr1] >= mem2[addr2]
-                case Operations.EQLT:
-                    mem3[addr3] = mem1[addr1] <= mem2[addr2]
-                case Operations.GOTO:
-                    self.quads.ptr = mem3[addr3]
-                case Operations.GOTOF:
-                    if not mem1[addr1]:
-                        self.quads.ptr = mem3[addr3]
-                case Operations.GOTOT:
-                    if mem1[addr1]:
-                        self.quads.ptr = mem3[addr3]
-                case Operations.GT:
-                    mem3[addr3] = mem1[addr1] > mem2[addr2]
-                case Operations.LT:
-                    mem3[addr3] = mem1[addr1] < mem2[addr2]
-                case Operations.MINUS:
-                    mem3[addr3] = mem1[addr1] - mem2[addr2]
-                case Operations.OR:
-                    mem3[addr3] = mem1[addr1] or mem2[addr2]
-                case Operations.PARAM:
-                    self.temp_memory[addr3] = mem1[addr1]
-                case Operations.PLUS:
-                    mem3[addr3] = mem1[addr1] + mem2[addr2]
-                case Operations.PRINT:
-                    print(mem1[addr1])
-                case Operations.READ:
-                    mem3[addr3] = sys.stdin.readline()
-                case Operations.TIMES:
-                    mem3[addr3] = mem1[addr1] * mem2[addr2]
+            match (addr1, addr2, addr3):
+                case (int(addr1), None, None):
+                    if op_code is Operations.PRINT:
+                        print(mem1[addr1])
+                    else:
+                        raise Exception("Cannot print from a None memory address.")
+                case (None, None, int(addr3)):
+                    match op_code:
+                        case Operations.GOSUB:
+                            self.__save_state(addr3, mem1)
+                        case Operations.ERA:
+                            self.__reserve_memory(addr3)
+                        case Operations.GOTO:
+                            self.quads.ptr = mem3[addr3]
+                        case Operations.READ:
+                            mem3[addr3] = sys.stdin.readline()
+                case (int(addr1), None, int(addr3)):
+                    match op_code:
+                        case Operations.GOTOF:
+                            if not mem1[addr1]:
+                                self.quads.ptr = mem3[addr3]
+                        case Operations.GOTOT:
+                            if mem1[addr1]:
+                                self.quads.ptr = mem3[addr3]
+                        case Operations.ASSIGNOP:
+                            mem3[addr3] = mem1[addr1]
+                        case Operations.PARAM:
+                            self.temp_memory[addr3] = mem1[addr1]
+                case (int(addr1), int(addr2), int(addr3)):
+                    match op_code:
+                        case Operations.AND:
+                            mem3[addr3] = mem1[addr1] and mem2[addr2]
+                        case Operations.DIFF:
+                            mem3[addr3] = mem1[addr1] != mem2[addr2]
+                        case Operations.DIVIDES:
+                            mem3[addr3] = mem1[addr1] / mem2[addr2]
+                        case Operations.EQ:
+                            mem3[addr3] = mem1[addr1] == mem2[addr2]
+                        case Operations.EQGT:
+                            mem3[addr3] = mem1[addr1] >= mem2[addr2]
+                        case Operations.EQLT:
+                            mem3[addr3] = mem1[addr1] <= mem2[addr2]
+                        case Operations.GT:
+                            mem3[addr3] = mem1[addr1] > mem2[addr2]
+                        case Operations.LT:
+                            mem3[addr3] = mem1[addr1] < mem2[addr2]
+                        case Operations.MINUS:
+                            mem3[addr3] = mem1[addr1] - mem2[addr2]
+                        case Operations.OR:
+                            mem3[addr3] = mem1[addr1] or mem2[addr2]
+                        case Operations.PLUS:
+                            mem3[addr3] = mem1[addr1] + mem2[addr2]
+                        case Operations.TIMES:
+                            mem3[addr3] = mem1[addr1] * mem2[addr2]
+                case (None, None, None):
+                    if op_code is Operations.ENDSUB:
+                        if self.__restore_state():
+                            return
