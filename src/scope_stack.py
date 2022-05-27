@@ -4,6 +4,7 @@ from .array_info import ArrayInfo
 from .scope import Scope
 from .utils.types import TypeAddress
 from .utils.enums import Types, ScopeTypes
+from .var_info import VarInfo
 
 
 class ScopeStack:
@@ -27,7 +28,7 @@ class ScopeStack:
                 return True
         return False
 
-    def get_var(self, var_name: str) -> TypeAddress:
+    def get_var(self, var_name: str) -> VarInfo:
         for scope in reversed(self.scope_stack):
             if scope.has(var_name):
                 return scope.get(var_name)

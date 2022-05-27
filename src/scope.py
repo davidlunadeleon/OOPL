@@ -5,6 +5,7 @@ from .memory import Memory
 from .utils.enums import Types, ScopeTypes
 from .utils.types import TypeAddress
 from .var_table import VarTable
+from .var_info import VarInfo
 
 
 class Scope:
@@ -20,9 +21,8 @@ class Scope:
     def has(self, var_name: str) -> bool:
         return self.var_table.has(var_name)
 
-    def get(self, var_name: str) -> TypeAddress:
-        var_info = self.var_table.get(var_name)
-        return (var_info.type, var_info.address, var_info.name)
+    def get(self, var_name: str) -> VarInfo:
+        return self.var_table.get(var_name)
 
     def add(
         self, var_name: str, var_type: Types, array_info: Optional[ArrayInfo] = None
