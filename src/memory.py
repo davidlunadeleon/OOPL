@@ -81,27 +81,30 @@ class Memory:
                 raise TypeError("Can't retrieve a list from invalid type.")
 
     def __getitem__(self, index: MemoryAddress) -> MemoryType:
-        if isinstance(index, int):
-            l = self.__get_list_from_index(index)
-            return l.values[index - l.start_address]
+        l = self.__get_list_from_index(index)
+        if l == self.ptrs:
+            return self[l.values[index - l.start_address]]
         else:
-            raise Exception("Can't access an invalid memory address.")
+            return l.values[index - l.start_address]
 
     def __setitem__(self, index: int, value: MemoryType) -> None:
         l = self.__get_list_from_index(index)
 
-        if l == self.bools:
-            if not isinstance(value, bool):
-                value = True if value == "True" else False
-        elif l == self.floats:
-            value = float(value)
-        elif l == self.ints:
-            value = int(value)
-        else:
-            value = str(value)
+        match l:
+            case self.bools:
+                if not isinstance(value, bool):
+                    value = True if value == "True" else False
+            case self.floats:
+                value = float(value)
+            case self.ints:
+                value = int(value)
+            case self.strings:
+                value = str(value)
+            case self.ptrs:
+                self[l.values[index - l.start_address]] = value
+                return
 
-        index -= l.start_address
-        l.values[index] = value
+        l.values[index - l.start_address] = value
 
     def __append(self, l: MemoryList, value: MemoryType | None) -> MemoryAddress:
         l.values.append(value)
@@ -110,6 +113,10 @@ class Memory:
             raise Exception("Chunk size exceeded!")
         else:
             return l_len + l.start_address
+
+    def save_ptr(self, index: int, value: int) -> None:
+        l = self.ptrs
+        l.values[index - l.start_address] = value
 
     def append(self, type: Types, value: MemoryType) -> MemoryAddress:
         l = self.__get_list_from_t(type)
@@ -164,3 +171,7 @@ class Memory:
             print(
                 f"{'# ' if comment else ''}{index + self.strings.start_address},{item}"
             )
+        if verbose:
+            print("# ptrs")
+        for index, item in enumerate(self.ptrs.values):
+            print(f"{'# ' if comment else ''}{index + self.ptrs.start_address},{item}")
