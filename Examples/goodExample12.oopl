@@ -1,0 +1,48 @@
+bool is_even(int x);
+bool is_odd(int x);
+
+bool is_even(int x) {
+	if (x == 0) {
+		return True;
+	} else {
+		return is_odd(x - 1);
+	}
+}
+
+bool is_odd(int x) {
+	if (x == 0) {
+		return False;
+	} else {
+		return is_even(x - 1);
+	}
+}
+
+int sum(int x) {
+	if (x == 0) {
+		return 0;
+	} else {
+		return x + sum(x - 1);
+	}
+}
+
+int one() {
+	return 1;
+}
+
+int main() {
+	int x;
+	for(x = 0; x < 10; x = x + 1) {
+		if(is_even(x)) {
+			print("X is even!");
+		} else {
+			print("X is odd!");
+		}
+	}
+	while((x = x - 1) > 0) {
+		print(sum(x));
+	}
+	if((x = one()) == 1) {
+		print("X is, indeed, equal to one.");
+	}
+	return 1;
+}
