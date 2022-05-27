@@ -98,6 +98,8 @@ class VM:
                             mem3[addr3] = mem1[addr1]
                         case Operations.PARAM:
                             self.temp_memory[addr3] = mem1[addr1]
+                        case Operations.SAVEPTR:
+                            mem3.save_ptr(addr3, mem1[addr1])
                 case (int(addr1), int(addr2), int(addr3)):
                     match op_code:
                         case Operations.AND:
@@ -124,6 +126,11 @@ class VM:
                             mem3[addr3] = mem1[addr1] + mem2[addr2]
                         case Operations.TIMES:
                             mem3[addr3] = mem1[addr1] * mem2[addr2]
+                        case Operations.VER:
+                            if not (
+                                mem2[addr2] <= mem1[addr1] and mem1[addr1] < mem3[addr3]
+                            ):
+                                raise Exception("Out of index error.")
                 case (None, None, None):
                     if op_code is Operations.ENDSUB:
                         if self.__restore_state():
