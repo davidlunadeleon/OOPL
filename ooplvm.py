@@ -21,34 +21,35 @@ if __name__ == "__main__":
                 if line[0] == "#":
                     # Skip comments and debug information.
                     continue
-                if line in segments:
+                elif line in segments:
                     segment = Segments(line)
                     continue
-                else:
-                    line = line.split(",")
 
-                if segment is Segments.GLOBAL_MEMORY:
-                    if line[1] != "None":
-                        vm.set_global_variable(int(line[0]), line[1])
-                elif segment is Segments.FUNCTIONS:
-                    vm.add_function(
-                        line[0],
-                        int(line[1]),
-                        (int(line[2]), int(line[3]), int(line[4]), int(line[5])),
-                    )
-                    pass
-                elif segment is Segments.QUADRUPLES:
-                    addr1 = None if line[1] == "None" else int(line[1])
-                    addr2 = None if line[2] == "None" else int(line[2])
-                    try:
+                match segment:
+                    case Segments.GLOBAL_MEMORY:
+                        index = line.find(",")
+                        line = [line[:index], line[index + 1 :]]
+                        if line[1] != "None":
+                            vm.set_global_variable(int(line[0]), line[1])
+                    case Segments.FUNCTIONS:
+                        line = line.split(",")
+                        vm.add_function(
+                            line[0],
+                            int(line[1]),
+                            (int(line[2]), int(line[3]), int(line[4]), int(line[5])),
+                        )
+                        pass
+                    case Segments.QUADRUPLES:
+                        line = line.split(",")
+                        addr1 = None if line[1] == "None" else int(line[1])
+                        addr2 = None if line[2] == "None" else int(line[2])
                         addr3 = None if line[3] == "None" else int(line[3])
-                    except ValueError:
-                        addr3 = line[3]
-                    vm.add_quadruple((Operations(line[0]), addr1, addr2, addr3))
-                elif segment is Segments.GLOBAL_RESOURCES:
-                    vm.init_global_memory(
-                        (int(line[0]), int(line[1]), int(line[2]), int(line[3]))
-                    )
+                        vm.add_quadruple((Operations(line[0]), addr1, addr2, addr3))
+                    case Segments.GLOBAL_RESOURCES:
+                        line = line.split(",")
+                        vm.init_global_memory(
+                            (int(line[0]), int(line[1]), int(line[2]), int(line[3]))
+                        )
         vm.run()
     except (EOFError, FileNotFoundError) as e:
         print(e)
