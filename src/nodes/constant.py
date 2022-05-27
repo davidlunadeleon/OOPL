@@ -10,20 +10,21 @@ class Constant:
 
     def __init__(self, const_val: str, const_type: Types, memory: Memory) -> None:
         self.type = const_type
-        if self.type is Types.BOOL:
-            self.val = True if const_val == "True" else False
-        elif self.type is Types.FLOAT:
-            self.val = float(const_val)
-        elif self.type is Types.INT:
-            self.val = int(const_val)
-        elif self.type is Types.STRING:
-            self.val = str(const_val).removeprefix('"').removesuffix('"')
-        else:
-            raise TypeError("Invalid type passed to Constant constructor.")
-        if (address := memory.find(self.val)) is not None:
+        match self.type:
+            case Types.BOOL:
+                self.val = True if const_val == "True" else False
+            case Types.FLOAT:
+                self.val = float(const_val)
+            case Types.INT:
+                self.val = int(const_val)
+            case Types.STRING:
+                self.val = str(const_val).removeprefix('"').removesuffix('"')
+            case _:
+                raise TypeError("Invalid type passed to Constant constructor.")
+        if (address := memory.find(self.type, self.val)) is not None:
             self.address = address
         else:
-            self.address = memory.append(self.val)
+            self.address = memory.append(self.type, self.val)
 
     def get(self) -> TypeAddress:
         return (self.type, self.address, None)
