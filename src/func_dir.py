@@ -27,8 +27,9 @@ class FuncInfo:
 
 
 class CFuncInfo(FuncInfo):
-    is_body_defined: bool
+    address: MemoryAddress
     has_return: bool
+    is_body_defined: bool
     param_list: ParamList
     return_address: MemoryAddress | None
     scope: Scope
@@ -40,8 +41,10 @@ class CFuncInfo(FuncInfo):
         return_address: MemoryAddress | None,
         scope: Scope,
         type: Types,
+        address: MemoryAddress,
     ) -> None:
         super().__init__(name)
+        self.address = address
         self.has_return = False
         self.is_body_defined = False
         self.param_list = []
@@ -53,7 +56,10 @@ class CFuncInfo(FuncInfo):
 
 class VMFuncInfo(FuncInfo):
     def __init__(
-        self, name: str, start_quad: int, resources: FunctionResources
+        self,
+        name: str,
+        start_quad: int,
+        resources: FunctionResources,
     ) -> None:
         super().__init__(name)
         self.start_quad = start_quad
@@ -109,15 +115,13 @@ class CFuncDir(FuncDir[CFuncInfo]):
         return_type: Types,
         return_address: MemoryAddress | None,
         scope: Scope,
+        address: MemoryAddress,
     ) -> CFuncInfo:
         if name in self.func_dir and self.func_dir[name].is_body_defined:
             raise Exception(f"The function {name} is already in the directory.")
         else:
             self.func_dir[name] = CFuncInfo(
-                name,
-                return_address,
-                scope,
-                return_type,
+                name, return_address, scope, return_type, address
             )
             return self.func_dir[name]
 
@@ -129,6 +133,7 @@ class CFuncDir(FuncDir[CFuncInfo]):
                 print(f"# Start quadruple: {value.start_quad}")
                 print(f"# Return address: {value.return_address}")
                 print(f"# Parameters list: {[param for param in value.param_list]}")
+                print(f"# Address: {value.address}")
             print(
                 f"{key},{value.start_quad},{str(value.resources).removeprefix('(').removesuffix(')')}"
             )

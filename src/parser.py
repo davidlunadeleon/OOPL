@@ -46,8 +46,8 @@ class Parser:
         self.verbose = verbose
 
         self.quads = QuadrupleList(self.global_memory)
-        self.quads.add((Operations.ERA, None, None, "main"))
-        self.quads.add((Operations.GOSUB, None, None, "main"))
+        self.quads.add((Operations.ERA, None, None, None))
+        self.quads.add((Operations.GOSUB, None, None, None))
 
     def parse(self, p):
         self.parser.parse(p)
@@ -69,11 +69,24 @@ class Parser:
         """
         finish  :
         """
+        self.quads.quads[0] = (
+            Operations.ERA,
+            None,
+            None,
+            self.func_dir.get("main").address,
+        )
+        self.quads.quads[1] = (
+            Operations.GOSUB,
+            None,
+            None,
+            self.func_dir.get("main").address,
+        )
         for quad in self.quads:
-            op, _, _, func_name = quad
+            op, _, _, func_addr = quad
             if op is Operations.GOSUB:
-                if not (
-                    isinstance(func_name, str)
+                if func_addr is not None and not (
+                    (func_name := self.global_memory[func_addr]) is not None
+                    and isinstance(func_name, str)
                     and self.func_dir.has(func_name)
                     and self.func_dir.get(func_name).is_body_defined
                 ):
@@ -188,7 +201,11 @@ class Parser:
             )
             func_scope = Scope(ScopeTypes.FUNCTION, self.function_memory)
             func_info = self.func_dir.add(
-                func_name, func_type, return_address, func_scope
+                func_name,
+                func_type,
+                return_address,
+                func_scope,
+                self.global_memory.append(func_name),
             )
             self.scope_stack.push(func_scope)
             for param_type, param_name in func_params:
@@ -453,7 +470,7 @@ class Parser:
                         f"Arg, self.function_memoryument mismatch when calling {func_name}."
                     )
                 else:
-                    self.quads.add((Operations.ERA, None, None, func_name))
+                    self.quads.add((Operations.ERA, None, None, func_info.address))
                     for arg, param in zip(func_args, param_list):
                         p_type, p_addr, p_name = param
                         arg_type, arg_addr, _ = arg
@@ -463,7 +480,7 @@ class Parser:
                             raise TypeError(
                                 f"Wrong parameter {p_name} in call to {func_name}. Expected {p_type} but received {arg_type}."
                             )
-                    self.quads.add((Operations.GOSUB, None, None, func_name))
+                    self.quads.add((Operations.GOSUB, None, None, func_info.address))
                     if func_info.type is not Types.VOID:
                         var_addr = self.function_memory.reserve(func_info.type)
                         self.quads.add(
@@ -474,7 +491,6 @@ class Parser:
                                 var_addr,
                             )
                         )
-                        print(func_info.type, var_addr, func_info.return_address)
                     else:
                         var_addr = func_info.return_address
                     p[0] = (func_info.type, var_addr, None)
