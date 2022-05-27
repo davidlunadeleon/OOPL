@@ -47,61 +47,63 @@ class VM:
             mem1 = self.__get_memory(addr1)
             mem2 = self.__get_memory(addr2)
 
-            if op_code is Operations.GOSUB:
-                self.memory_stack.append((self.function_memory, self.quads.ptr))
-                self.function_memory = self.temp_memory
-                self.quads.ptr = mem1[self.func_dir.get(addr3).start_quad]
-            elif op_code is Operations.ERA:
-                self.temp_memory = Memory(
-                    4000, 1000, self.func_dir.get(addr3).resources
-                )
+            match op_code:
+                case Operations.GOSUB:
+                    self.memory_stack.append((self.function_memory, self.quads.ptr))
+                    self.function_memory = self.temp_memory
+                    self.quads.ptr = mem1[self.func_dir.get(addr3).start_quad]
+                case Operations.ERA:
+                    self.temp_memory = Memory(
+                        4000, 1000, self.func_dir.get(addr3).resources
+                    )
 
             if isinstance(addr3, str) or addr3 is None:
                 addr3 = 0
             mem3 = self.__get_memory(addr3)
 
-            if op_code is Operations.AND:
-                mem3[addr3] = mem1[addr1] and mem2[addr2]
-            elif op_code is Operations.ASSIGNOP:
-                mem3[addr3] = mem1[addr1]
-            elif op_code is Operations.DIFF:
-                mem3[addr3] = mem1[addr1] != mem2[addr2]
-            elif op_code is Operations.DIVIDES:
-                mem3[addr3] = mem1[addr1] / mem2[addr2]
-            elif op_code is Operations.ENDSUB:
-                self.temp_memory.clear()
-                self.function_memory, self.quads.ptr = self.memory_stack.pop()
-                if len(self.memory_stack) == 0:
-                    return
-            elif op_code is Operations.EQ:
-                mem3[addr3] = mem1[addr1] == mem2[addr2]
-            elif op_code is Operations.EQGT:
-                mem3[addr3] = mem1[addr1] >= mem2[addr2]
-            elif op_code is Operations.EQLT:
-                mem3[addr3] = mem1[addr1] <= mem2[addr2]
-            elif op_code is Operations.GOTO:
-                self.quads.ptr = mem3[addr3]
-            elif op_code is Operations.GOTOF:
-                if not mem1[addr1]:
+            match op_code:
+                case Operations.AND:
+                    mem3[addr3] = mem1[addr1] and mem2[addr2]
+                case Operations.ASSIGNOP:
+                    mem3[addr3] = mem1[addr1]
+                case Operations.DIFF:
+                    mem3[addr3] = mem1[addr1] != mem2[addr2]
+                case Operations.DIVIDES:
+                    mem3[addr3] = mem1[addr1] / mem2[addr2]
+                case Operations.ENDSUB:
+                    self.temp_memory.clear()
+                    self.function_memory, self.quads.ptr = self.memory_stack.pop()
+                    if len(self.memory_stack) == 0:
+                        return
+                case Operations.EQ:
+                    mem3[addr3] = mem1[addr1] == mem2[addr2]
+                case Operations.EQGT:
+                    mem3[addr3] = mem1[addr1] >= mem2[addr2]
+                case Operations.EQLT:
+                    mem3[addr3] = mem1[addr1] <= mem2[addr2]
+                case Operations.GOTO:
                     self.quads.ptr = mem3[addr3]
-            elif op_code is Operations.GOTOT:
-                if mem1[addr1]:
-                    self.quads.ptr = mem3[addr3]
-            elif op_code is Operations.GT:
-                mem3[addr3] = mem1[addr1] > mem2[addr2]
-            elif op_code is Operations.LT:
-                mem3[addr3] = mem1[addr1] < mem2[addr2]
-            elif op_code is Operations.MINUS:
-                mem3[addr3] = mem1[addr1] - mem2[addr2]
-            elif op_code is Operations.OR:
-                mem3[addr3] = mem1[addr1] or mem2[addr2]
-            elif op_code is Operations.PARAM:
-                self.temp_memory[addr3] = mem1[addr1]
-            elif op_code is Operations.PLUS:
-                mem3[addr3] = mem1[addr1] + mem2[addr2]
-            elif op_code is Operations.PRINT:
-                print(mem1[addr1])
-            elif op_code is Operations.READ:
-                mem3[addr3] = sys.stdin.readline()
-            elif op_code is Operations.TIMES:
-                mem3[addr3] = mem1[addr1] * mem2[addr2]
+                case Operations.GOTOF:
+                    if not mem1[addr1]:
+                        self.quads.ptr = mem3[addr3]
+                case Operations.GOTOT:
+                    if mem1[addr1]:
+                        self.quads.ptr = mem3[addr3]
+                case Operations.GT:
+                    mem3[addr3] = mem1[addr1] > mem2[addr2]
+                case Operations.LT:
+                    mem3[addr3] = mem1[addr1] < mem2[addr2]
+                case Operations.MINUS:
+                    mem3[addr3] = mem1[addr1] - mem2[addr2]
+                case Operations.OR:
+                    mem3[addr3] = mem1[addr1] or mem2[addr2]
+                case Operations.PARAM:
+                    self.temp_memory[addr3] = mem1[addr1]
+                case Operations.PLUS:
+                    mem3[addr3] = mem1[addr1] + mem2[addr2]
+                case Operations.PRINT:
+                    print(mem1[addr1])
+                case Operations.READ:
+                    mem3[addr3] = sys.stdin.readline()
+                case Operations.TIMES:
+                    mem3[addr3] = mem1[addr1] * mem2[addr2]
