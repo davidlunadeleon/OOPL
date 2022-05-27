@@ -19,6 +19,8 @@ class Constant:
                 self.val = int(const_val)
             case Types.STRING:
                 self.val = str(const_val).removeprefix('"').removesuffix('"')
+            case Types.PTR:
+                self.val = int(const_val)
             case _:
                 raise TypeError("Invalid type passed to Constant constructor.")
         if (address := memory.find(self.type, self.val)) is not None:
