@@ -43,7 +43,9 @@ class VM:
 
     def __reserve_memory(self, func_address: MemoryAddress) -> None:
         self.temp_memory = Memory(
-            4000, 1000, self.func_dir.get(self.global_memory[func_address]).resources
+            4000,
+            1000,
+            self.func_dir.get(str(self.global_memory[func_address])).resources,
         )
 
     def __restore_state(self) -> bool:
@@ -57,9 +59,9 @@ class VM:
     def __save_state(self, func_address: MemoryAddress, mem: Memory) -> None:
         self.memory_stack.append((self.function_memory, self.quads.ptr))
         self.function_memory = self.temp_memory
-        self.quads.ptr = mem[
-            self.func_dir.get(self.global_memory[func_address]).start_quad
-        ]
+        self.quads.ptr = int(
+            mem[self.func_dir.get(str(self.global_memory[func_address])).start_quad]
+        )
 
     def run(self):
         for quad in self.quads:
@@ -81,17 +83,17 @@ class VM:
                         case Operations.ERA:
                             self.__reserve_memory(addr3)
                         case Operations.GOTO:
-                            self.quads.ptr = mem3[addr3]
+                            self.quads.ptr = int(mem3[addr3])
                         case Operations.READ:
                             mem3[addr3] = sys.stdin.readline()
                 case (int(addr1), None, int(addr3)):
                     match op_code:
                         case Operations.GOTOF:
                             if not mem1[addr1]:
-                                self.quads.ptr = mem3[addr3]
+                                self.quads.ptr = int(mem3[addr3])
                         case Operations.GOTOT:
                             if mem1[addr1]:
-                                self.quads.ptr = mem3[addr3]
+                                self.quads.ptr = int(mem3[addr3])
                         case Operations.ASSIGNOP:
                             mem3[addr3] = mem1[addr1]
                         case Operations.PARAM:
