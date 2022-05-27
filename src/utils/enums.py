@@ -32,6 +32,7 @@ class Operations(Enum):
     PLUS = "+"
     PRINT = "PRINT"
     READ = "READ"
+    SAVEPTR = "SAVEPTR"
     TIMES = "*"
     VER = "VER"
 
