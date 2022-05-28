@@ -14,6 +14,7 @@ from .scope import Scope
 from .scope_stack import ScopeStack
 from .utils.enums import Types, Operations, ScopeTypes, Segments
 from .utils.types import TokenList, MemoryAddress
+from .utils.errors import OOPLErrorTypes, OOPLError
 
 
 class Parser:
@@ -50,7 +51,7 @@ class Parser:
         self.quads.add((Operations.GOSUB, None, None, None))
 
     def parse(self, p):
-        self.parser.parse(p)
+        self.parser.parse(p, tracking=True)
 
     # Write functions for each grammar rule which is
     # specified in the docstring.
@@ -90,8 +91,11 @@ class Parser:
                     and self.func_dir.has(func_name)
                     and self.func_dir.get(func_name).is_body_defined
                 ):
-                    raise Exception(
-                        f"Function {func_name} was called but its body was not defined."
+                    raise OOPLError(
+                        OOPLErrorTypes.IMPLICIT_DECLARATION,
+                        p.lineno(0),
+                        p.lexpos(0),
+                        f"Function {func_name} was called but its body was not defined.",
                     )
         print(Segments.GLOBAL_RESOURCES.value)
         print(
@@ -140,7 +144,12 @@ class Parser:
         if len(p) == 6:
             func_info.is_body_defined = True
             if func_info.type is not Types.VOID and not func_info.has_return:
-                raise Exception("Missing return statement for non void function.")
+                raise OOPLError(
+                    OOPLErrorTypes.SEMANTIC,
+                    p.lineno(0),
+                    p.lexpos(0),
+                    "missing return statement for non void function",
+                )
             func_info.resources = self.function_memory.describe_resources()
 
             # Only add if there is no return after and it is the end of the function
@@ -424,8 +433,11 @@ class Parser:
                 self.quads.add((Operations.ENDSUB, None, None, None))
                 func_info.has_return = True
             else:
-                raise TypeError(
-                    f"Expected return type {func_info.type} but received {expr_type}."
+                raise OOPLError(
+                    OOPLErrorTypes.TYPE_MISMATCH,
+                    p.lineno(2),
+                    p.lexpos(2),
+                    f"function {func_info.name} expected return type {func_info.type.value} but received {expr_type.value}.",
                 )
         else:
             raise Exception("Can't return from outside a function.")
@@ -712,5 +724,9 @@ class Parser:
         p[0] = Constant(p[1], Types.INT, self.global_memory).get()
 
     def p_error(self, p):
-        # print(f'Syntax error at {p.value!r} in line {p.lineno}')
-        print(f"Syntax error at {p} for {p.value!r} in line {p.lineno}")
+        raise OOPLError(
+            OOPLErrorTypes.SYNTAX,
+            p.lineno,
+            p.lexpos,
+            f"unexpected {p.value}",
+        )

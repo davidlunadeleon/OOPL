@@ -5,6 +5,7 @@ class OOPLErrorTypes(Enum):
     SYNTAX = "syntax"
     TYPE_MISMATCH = "type mismatch"
     IMPLICIT_DECLARATION = "implicit function declaration"
+    SEMANTIC = "semantic"
 
 
 class OOPLError(Exception):
