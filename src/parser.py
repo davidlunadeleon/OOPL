@@ -513,7 +513,53 @@ class Parser:
             elif (array_info := var_info.array_info) is not None and len(p[2]) == len(
                 array_info.table
             ):
-                pass
+                print(array_info)
+                _, lower_lim_addr, _ = Constant(
+                    "0", Types.INT, self.global_memory
+                ).get()
+                temp_addr1 = temp_addr2 = self.function_memory.reserve(Types.INT)
+                for index, (dim, param) in enumerate(zip(array_info.table, p[2])):
+                    param_type, param_address, _ = param
+                    if param_type is not Types.INT:
+                        raise Exception(
+                            f"Can't index {var_info.name} with non int numeric expression."
+                        )
+                    else:
+                        _, upper_lim_addr, _ = Constant(
+                            str(dim.lim_s), Types.INT, self.global_memory
+                        ).get()
+                        _, m_addr, _ = Constant(
+                            str(dim.m), Types.INT, self.global_memory
+                        ).get()
+                        self.quads.add(
+                            (
+                                Operations.VER,
+                                param_address,
+                                lower_lim_addr,
+                                upper_lim_addr,
+                            )
+                        )
+                        if index < len(array_info.table) - 1:
+                            temp_addr1 = temp_addr2
+                            self.quads.add(
+                                (Operations.TIMES, param_address, m_addr, temp_addr1)
+                            )
+                        if index > 0:
+                            temp_addr2 = self.function_memory.reserve(Types.INT)
+                            self.quads.add(
+                                (Operations.PLUS, temp_addr1, param_address, temp_addr2)
+                            )
+                            temp_addr1 = temp_addr2
+                _, addres_address, _ = Constant(
+                    str(var_info.address), Types.INT, self.global_memory
+                ).get()
+                temp_addr2 = self.function_memory.reserve(Types.INT)
+                self.quads.add(
+                    (Operations.PLUS, temp_addr1, addres_address, temp_addr2)
+                )
+                temp_addr1 = self.function_memory.reserve(Types.PTR)
+                self.quads.add((Operations.SAVEPTR, temp_addr2, None, temp_addr1))
+                p[0] = (var_info.type, temp_addr1, var_info.name)
             else:
                 # Variable has dimensions there's a mismatch with the dimensions passed.
                 raise Exception(
