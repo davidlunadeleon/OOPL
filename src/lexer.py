@@ -107,7 +107,7 @@ class Lexer:
 
     def t_ignore_newline(self, t):
         r"\n+"
-        t.lexer.lineno += t.value.count("\n")
+        t.lexer.lineno += len(t.value)
 
     # Error handler for illegal characters
     def t_error(self, t):
