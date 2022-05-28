@@ -30,9 +30,10 @@ def printing_range(line_number: int, number_of_lines: int, context: int) -> rang
     return range(min_num, max_num + 1)
 
 
-def find_column(file_content: str, lexpos: int) -> int:
-    line_start = file_content.rfind("\n", 0, lexpos) + 1
-    return (lexpos - line_start) + 1
+def find_column(file_content: list[str], lexpos: int, line_no: int) -> int:
+    for line in range(0, line_no - 1):
+        lexpos -= len(file_content[line])
+    return lexpos
 
 
 if __name__ == "__main__":
@@ -58,11 +59,11 @@ if __name__ == "__main__":
     try:
         with open(args.file, "r") as file:
             file_lines = file.readlines()
-            file_content = "".join(file_lines).replace("\t", "    ")
+            file_content = "".join(file_lines)
             try:
                 parser.parse(file_content)
             except OOPLError as e:
-                col = find_column(file_content, e.char_pos)
+                col = find_column(file_lines, e.char_pos, e.line_number)
                 print(f"\nError in {file.name}")
                 print(f"{Path(file.name).name}:{e.line_number}:{col}: {e.__str__()}\n")
                 for line_no in printing_range(e.line_number, len(file_lines), 4):
