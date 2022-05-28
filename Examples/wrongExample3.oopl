@@ -4,8 +4,7 @@ int main() {
 	print("Fail!");
 }
 
-int main()
-{
+int main() {
 	int x, y, i, j;
 	float z;
 	string f;

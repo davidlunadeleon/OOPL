@@ -1,7 +1,6 @@
 # Explanation: wrong type return statement in function add.
 
-int add(int x, int y)
-{
+int add(int x, int y) {
 	bool is2;
 	x = 1;
 	y = 2;
@@ -13,8 +12,7 @@ int add(int x, int y)
 	return is2;
 }
 
-int main()
-{
+int main() {
 	int x, y;
 	return 1;
 }

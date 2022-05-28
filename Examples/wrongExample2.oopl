@@ -4,7 +4,7 @@ float j = 28.75;
 class Carro {
 	int llantas;
 	float presion_aire;
-	void checarLlantas(float presion_min) [] {
+	void checarLlantas(float presion_min) {
 		if(presion_aire < presion_min){
 			print("Falta aire");
 		} else {
@@ -13,8 +13,7 @@ class Carro {
 	}
 }
 
-void main()
-{
+void main() {
 	Carro audi;
 	audi.llantas = i;
 	audi.presion_aire = 20.0;
