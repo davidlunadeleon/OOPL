@@ -73,7 +73,7 @@ class VM:
             match (addr1, addr2, addr3):
                 case (int(addr1), None, None):
                     if op_code is Operations.PRINT:
-                        print(mem1[addr1])
+                        print(mem1[addr1], end="")
                     else:
                         raise Exception("Cannot print from a None memory address.")
                 case (None, None, int(addr3)):
@@ -130,7 +130,7 @@ class VM:
                             if not (
                                 mem2[addr2] <= mem1[addr1] and mem1[addr1] < mem3[addr3]
                             ):
-                                raise Exception("Out of index error.")
+                                raise Exception("Out of bounds error.")
                 case (None, None, None):
                     if op_code is Operations.ENDSUB:
                         if self.__restore_state():
