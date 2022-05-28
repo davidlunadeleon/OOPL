@@ -1,0 +1,55 @@
+int main() {
+	int mat1[4], mat2[4][4], mat3[4][4][4];
+	int x, y, z, temp, len;
+
+	len = 4;
+
+	int cont;
+
+	cont = 0;
+	for (x = 0; x < len; x = x + 1) {
+		mat1[x] = (cont = cont + 1);
+	}
+
+	print("Printing input mat1:\n");
+	for (x = 0; x < len; x = x + 1) {
+		print(mat1[x], "\t");
+	}
+	print("\n");
+
+	cont = 0;
+	for (x = 0; x < len; x = x + 1) {
+		for (y = 0; y < len; y = y + 1) {
+			mat2[x][y] = (cont = cont + 1);
+		}
+	}
+
+	print("Printing input mat2:\n");
+	for (x = 0; x < len; x = x + 1) {
+		for (y = 0; y < len; y = y + 1) {
+				print(mat2[x][y], "\t");
+		}
+		print("\n");
+	}
+
+	cont = 0;
+	for (x = 0; x < len; x = x + 1) {
+		for (y = 0; y < len; y = y + 1) {
+			for(z = 0; z < len; z = z + 1) {
+				mat3[x][y][z] = (cont = cont + 1);
+			}
+		}
+	}
+
+	print("Printing input mat3:\n");
+	for (x = 0; x < len; x = x + 1) {
+		for (y = 0; y < len; y = y + 1) {
+			for(z = 0; z < len; z = z + 1) {
+				print(mat3[x][y][z], "\t");
+			}
+			print("\n");
+		}
+		print("\n");
+	}
+	return 1;
+}
