@@ -33,16 +33,16 @@ int main() {
 	int x;
 	for(x = 0; x < 10; x = x + 1) {
 		if(is_even(x)) {
-			print("X is even!");
+			print("X is even!\n");
 		} else {
-			print("X is odd!");
+			print("X is odd!\n");
 		}
 	}
 	while((x = x - 1) > 0) {
-		print(sum(x));
+		print("The sum of 1 to ", x, " is ", sum(x), "\n");
 	}
 	if((x = one()) == 1) {
-		print("X is, indeed, equal to one.");
+		print("X is, indeed, equal to one.\n");
 	}
 	return 1;
 }
