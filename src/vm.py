@@ -72,10 +72,7 @@ class VM:
 
             match quad:
                 case (Operations.PRINT, int(addr1), None, None):
-                    if op_code is Operations.PRINT:
-                        print(mem1[addr1], end="")
-                    else:
-                        raise Exception("Cannot print from a None memory address.")
+                    print(mem1[addr1], end="")
                 case (Operations.GOSUB, None, None, int(addr3)):
                     self.__save_state(addr3, mem1)
                 case (Operations.ERA, None, None, int(addr3)):
@@ -83,7 +80,7 @@ class VM:
                 case (Operations.GOTO, None, None, int(addr3)):
                     self.quads.ptr = int(mem3[addr3])
                 case (Operations.READ, None, None, int(addr3)):
-                    mem3[addr3] = sys.stdin.readline()
+                    mem3[addr3] = input()
                 case (Operations.GOTOF, int(addr1), None, int(addr3)):
                     if not mem1[addr1]:
                         self.quads.ptr = int(mem3[addr3])
