@@ -1,6 +1,7 @@
 float arr[11];
 int arr_len;
 
+int find(float num);
 
 void bubble_sort() {
 	int i, j;
@@ -15,6 +16,8 @@ void bubble_sort() {
 		}
 	}
 }
+
+void print_arr();
 
 void print_arr() {
 	int i;
