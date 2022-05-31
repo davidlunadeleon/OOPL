@@ -237,7 +237,7 @@ class Parser:
 
     def p_for_loop(self, p):
         """
-        for_loop    : FOR LPAREN for_loop_assign SEMICOLON ptr_to_jump_stack expr for_loop_expr SEMICOLON ptr_to_jump_stack for_loop_assign RPAREN ptr_to_jump_stack loop_block
+        for_loop    : FOR LPAREN for_loop_assign SEMICOLON expr for_loop_expr SEMICOLON ptr_to_jump_stack for_loop_assign RPAREN ptr_to_jump_stack loop_block
         """
         before_block = self.jump_stack.pop()
         second_assign = self.jump_stack.pop()
@@ -245,12 +245,9 @@ class Parser:
         after_expr_true = self.jump_stack.pop()
         after_expr_false = self.jump_stack.pop()
         before_expr = self.jump_stack.pop()
-        first_assign = self.jump_stack.pop()
         self.quads.add((Operations.GOTO, None, None, before_second_assign))
         op_code, _, _, _ = self.quads[second_assign]
         self.quads[second_assign] = (op_code, None, None, before_expr)
-        op_code, _, _, _ = self.quads[first_assign]
-        self.quads[first_assign] = (op_code, None, None, before_block)
         op_code, addr, _, _ = self.quads[after_expr_false]
         self.quads[after_expr_false] = (op_code, addr, None, self.quads.ptr_address())
         op_code, addr, _, _ = self.quads[after_expr_true]
