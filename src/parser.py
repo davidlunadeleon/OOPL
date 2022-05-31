@@ -483,7 +483,11 @@ class Parser:
                     for arg, param in zip(func_args, param_list):
                         p_type, p_addr, p_name = param
                         arg_type, arg_addr, _ = arg
-                        if p_type is arg_type:
+                        if (
+                            p_type is arg_type
+                            or (p_type is Types.INT and arg_type is Types.FLOAT)
+                            or (p_type is Types.FLOAT and arg_type is Types.INT)
+                        ):
                             self.quads.add((Operations.PARAM, arg_addr, None, p_addr))
                         else:
                             raise TypeError(
@@ -533,7 +537,7 @@ class Parser:
                 for index, (dim, param) in enumerate(zip(array_info.table, p[2])):
                     param_type, param_address, _ = param
                     addr_stack.append(param_address)
-                    if param_type is not Types.INT:
+                    if not (param_type is Types.INT or param_type is Types.FLOAT):
                         raise Exception(
                             f"Can't index {var_info.name} with non int numeric expression."
                         )
