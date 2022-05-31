@@ -82,10 +82,7 @@ class Memory:
 
     def __getitem__(self, index: MemoryAddress) -> MemoryType:
         l = self.__get_list_from_index(index)
-        if l == self.ptrs:
-            return self[l.values[index - l.start_address]]
-        else:
-            return l.values[index - l.start_address]
+        return l.values[index - l.start_address]
 
     def __setitem__(self, index: int, value: MemoryType) -> None:
         l = self.__get_list_from_index(index)
@@ -149,6 +146,10 @@ class Memory:
             len(self.strings.values),
             len(self.ptrs.values),
         )
+
+    def is_ptr(self, address: MemoryAddress) -> bool:
+        l = self.__get_list_from_index(address)
+        return l == self.ptrs
 
     def print(self, verbose: bool, comment: bool = False):
         if verbose:

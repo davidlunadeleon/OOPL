@@ -70,6 +70,25 @@ class VM:
             mem2 = self.__get_memory(addr2)
             mem3 = self.__get_memory(addr3)
 
+            if addr1 is not None and mem1.is_ptr(addr1):
+                temp_mem = self.__get_memory(int(mem1[addr1]))
+                addr1 = mem1[addr1]
+                mem1 = temp_mem
+            if addr2 is not None and mem2.is_ptr(addr2):
+                temp_mem = self.__get_memory(int(mem2[addr2]))
+                addr2 = mem2[addr2]
+                mem2 = temp_mem
+            if (
+                addr3 is not None
+                and mem3.is_ptr(addr3)
+                and op_code is not Operations.SAVEPTR
+            ):
+                temp_mem = self.__get_memory(int(mem3[addr3]))
+                addr3 = mem3[addr3]
+                mem3 = temp_mem
+
+            quad = (op_code, addr1, addr2, addr3)
+
             match quad:
                 case (Operations.PRINT, int(addr1), None, None):
                     print(mem1[addr1], end="")
