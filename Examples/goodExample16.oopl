@@ -1,4 +1,5 @@
-float B[3][2], C[2][2];
+int B[3][2];
+float C[2][2];
 int len_cB;
 int len_c;
 
@@ -54,6 +55,9 @@ int main(){
     print_C();
     add_num_to_C();
 	print_C();
+
+    print("===== Moving on into matrix multiplication =====\n");
+	fill_C_zeros();
 	
     len_cB = 2;
     float A[2][3];
@@ -63,8 +67,31 @@ int main(){
 	len_rA= 2;
 	len_cA = 3;
 
-    print("Moving on into matrix multiplication: \n");
-	fill_C_zeros();
+    # A is
+    # 10 20.2 30.3
+    # 40.4 50.5 60.6
+
+    A[0][0] = 10;
+    A[0][1] = 20.2;
+    A[0][2] = 30.3;
+
+    A[1][0] = 40.4;
+    A[1][1] = 50.5;
+    A[1][2] = 60.6;
+
+    # B is
+    # 1 2
+    # 3 4
+    # 5 6
+
+    B[0][0] = 1;
+    B[0][1] = 2;
+
+    B[1][0] = 3;
+    B[1][1] = 4;
+
+    B[2][0] = 5;
+    B[2][1] = 6;
 
 	int i, j, k;
 	# Result of matrix multiplication
@@ -75,7 +102,11 @@ int main(){
 			}
 		}
 	}
-	
+
+    # Result should be
+	# 222.1 282.6
+    # 494.9 646.4
+
 	print_C();
 	
 	return 1;
