@@ -1,33 +1,20 @@
 float arr[11];
 int arr_len;
 
+
 void bubble_sort() {
 	int i, j;
 	float buffer;
 	for(i = 0; i < arr_len; i = i + 1) {
 		for(j = i + 1; j < arr_len; j = j + 1) {
-			if(arr[j] > arr[i]) {
-				buffer = arr[j];
-				arr[j] = arr[i];
-				arr[i] = buffer;
-			}
+			print(j , "\n");
 		}
 	}
 }
 
-int find(float num) {
-    int i;
-    for(i = 0; i < arr_len; i = i + 1) {
-        if(arr[i] == num) {
-            return i;
-        }
-    }
-    return -1;
-}
-
 void print_arr() {
 	int i;
-	print("Sorted array with bubble sort: \n")
+	print("Sorted array with bubble sort: \n");
 	for(i = 0; i < arr_len; i = i + 1) {
 		print(arr[i], " ");
 	}
@@ -48,26 +35,8 @@ int main() {
 	arr[9] = 43.2354;
 	arr[10] = -984.342;
 	
-	bubble_sort(arr);
-	print_arr(arr);
-
-	int pos;
-
-	print("Checking if 100 can be found in this list: /n");
-	pos = find(arr, 100);
-	if(pos != -1) {
-		print("It was found at pos ", pos, "\n");
-	} else {
-		print("It was not found! \n");
-	}
-
-	print("Checking if -120.95 can be found in this list: /n");
-	pos = find(arr, -120.95);
-	if(pos != -1) {
-		print("It was found at pos ", pos, "\n");
-	} else {
-		print("It was not found! \n");
-	}
+	bubble_sort();
+	print_arr();
 
 	return 1;
 }
