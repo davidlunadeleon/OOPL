@@ -18,10 +18,19 @@ void bubble_sort() {
 
 void print_arr() {
 	int i;
-	print("Sorted array with bubble sort: \n");
 	for(i = 0; i < arr_len; i = i + 1) {
 		print(arr[i], " ");
 	}
+}
+
+int find(float num) {
+    int i;
+    for(i = 0; i < arr_len; i = i + 1) {
+        if(arr[i] == num) {
+            return i;
+        }
+    }
+    return -1;
 }
 
 int main() {
@@ -39,8 +48,31 @@ int main() {
 	arr[9] = 43.2354;
 	arr[10] = -984.342;
 	
-	bubble_sort();
+	print("Unsorted array: \n");
 	print_arr();
+
+	bubble_sort();
+	
+	print("\nSorted array: \n");
+	print_arr();
+
+	int pos;
+
+	print("\nChecking if 100 can be found in this list: \n");
+	pos = find(100.0);
+	if(pos != -1) {
+		print("It was found at pos ", pos, "\n");
+	} else {
+		print("It was not found! \n");
+	}
+
+	print("Checking if -120.95 can be found in this list: \n");
+	pos = find(-120.95);
+	if(pos != -1) {
+		print("It was found at pos ", pos, "\n");
+	} else {
+		print("It was not found! \n");
+	}
 
 	return 1;
 }
