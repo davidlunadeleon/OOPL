@@ -8,10 +8,23 @@ int fib(int x) {
 	}
 }
 
+int fact(int x) {
+	if (x == 0) {
+		return 1;
+	} else {
+		return (x * fact(x - 1));
+	}
+}
+
 int main() {
 	int x;
+	print("Fibonacci series for first 10 numbers: \n");
 	for(x = 0; x < 10; x = x + 1) {
-		print(fib(x));
+		print(fib(x), " ");
+	}
+	print("\nFactorial of first 10 numbers: \n");
+	for(x = 1; x < 11; x = x + 1) {
+		print(fact(x), " " );
 	}
 	return 1;
 }
