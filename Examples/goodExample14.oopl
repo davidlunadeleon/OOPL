@@ -1,0 +1,25 @@
+float arr[11];
+
+
+int main() {
+	int arr_len;
+	arr_len = 11;
+	
+	arr[0] = 98.4;
+	arr[1] = 24.2;
+	arr[2] = 24.19;
+	arr[3] = 312.3;
+	arr[4] = -4;
+	arr[5] = 5;
+	arr[6] = 6;
+	arr[7] = -120.95;
+	arr[8] = 435;
+	arr[9] = 43.2354;
+	arr[10] = -984.342;
+	
+	
+	# bubble_sort(arr);
+	# print_arr(arr);
+
+	return 1;
+}
