@@ -59,7 +59,7 @@ int main() {
 	int pos;
 
 	print("\nChecking if 100 can be found in this list: \n");
-	pos = find(100.0);
+	pos = find(100);
 	if(pos != -1) {
 		print("It was found at pos ", pos, "\n");
 	} else {
