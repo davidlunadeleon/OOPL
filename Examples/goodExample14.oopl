@@ -7,7 +7,11 @@ void bubble_sort() {
 	float buffer;
 	for(i = 0; i < arr_len; i = i + 1) {
 		for(j = i + 1; j < arr_len; j = j + 1) {
-			print(j , "\n");
+			if(arr[j] < arr[i]) {
+				buffer = arr[j];
+				arr[j] = arr[i];
+				arr[i] = buffer;
+			}
 		}
 	}
 }
