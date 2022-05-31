@@ -1,0 +1,82 @@
+float B[3][2], C[2][2];
+int len_cB;
+int len_c;
+
+void print_C() {
+	int i, j;
+	print("Result of operation: \n");
+	for(i = 0; i < len_c; i = i + 1) {
+		for(j = 0; j < len_c; j = j + 1) {
+			print(C[i][j], " ");
+		}
+		print("\n");
+	}
+}
+
+void fill_C_input(){
+	int i, j;
+	print("Input data for C: \n");
+	float buffer;
+	for(i = 0; i < len_c; i = i + 1) {
+		for(j = 0; j < len_c; j = j + 1) {
+			read(buffer);
+            C[i][j] = buffer;
+		}
+	}
+}
+
+void add_num_to_C(){
+	int i, j;
+    float buffer;
+	print("Input number to add to every value of C: \n");
+	read(buffer);
+	for(i = 0; i < len_c; i = i + 1) {
+		for(j = 0; j < len_c; j = j + 1) {
+			C[i][j] = C[i][j] + buffer;
+		}
+	}
+}
+
+void fill_C_zeros(){
+	int i, j;
+	for(i = 0; i < len_c; i = i + 1) {
+		for(j = 0; j < len_c; j = j + 1) {
+			C[i][j] = 0;
+		}
+	}
+}
+
+
+int main(){	
+	len_c = 2;
+
+	fill_C_input();
+    print_C();
+    add_num_to_C();
+	print_C();
+	
+    len_cB = 2;
+    float A[2][3];
+	int len_rA;
+	int len_cA;
+	
+	len_rA= 2;
+	len_cA = 3;
+
+    print("Moving on into matrix multiplication: \n");
+	fill_C_zeros();
+
+	int i, j, k;
+	# Result of matrix multiplication
+	for(i = 0; i < len_rA; i = i + 1) {
+		for(j = 0; j < len_cB; j = j + 1) {
+			for(k = 0; k < len_cA; k = k + 1) {
+				C[i][j] = C[i][j] + A[i][k] * B[k][j];
+			}
+		}
+	}
+	
+	print_C();
+	
+	return 1;
+}
