@@ -1,0 +1,22 @@
+void bar(int x) {
+	print("Bar: ", x, "\n");
+}
+
+void foo(float x) {
+	print("Foo: ", x, "\n");
+}
+
+int main() {
+	float x;
+	int y;
+	x = 10.5;
+	foo(x);
+	y = 50;
+	bar(y);
+	int arr[10];
+	for(x = 0.5; x < 10; x = x + 1) {
+		arr[x] = x;
+		print("arr[", x, "] is ", arr[x], "\n");
+	}
+	return 1;
+}
