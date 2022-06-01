@@ -25,7 +25,7 @@ class Expression:
         self.type = SemanticCube().get(l_type, op_code, r_type)
         if op_code is Operations.ASSIGNOP:
             if l_name is not None and scope_stack.has_var(l_name):
-                quads.add((op_code, r_addr, None, l_addr))
+                quads.add((op_code, r_addr, 0, l_addr))
                 self.addr = l_addr
                 self.name = l_name
             else:
