@@ -143,7 +143,7 @@ class Parser:
 
         if len(p) == 6:
             func_info.is_body_defined = True
-            if func_info.type is not Types.VOID and not func_info.has_return:
+            if func_info.type is not Types.VOID.value and not func_info.has_return:
                 raise CError(
                     OOPLErrorTypes.SEMANTIC,
                     p.lineno(0),
@@ -237,7 +237,7 @@ class Parser:
 
     def p_for_loop(self, p):
         """
-        for_loop    : FOR LPAREN for_loop_assign SEMICOLON expr for_loop_expr SEMICOLON ptr_to_jump_stack for_loop_assign RPAREN ptr_to_jump_stack loop_block
+        for_loop    : FOR LPAREN for_loop_assign SEMICOLON expr for_loop_expr SEMICOLON ptr_to_jump_stack for_loop_assign empty_goto RPAREN ptr_to_jump_stack loop_block
         """
         before_block = self.jump_stack.pop()
         second_assign = self.jump_stack.pop()
@@ -252,6 +252,7 @@ class Parser:
         self.quads[after_expr_false] = (op_code, addr, 0, self.quads.ptr_address())
         op_code, addr, _, _ = self.quads[after_expr_true]
         self.quads[after_expr_true] = (op_code, addr, 0, before_block)
+        self.quads.print(True)
 
     def p_for_loop_assign(self, p):
         """
@@ -259,6 +260,13 @@ class Parser:
                         |
         """
         self.jump_stack.append(self.quads.ptr_address())
+        print(self.quads.ptr)
+        print(self.jump_stack[-1])
+
+    def p_empty_goto(self, p):
+        """
+        empty_goto  :
+        """
         self.quads.add((Operations.GOTO, 0, 0, 0))
 
     def p_loop_expr(self, p):
@@ -500,7 +508,7 @@ class Parser:
                                 f"Wrong parameter {p_name} in call to {func_name}. Expected {p_type} but received {arg_type}."
                             )
                     self.quads.add((Operations.GOSUB, 0, 0, func_info.address))
-                    if func_info.type is not Types.VOID:
+                    if func_info.type is not Types.VOID.value:
                         var_addr = self.function_memory.reserve(func_info.type)
                         self.quads.add(
                             (
