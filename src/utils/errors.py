@@ -1,14 +1,29 @@
 from enum import Enum
+from typing import TypeAlias
 
 
 class OOPLErrorTypes(Enum):
+    DUPLICATE = "duplicate entity"
+    IMPLICIT_DECLARATION = "implicit function declaration"
+    NULL_DEREF = "null pointer dereference"
+    SEMANTIC = "semantic"
     SYNTAX = "syntax"
     TYPE_MISMATCH = "type mismatch"
-    IMPLICIT_DECLARATION = "implicit function declaration"
-    SEMANTIC = "semantic"
 
 
 class OOPLError(Exception):
+    message: str
+    type: OOPLErrorTypes
+
+    def __init__(self, type: OOPLErrorTypes, message: str) -> None:
+        super().__init__(message)
+        self.type = type
+
+    def __str__(self) -> str:
+        return f"{self.type.value} error: {self.message}"
+
+
+class CError(OOPLError):
     char_pos: int
     line_number: int
     message: str
@@ -17,11 +32,9 @@ class OOPLError(Exception):
     def __init__(
         self, type: OOPLErrorTypes, line_number: int, char_pos: int, message: str
     ) -> None:
-        self.line_number = line_number
+        super().__init__(type, message)
         self.char_pos = char_pos
-        self.message = message
-        self.type = type
-        super().__init__(self.message)
+        self.line_number = line_number
 
-    def __str__(self) -> str:
-        return f"{self.type.value} error: {self.message}"
+
+VMError: TypeAlias = OOPLError
