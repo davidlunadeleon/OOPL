@@ -51,6 +51,9 @@ class VarTable:
         """
         return False if self.table.get(name) is None else True
 
+    def values(self) -> list[VarInfo]:
+        return list(self.table.values())
+
     def __str__(self) -> str:
         var_string = ""
         for key, value in self.table.items():
