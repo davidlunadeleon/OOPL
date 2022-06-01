@@ -2,12 +2,12 @@ from ..memory import Memory
 from ..quadruple_list import QuadrupleList
 from ..scope_stack import ScopeStack
 from ..semantic_cube import SemanticCube
-from ..utils.enums import Operations, Types
 from ..utils.types import TypeAddress, MemoryAddress
+from ..utils.enums import Operations
 
 
 class Expression:
-    type: Types
+    type: str
     addr: MemoryAddress
     name: str | None
 

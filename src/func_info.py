@@ -1,6 +1,5 @@
 from .utils.types import FunctionResources, MemoryAddress, ParamList
 from .scope import Scope
-from .utils.enums import Types
 
 
 class FuncInfo:
@@ -25,14 +24,14 @@ class CFuncInfo(FuncInfo):
     param_list: ParamList
     return_address: MemoryAddress | None
     scope: Scope
-    type: Types
+    type: str
 
     def __init__(
         self,
         name: str,
         return_address: MemoryAddress | None,
         scope: Scope,
-        type: Types,
+        type: str,
         address: MemoryAddress,
     ) -> None:
         super().__init__(name)

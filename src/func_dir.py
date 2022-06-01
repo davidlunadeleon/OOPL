@@ -11,7 +11,6 @@
 
 from .func_info import CFuncInfo, VMFuncInfo
 from .scope import Scope
-from .utils.enums import Types
 from .utils.types import FunctionResources, MemoryAddress
 from .dir import Dir
 
@@ -23,7 +22,7 @@ class CFuncDir(Dir[CFuncInfo]):
     def add(
         self,
         name: str,
-        return_type: Types,
+        return_type: str,
         return_address: MemoryAddress | None,
         scope: Scope,
         address: MemoryAddress,
