@@ -37,7 +37,9 @@ class QuadrupleList:
         self.ptr = 0
 
     def ptr_address(self, offset: int = 0) -> MemoryAddress:
-        _, address, _ = Constant(str(self.ptr + offset), Types.INT, self.mem).get()
+        _, address, _ = Constant(
+            str(self.ptr + offset), Types.INT.value, self.mem
+        ).get()
         return address
 
     def __iter__(self):
