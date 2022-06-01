@@ -28,14 +28,14 @@ class Dir(ABC, Generic[T]):
         """
         Get an item in the directory.
         """
-        if (func_info := self.dir.get(name)) is not None:
-            return func_info
+        if (item := self.dir.get(name)) is not None:
+            return item
         else:
-            raise Exception(f"Couldn't retrieve the information of function {name}.")
+            raise Exception(f"Couldn't retrieve the information of item {name}.")
 
     def has(self, name: str) -> bool:
         """
-        Check whether a function is contained in the directory.
+        Check whether an item is contained in the directory.
         """
         return False if self.dir.get(name) is None else True
 
