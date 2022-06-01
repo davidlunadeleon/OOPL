@@ -48,9 +48,9 @@ if __name__ == "__main__":
                         pass
                     case Segments.QUADRUPLES:
                         line = line.split(",")
-                        addr1 = None if line[1] == "None" else int(line[1])
-                        addr2 = None if line[2] == "None" else int(line[2])
-                        addr3 = None if line[3] == "None" else int(line[3])
+                        addr1 = int(line[1])
+                        addr2 = int(line[2])
+                        addr3 = int(line[3])
                         vm.add_quadruple((Operations(line[0]), addr1, addr2, addr3))
                     case Segments.GLOBAL_RESOURCES:
                         line = line.split(",")
