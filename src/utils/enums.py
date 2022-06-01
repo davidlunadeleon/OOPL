@@ -38,6 +38,7 @@ class Operations(Enum):
 
 
 class ScopeTypes(Enum):
+    CLASS = auto()
     CLASS_FUNCTION = auto()
     FUNCTION = auto()
     GENERIC = auto()

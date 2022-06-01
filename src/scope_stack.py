@@ -25,3 +25,9 @@ class ScopeStack(Stack[Scope]):
             if scope.type is ScopeTypes.LOOP:
                 return True
         return False
+
+    def is_in_class(self) -> bool:
+        for scope in reversed(self.stack):
+            if scope.type is ScopeTypes.CLASS:
+                return True
+        return False
