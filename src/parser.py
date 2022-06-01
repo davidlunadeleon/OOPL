@@ -1,5 +1,7 @@
 # OOPL parser
 
+from copy import deepcopy
+
 # Import libraries
 from .libs.ply import yacc
 
@@ -16,13 +18,14 @@ from .scope_stack import ScopeStack
 from .utils.enums import Types, Operations, ScopeTypes, Segments
 from .utils.errors import OOPLErrorTypes, CError
 from .utils.types import TokenList, MemoryAddress
+from .func_dir_stack import FuncDirStack
 
 
 class Parser:
     break_counter: list[int]
     break_stack: list[int]
     class_dir: ClassDir
-    func_dir: CFuncDir
+    func_dir_stack: FuncDirStack
     function_memory: Memory
     function_stack: list[str]
     global_memory: Memory
@@ -57,7 +60,8 @@ class Parser:
         self.jump_stack = []
 
         # Functions
-        self.func_dir = CFuncDir()
+        self.func_dir_stack = FuncDirStack()
+        self.func_dir_stack.push(CFuncDir())
         self.function_stack = []
 
         # Options
@@ -90,13 +94,13 @@ class Parser:
             Operations.ERA,
             0,
             0,
-            self.func_dir.get("main").address,
+            self.func_dir_stack.get_func("main").address,
         )
         self.quads.quads[1] = (
             Operations.GOSUB,
             0,
             0,
-            self.func_dir.get("main").address,
+            self.func_dir_stack.get_func("main").address,
         )
         for quad in self.quads:
             op, _, _, func_addr = quad
@@ -104,8 +108,8 @@ class Parser:
                 if func_addr is not None and not (
                     (func_name := self.global_memory[func_addr]) is not None
                     and isinstance(func_name, str)
-                    and self.func_dir.has(func_name)
-                    and self.func_dir.get(func_name).is_body_defined
+                    and self.func_dir_stack.has_func(func_name)
+                    and self.func_dir_stack.get_func(func_name).is_body_defined
                 ):
                     raise CError(
                         OOPLErrorTypes.IMPLICIT_DECLARATION,
@@ -122,27 +126,66 @@ class Parser:
         print(Segments.GLOBAL_MEMORY.value)
         self.global_memory.print(self.verbose)
         print(Segments.FUNCTIONS.value)
-        self.func_dir.print(self.verbose)
+        self.func_dir_stack.top().print(self.verbose)
         print(Segments.QUADRUPLES.value)
         self.quads.print(self.verbose)
 
     def p_class(self, p):
         """
-        class   : CLASS ID class_inheritance LCURBR class_content RCURBR
+        class   : CLASS ID register_class class_inheritance mark_class_begin class_block
         """
+        class_name = p[2]
+        self.scope_stack.pop()
+        self.func_dir_stack.pop()
+        class_info = self.class_dir.get(class_name)
+
+    def p_register_class(self, p):
+        """
+        register_class  :
+        """
+        class_name = p[-1]
+        if self.class_dir.has(class_name):
+            raise CError(
+                OOPLErrorTypes.DUPLICATE,
+                p.lineno(0),
+                p.lexpos(0),
+                f"class {class_name} was already declared.",
+            )
+        self.class_dir.add(class_name)
+        p[0] = class_name
 
     def p_class_inheritance(self, p):
         """
         class_inheritance   : COLON ID
                             |
         """
+        class_name = p[-1]
+        if len(p) == 3:
+            base_class_name = p[2]
+            if not self.class_dir.has(base_class_name):
+                raise CError(
+                    OOPLErrorTypes.UNDECLARED_IDENTIFIER,
+                    p.lineno(2),
+                    p.lexpos(2),
+                    f"use of undeclared class {base_class_name}",
+                )
+            else:
+                base_class_info = self.class_dir.get(base_class_name)
+                class_info = self.class_dir.get(class_name)
+                class_info.func_dir = deepcopy(base_class_info.func_dir)
+                class_info.var_table = deepcopy(base_class_info.var_table)
+        p[0] = class_name
 
-    def p_class_content(self, p):
+    def p_mark_class_begin(self, p):
         """
-        class_content   : var_decl class_content
-                        | function class_content
-                        |
+        mark_class_begin    :
         """
+        class_name = p[-1]
+        class_info = self.class_dir.get(class_name)
+        self.scope_stack.push(
+            Scope(ScopeTypes.CLASS, self.global_memory, class_info.var_table)
+        )
+        self.func_dir_stack.push(class_info.func_dir)
 
     def p_function(self, p):
         """
@@ -155,7 +198,7 @@ class Parser:
         func_name = self.function_stack.pop()
         self.scope_stack.pop()
 
-        func_info = self.func_dir.get(func_name)
+        func_info = self.func_dir_stack.get_func(func_name)
 
         if len(p) == 6:
             func_info.is_body_defined = True
@@ -185,7 +228,7 @@ class Parser:
         mark_function_begin :
         """
         func_name = self.function_stack[-1]
-        self.func_dir.get(func_name).start_quad = self.quads.ptr_address()
+        self.func_dir_stack.get_func(func_name).start_quad = self.quads.ptr_address()
 
     def p_register_function(self, p):
         """
@@ -195,14 +238,18 @@ class Parser:
         func_params = p[-1]
 
         # Special logic for main function.
-        if func_name == "main":
+        if func_name == "main" and self.scope_stack.is_in_class():
             if func_type is not Types.INT.value:
                 raise Exception("Return type of main function must be int.")
             if len(func_params) > 0:
                 raise Exception("Main function can't take any parameters.")
 
-        if self.func_dir.has(func_name):
-            func_info = self.func_dir.get(func_name)
+        if (
+            self.func_dir_stack.top().has(func_name)
+            and not (
+                func_info := self.func_dir_stack.top().get(func_name)
+            ).is_body_defined
+        ):
             if func_type is not func_info.type:
                 raise Exception(
                     f"The new function signature of {func_name} does not match the previously defined signature."
@@ -225,7 +272,7 @@ class Parser:
                 else self.global_memory.reserve(func_type)
             )
             func_scope = Scope(ScopeTypes.FUNCTION, self.function_memory)
-            func_info = self.func_dir.add(
+            func_info = self.func_dir_stack.top().add(
                 func_name,
                 func_type,
                 return_address,
@@ -313,6 +360,10 @@ class Parser:
         """
         block           : LCURBR push_scope block_content RCURBR pop_scope
         loop_block      : LCURBR push_loop_scope block_content RCURBR pop_loop_scope
+        class_block     : LCURBR class_content RCURBR
+        class_content   : var_decl class_content
+                        | function class_content
+                        |
         block_content   : statement block_content
                         |
         statement       : expr SEMICOLON
@@ -337,6 +388,7 @@ class Parser:
         push_loop_scope :
         """
         self.scope_stack.push(Scope(ScopeTypes.LOOP, self.function_memory))
+
         self.break_counter.append(0)
 
     def p_pop_loop_scope(self, p):
@@ -438,8 +490,8 @@ class Parser:
         """
         expr_type, expr_address, _ = p[2]
         func_name = self.function_stack[-1]
-        if self.func_dir.has(func_name):
-            func_info = self.func_dir.get(func_name)
+        if self.func_dir_stack.has_func(func_name):
+            func_info = self.func_dir_stack.get_func(func_name)
             if func_info.type is Types.VOID.value:
                 raise Exception("Can't return from a void function.")
             elif func_info.return_address is not None and expr_type is func_info.type:
@@ -489,14 +541,15 @@ class Parser:
         """
         call    : ID call_arguments
                 | ID DOT ID call_arguments
+                | THIS DOT ID call_arguments
         """
         if len(p) == 3:
             func_name = p[1]
             func_args = p[2]
             if func_name == "main":
                 raise Exception(f"Main function cannot be called.")
-            if self.func_dir.has(func_name):
-                func_info = self.func_dir.get(func_name)
+            if self.func_dir_stack.has_func(func_name):
+                func_info = self.func_dir_stack.get_func(func_name)
                 param_list = func_info.param_list
                 if len(func_args) != len(param_list):
                     raise Exception(
@@ -546,6 +599,7 @@ class Parser:
         """
         variable    : ID DOT ID
                     | ID dimension
+                    | THIS DOT ID
         """
         if len(p) == 4:
             pass
