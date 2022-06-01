@@ -1,10 +1,10 @@
-from .utils.types import FunctionResources, MemoryAddress, ParamList
+from .utils.types import Resources, MemoryAddress, ParamList
 from .scope import Scope
 
 
 class FuncInfo:
     start_quad: int
-    resources: FunctionResources
+    resources: Resources
     name: str
 
     def __init__(self, name: str) -> None:
@@ -53,7 +53,7 @@ class VMFuncInfo(FuncInfo):
         self,
         name: str,
         start_quad: int,
-        resources: FunctionResources,
+        resources: Resources,
     ) -> None:
         super().__init__(name)
         self.start_quad = start_quad

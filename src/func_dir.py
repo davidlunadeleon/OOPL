@@ -11,7 +11,7 @@
 
 from .func_info import CFuncInfo, VMFuncInfo
 from .scope import Scope
-from .utils.types import FunctionResources, MemoryAddress
+from .utils.types import Resources, MemoryAddress
 from .containers.dir import Dir
 
 
@@ -27,7 +27,7 @@ class CFuncDir(Dir[CFuncInfo]):
         scope: Scope,
         address: MemoryAddress,
     ) -> CFuncInfo:
-        if name in self.dir and self.dir[name].is_body_defined:
+        if self.has(name) and self.get(name).is_body_defined:
             raise Exception(f"The function {name} is already in the directory.")
         else:
             self.dir[name] = CFuncInfo(
@@ -50,7 +50,6 @@ class CFuncDir(Dir[CFuncInfo]):
                 print(f"# Address: {value.address}")
             print(value)
 
-
 class VMFuncDir(Dir[VMFuncInfo]):
     def __init__(self) -> None:
         super().__init__()
@@ -59,7 +58,7 @@ class VMFuncDir(Dir[VMFuncInfo]):
         self,
         name: str,
         start_quad: int,
-        resources: FunctionResources,
+        resources: Resources,
     ) -> VMFuncInfo:
         if name in self.dir:
             raise Exception(f"The function {name} is already in the directory.")
