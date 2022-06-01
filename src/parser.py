@@ -1,5 +1,7 @@
 # OOPL parser
 
+from copy import deepcopy
+
 # Import libraries
 from .libs.ply import yacc
 
@@ -16,13 +18,16 @@ from .scope_stack import ScopeStack
 from .utils.enums import Types, Operations, ScopeTypes, Segments
 from .utils.errors import OOPLErrorTypes, CError
 from .utils.types import TokenList, MemoryAddress
+from .func_dir_stack import FuncDirStack
+from .containers.stack import Stack
 
 
 class Parser:
     break_counter: list[int]
     break_stack: list[int]
     class_dir: ClassDir
-    func_dir: CFuncDir
+    class_stack: Stack[str]
+    func_dir_stack: FuncDirStack
     function_memory: Memory
     function_stack: list[str]
     global_memory: Memory
@@ -57,13 +62,15 @@ class Parser:
         self.jump_stack = []
 
         # Functions
-        self.func_dir = CFuncDir()
+        self.func_dir_stack = FuncDirStack()
+        self.func_dir_stack.push(CFuncDir())
         self.function_stack = []
 
         # Options
         self.verbose = verbose
 
         # Classes
+        self.class_stack = Stack()
         self.class_dir = ClassDir()
 
     def parse(self, p):
@@ -90,22 +97,22 @@ class Parser:
             Operations.ERA,
             0,
             0,
-            self.func_dir.get("main").address,
+            self.func_dir_stack.get_func("main").address,
         )
         self.quads.quads[1] = (
             Operations.GOSUB,
             0,
             0,
-            self.func_dir.get("main").address,
+            self.func_dir_stack.get_func("main").address,
         )
         for quad in self.quads:
             op, _, _, func_addr = quad
             if op is Operations.GOSUB:
-                if func_addr is not None and not (
+                if func_addr != 0 and not (
                     (func_name := self.global_memory[func_addr]) is not None
                     and isinstance(func_name, str)
-                    and self.func_dir.has(func_name)
-                    and self.func_dir.get(func_name).is_body_defined
+                    and self.func_dir_stack.has_func(func_name)
+                    and self.func_dir_stack.get_func(func_name).is_body_defined
                 ):
                     raise CError(
                         OOPLErrorTypes.IMPLICIT_DECLARATION,
@@ -122,27 +129,66 @@ class Parser:
         print(Segments.GLOBAL_MEMORY.value)
         self.global_memory.print(self.verbose)
         print(Segments.FUNCTIONS.value)
-        self.func_dir.print(self.verbose)
+        self.func_dir_stack.top().print(self.verbose)
         print(Segments.QUADRUPLES.value)
         self.quads.print(self.verbose)
 
     def p_class(self, p):
         """
-        class   : CLASS ID class_inheritance LCURBR class_content RCURBR
+        class   : CLASS ID register_class class_inheritance mark_class_begin class_block
         """
+        self.class_stack.pop()
+        self.func_dir_stack.pop()
+        self.scope_stack.pop()
+
+    def p_register_class(self, p):
+        """
+        register_class  :
+        """
+        class_name = p[-1]
+        if self.class_dir.has(class_name):
+            raise CError(
+                OOPLErrorTypes.DUPLICATE,
+                p.lineno(0),
+                p.lexpos(0),
+                f"class {class_name} was already declared.",
+            )
+        self.class_dir.add(class_name)
+        self.class_stack.push(class_name)
+        p[0] = class_name
 
     def p_class_inheritance(self, p):
         """
         class_inheritance   : COLON ID
                             |
         """
+        class_name = p[-1]
+        if len(p) == 3:
+            base_class_name = p[2]
+            if not self.class_dir.has(base_class_name):
+                raise CError(
+                    OOPLErrorTypes.UNDECLARED_IDENTIFIER,
+                    p.lineno(2),
+                    p.lexpos(2),
+                    f"use of undeclared class {base_class_name}",
+                )
+            else:
+                base_class_info = self.class_dir.get(base_class_name)
+                class_info = self.class_dir.get(class_name)
+                class_info.func_dir = deepcopy(base_class_info.func_dir)
+                class_info.var_table = deepcopy(base_class_info.var_table)
+        p[0] = class_name
 
-    def p_class_content(self, p):
+    def p_mark_class_begin(self, p):
         """
-        class_content   : var_decl class_content
-                        | function class_content
-                        |
+        mark_class_begin    :
         """
+        class_name = p[-1]
+        class_info = self.class_dir.get(class_name)
+        self.scope_stack.push(
+            Scope(ScopeTypes.CLASS, self.global_memory, class_info.var_table)
+        )
+        self.func_dir_stack.push(class_info.func_dir)
 
     def p_function(self, p):
         """
@@ -150,16 +196,15 @@ class Parser:
                     | void_id function_parameters register_function mark_function_begin block
                     | simple_type_id function_parameters register_function SEMICOLON
                     | void_id function_parameters register_function SEMICOLON
-
         """
         func_name = self.function_stack.pop()
         self.scope_stack.pop()
 
-        func_info = self.func_dir.get(func_name)
+        func_info = self.func_dir_stack.get_func(func_name)
 
         if len(p) == 6:
             func_info.is_body_defined = True
-            if func_info.type is not Types.VOID.value and not func_info.has_return:
+            if func_info.type != Types.VOID.value and not func_info.has_return:
                 raise CError(
                     OOPLErrorTypes.SEMANTIC,
                     p.lineno(0),
@@ -185,7 +230,15 @@ class Parser:
         mark_function_begin :
         """
         func_name = self.function_stack[-1]
-        self.func_dir.get(func_name).start_quad = self.quads.ptr_address()
+        func_info = self.func_dir_stack.top().get(func_name)
+        if self.scope_stack.is_in_class():
+            class_info = self.class_dir.get(self.class_stack.top())
+            for value in class_info.var_table.values():
+                _, address, name = self.scope_stack.top().add(
+                    f"this.{value.name}", value.type, value.array_info
+                )
+                func_info.obj_addresses[str(name)] = address
+        func_info.start_quad = self.quads.ptr_address()
 
     def p_register_function(self, p):
         """
@@ -195,15 +248,19 @@ class Parser:
         func_params = p[-1]
 
         # Special logic for main function.
-        if func_name == "main":
-            if func_type is not Types.INT.value:
+        if func_name == "main" and self.scope_stack.is_in_class():
+            if func_type != Types.INT.value:
                 raise Exception("Return type of main function must be int.")
             if len(func_params) > 0:
                 raise Exception("Main function can't take any parameters.")
 
-        if self.func_dir.has(func_name):
-            func_info = self.func_dir.get(func_name)
-            if func_type is not func_info.type:
+        if (
+            self.func_dir_stack.top().has(func_name)
+            and not (
+                func_info := self.func_dir_stack.top().get(func_name)
+            ).is_body_defined
+        ):
+            if func_type != func_info.type:
                 raise Exception(
                     f"The new function signature of {func_name} does not match the previously defined signature."
                 )
@@ -211,7 +268,7 @@ class Parser:
             for saved_param, new_param in zip(func_info.param_list, func_params):
                 sp_type, sp_addr, sp_name = saved_param
                 np_type, np_name = new_param
-                if sp_type is not np_type or np_name != sp_name:
+                if sp_type != np_type or np_name != sp_name:
                     raise Exception(
                         f"The new function signature of {func_name} does not match the previously defined signature."
                     )
@@ -221,11 +278,11 @@ class Parser:
         else:
             return_address = (
                 0
-                if func_type is Types.VOID.value
+                if func_type == Types.VOID.value
                 else self.global_memory.reserve(func_type)
             )
             func_scope = Scope(ScopeTypes.FUNCTION, self.function_memory)
-            func_info = self.func_dir.add(
+            func_info = self.func_dir_stack.top().add(
                 func_name,
                 func_type,
                 return_address,
@@ -290,7 +347,7 @@ class Parser:
         loop_expr  :
         """
         expr_type, expr_addr, _ = p[-1]
-        if expr_type is Types.BOOL.value:
+        if expr_type == Types.BOOL.value:
             self.jump_stack.append(self.quads.ptr_address())
             self.quads.add((Operations.GOTOF, expr_addr, 0, 0))
         else:
@@ -301,7 +358,7 @@ class Parser:
         for_loop_expr  :
         """
         expr_type, expr_addr, _ = p[-1]
-        if expr_type is Types.BOOL.value:
+        if expr_type == Types.BOOL.value:
             self.jump_stack.append(self.quads.ptr_address())
             self.quads.add((Operations.GOTOF, expr_addr, 0, 0))
             self.jump_stack.append(self.quads.ptr_address())
@@ -313,6 +370,10 @@ class Parser:
         """
         block           : LCURBR push_scope block_content RCURBR pop_scope
         loop_block      : LCURBR push_loop_scope block_content RCURBR pop_loop_scope
+        class_block     : LCURBR class_content RCURBR
+        class_content   : var_decl class_content
+                        | function class_content
+                        |
         block_content   : statement block_content
                         |
         statement       : expr SEMICOLON
@@ -337,6 +398,7 @@ class Parser:
         push_loop_scope :
         """
         self.scope_stack.push(Scope(ScopeTypes.LOOP, self.function_memory))
+
         self.break_counter.append(0)
 
     def p_pop_loop_scope(self, p):
@@ -410,18 +472,6 @@ class Parser:
         op_code, addr, _, _ = self.quads[false]
         self.quads[false] = (op_code, addr, 0, self.quads.ptr_address())
 
-    def p_type(self, p):
-        """
-        simple_type     : INT
-                        | FLOAT
-                        | STRING
-                        | BOOL
-        composite_type  : ID
-                        | FILE
-        void            : VOID
-        """
-        p[0] = Types(p[1]).value
-
     def p_break(self, p):
         """
         break   : BREAK SEMICOLON
@@ -438,11 +488,11 @@ class Parser:
         """
         expr_type, expr_address, _ = p[2]
         func_name = self.function_stack[-1]
-        if self.func_dir.has(func_name):
-            func_info = self.func_dir.get(func_name)
-            if func_info.type is Types.VOID.value:
+        if self.func_dir_stack.has_func(func_name):
+            func_info = self.func_dir_stack.get_func(func_name)
+            if func_info.type == Types.VOID.value:
                 raise Exception("Can't return from a void function.")
-            elif func_info.return_address is not None and expr_type is func_info.type:
+            elif func_info.return_address != 0 and expr_type == func_info.type:
                 self.quads.add(
                     (
                         Operations.ASSIGNOP,
@@ -489,14 +539,15 @@ class Parser:
         """
         call    : ID call_arguments
                 | ID DOT ID call_arguments
+                | THIS DOT ID call_arguments
         """
         if len(p) == 3:
             func_name = p[1]
             func_args = p[2]
             if func_name == "main":
                 raise Exception(f"Main function cannot be called.")
-            if self.func_dir.has(func_name):
-                func_info = self.func_dir.get(func_name)
+            if self.func_dir_stack.has_func(func_name):
+                func_info = self.func_dir_stack.get_func(func_name)
                 param_list = func_info.param_list
                 if len(func_args) != len(param_list):
                     raise Exception(
@@ -510,12 +561,12 @@ class Parser:
                         if (
                             p_type is arg_type
                             or (
-                                p_type is Types.INT.value
-                                and arg_type is Types.FLOAT.value
+                                p_type == Types.INT.value
+                                and arg_type == Types.FLOAT.value
                             )
                             or (
-                                p_type is Types.FLOAT.value
-                                and arg_type is Types.INT.value
+                                p_type == Types.FLOAT.value
+                                and arg_type == Types.INT.value
                             )
                         ):
                             self.quads.add((Operations.PARAM, arg_addr, 0, p_addr))
@@ -524,7 +575,7 @@ class Parser:
                                 f"Wrong parameter {p_name} in call to {func_name}. Expected {p_type} but received {arg_type}."
                             )
                     self.quads.add((Operations.GOSUB, 0, 0, func_info.address))
-                    if func_info.type is not Types.VOID.value:
+                    if func_info.type != Types.VOID.value:
                         var_addr = self.function_memory.reserve(func_info.type)
                         self.quads.add(
                             (
@@ -545,76 +596,99 @@ class Parser:
     def p_variable(self, p):
         """
         variable    : ID DOT ID
+                    | THIS DOT ID
                     | ID dimension
         """
         if len(p) == 4:
-            pass
+            base_name = p[1]
+            var_name = f"{base_name}.{p[3]}"
+            if base_name == "this" and not self.scope_stack.is_in_class():
+                raise CError(
+                    OOPLErrorTypes.SCOPE,
+                    p.linepos(1),
+                    p.lexpos(1),
+                    'cannot use keyword "this" outside a class function',
+                )
+            if base_name != "this" and not self.scope_stack.has_var(base_name):
+                raise CError(
+                    OOPLErrorTypes.UNDECLARED_IDENTIFIER,
+                    p.lineno(1),
+                    p.lexpos(1),
+                    f"use of undeclared variable {base_name}",
+                )
         else:
-            var_info = self.scope_stack.get_var(p[1])
-            if len(p[2]) == 0 and var_info.array_info is None:
-                p[0] = (var_info.type, var_info.address, var_info.name)
-            elif (array_info := var_info.array_info) is not None and len(p[2]) == len(
-                array_info.table
-            ):
-                _, lower_lim_addr, _ = Constant(
-                    "0", Types.INT.value, self.global_memory
-                ).get()
-                _, addres_address, _ = Constant(
-                    str(var_info.address), Types.INT.value, self.global_memory
-                ).get()
+            var_name = p[1]
 
-                addr_stack = []
-                for index, (dim, param) in enumerate(zip(array_info.table, p[2])):
-                    param_type, param_address, _ = param
-                    addr_stack.append(param_address)
-                    if not (
-                        param_type is Types.INT.value or param_type is Types.FLOAT.value
-                    ):
-                        raise Exception(
-                            f"Can't index {var_info.name} with non int numeric expression."
+        if not self.scope_stack.has_var(var_name):
+            raise CError(
+                OOPLErrorTypes.UNDECLARED_IDENTIFIER,
+                p.lineno(1),
+                p.lexpos(1),
+                f"use of undeclared variable {var_name}",
+            )
+        var_info = self.scope_stack.get_var(var_name)
+        if var_info.array_info is None:
+            p[0] = (var_info.type, var_info.address, var_info.name)
+        elif (array_info := var_info.array_info) is not None and len(p[2]) == len(
+            array_info.table
+        ):
+            _, lower_lim_addr, _ = Constant(
+                "0", Types.INT.value, self.global_memory
+            ).get()
+            _, addres_address, _ = Constant(
+                str(var_info.address), Types.INT.value, self.global_memory
+            ).get()
+
+            addr_stack = []
+            for index, (dim, param) in enumerate(zip(array_info.table, p[2])):
+                param_type, param_address, _ = param
+                addr_stack.append(param_address)
+                if not (
+                    param_type == Types.INT.value or param_type == Types.FLOAT.value
+                ):
+                    raise Exception(
+                        f"Can't index {var_info.name} with non int numeric expression."
+                    )
+                else:
+                    _, upper_lim_addr, _ = Constant(
+                        str(dim.lim_s), Types.INT.value, self.global_memory
+                    ).get()
+                    _, m_addr, _ = Constant(
+                        str(dim.m), Types.INT.value, self.global_memory
+                    ).get()
+                    self.quads.add(
+                        (
+                            Operations.VER,
+                            param_address,
+                            lower_lim_addr,
+                            upper_lim_addr,
                         )
-                    else:
-                        _, upper_lim_addr, _ = Constant(
-                            str(dim.lim_s), Types.INT.value, self.global_memory
-                        ).get()
-                        _, m_addr, _ = Constant(
-                            str(dim.m), Types.INT.value, self.global_memory
-                        ).get()
+                    )
+                    if index < len(array_info.table) - 1:
+                        temp_addr1 = self.function_memory.reserve(Types.INT.value)
                         self.quads.add(
-                            (
-                                Operations.VER,
-                                param_address,
-                                lower_lim_addr,
-                                upper_lim_addr,
-                            )
+                            (Operations.TIMES, addr_stack.pop(), m_addr, temp_addr1)
                         )
-                        if index < len(array_info.table) - 1:
-                            temp_addr1 = self.function_memory.reserve(Types.INT.value)
-                            self.quads.add(
-                                (Operations.TIMES, addr_stack.pop(), m_addr, temp_addr1)
-                            )
-                            addr_stack.append(temp_addr1)
-                        if index > 0:
-                            temp_addr2 = addr_stack.pop()
-                            temp_addr1 = addr_stack.pop()
-                            temp_addr3 = self.function_memory.reserve(Types.INT.value)
-                            self.quads.add(
-                                (Operations.PLUS, temp_addr1, temp_addr2, temp_addr3)
-                            )
-                            addr_stack.append(temp_addr3)
+                        addr_stack.append(temp_addr1)
+                    if index > 0:
+                        temp_addr2 = addr_stack.pop()
+                        temp_addr1 = addr_stack.pop()
+                        temp_addr3 = self.function_memory.reserve(Types.INT.value)
+                        self.quads.add(
+                            (Operations.PLUS, temp_addr1, temp_addr2, temp_addr3)
+                        )
+                        addr_stack.append(temp_addr3)
 
-                temp_addr1 = self.function_memory.reserve(Types.INT.value)
-                self.quads.add(
-                    (Operations.PLUS, addr_stack.pop(), addres_address, temp_addr1)
-                )
-                temp_addr2 = self.function_memory.reserve(Types.PTR.value)
-                self.quads.add((Operations.SAVEPTR, temp_addr1, 0, temp_addr2))
-                p[0] = (var_info.type, temp_addr2, var_info.name)
-            else:
-                # Variable has dimensions there's a mismatch with the dimensions passed.
-                raise Exception(
-                    f"Wrong indexing when trying to access {var_info.name}."
-                )
+            temp_addr1 = self.function_memory.reserve(Types.INT.value)
+            self.quads.add(
+                (Operations.PLUS, addr_stack.pop(), addres_address, temp_addr1)
+            )
+            temp_addr2 = self.function_memory.reserve(Types.PTR.value)
+            self.quads.add((Operations.SAVEPTR, temp_addr1, 0, temp_addr2))
+            p[0] = (var_info.type, temp_addr2, var_info.name)
+        else:
+            # Variable has dimensions there's a mismatch with the dimensions passed.
+            raise Exception(f"Wrong indexing when trying to access {var_info.name}.")
 
     def p_read(self, p):
         """
@@ -645,8 +719,20 @@ class Parser:
         var_type = p[1]
         if len(p) == 5:
             var_names = [p[2], *p[3]]
+            class_name = p[1]
+            if not self.class_dir.has(class_name):
+                raise CError(
+                    OOPLErrorTypes.UNDECLARED_IDENTIFIER,
+                    p.lineno(1),
+                    p.lexpos(1),
+                    f"use of undeclared class {class_name}",
+                )
+            class_info = self.class_dir.get(class_name)
             for var_name in var_names:
-                pass
+                for value in class_info.var_table.values():
+                    self.scope_stack.top().add(
+                        f"{var_name}.{value.name}", value.type, value.array_info
+                    )
         else:
             var_names = [(p[2], p[3]), *p[4]]
             for var_name, dimensions in var_names:
@@ -720,6 +806,13 @@ class Parser:
         factor          : constant
                         | variable
                         | call
+        simple_type     : INT
+                        | FLOAT
+                        | STRING
+                        | BOOL
+        composite_type  : ID
+                        | FILE
+        void            : VOID
         """
         p[0] = p[1]
 

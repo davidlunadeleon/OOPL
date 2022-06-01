@@ -7,6 +7,7 @@ class OOPLErrorTypes(Enum):
     IMPLICIT_DECLARATION = "implicit function declaration"
     NULL_DEREF = "null pointer dereference"
     SEMANTIC = "semantic"
+    SCOPE = "scope"
     SYNTAX = "syntax"
     TYPE_MISMATCH = "type mismatch"
     UNDECLARED_IDENTIFIER = "undeclared identifier"
