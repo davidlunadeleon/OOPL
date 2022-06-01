@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import Enum, auto
 
 
 class Types(Enum):
@@ -38,10 +38,11 @@ class Operations(Enum):
 
 
 class ScopeTypes(Enum):
-    FUNCTION = "function"
-    GENERIC = "generic"
-    GLOBAL = "global"
-    LOOP = "loop"
+    CLASS_FUNCTION = auto()
+    FUNCTION = auto()
+    GENERIC = auto()
+    GLOBAL = auto()
+    LOOP = auto()
 
 
 class Segments(Enum):
