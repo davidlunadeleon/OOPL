@@ -9,55 +9,15 @@
 #
 #
 
-from abc import ABC, abstractmethod
-from typing import Generic, TypeVar
-
 from .func_info import CFuncInfo, VMFuncInfo
 from .scope import Scope
 from .utils.enums import Types
 from .utils.types import FunctionResources, MemoryAddress
-
-T = TypeVar("T", CFuncInfo, VMFuncInfo)
-
-
-class FuncDir(ABC, Generic[T]):
-    func_dir: dict[str, T]
-
-    def __init__(self):
-        self.func_dir = {}
-
-    @abstractmethod
-    def print(self, verbose: bool) -> None:
-        """
-        Print the function directory.
-        """
-        pass
-
-    @abstractmethod
-    def add(self) -> T:
-        """
-        Insert a new function to the directory.
-        """
-        pass
-
-    def get(self, name: str) -> T:
-        """
-        Get a function in the directory.
-        """
-        if (func_info := self.func_dir.get(name)) is not None:
-            return func_info
-        else:
-            raise Exception(f"Couldn't retrieve the information of function {name}.")
-
-    def has(self, name: str) -> bool:
-        """
-        Check whether a function is contained in the directory.
-        """
-        return False if self.func_dir.get(name) is None else True
+from .dir import Dir
 
 
-class CFuncDir(FuncDir[CFuncInfo]):
-    def __init__(self):
+class CFuncDir(Dir[CFuncInfo]):
+    def __init__(self) -> None:
         super().__init__()
 
     def add(
@@ -68,16 +28,16 @@ class CFuncDir(FuncDir[CFuncInfo]):
         scope: Scope,
         address: MemoryAddress,
     ) -> CFuncInfo:
-        if name in self.func_dir and self.func_dir[name].is_body_defined:
+        if name in self.dir and self.dir[name].is_body_defined:
             raise Exception(f"The function {name} is already in the directory.")
         else:
-            self.func_dir[name] = CFuncInfo(
+            self.dir[name] = CFuncInfo(
                 name, return_address, scope, return_type, address
             )
-            return self.func_dir[name]
+            return self.dir[name]
 
     def print(self, verbose: bool) -> None:
-        for key, value in self.func_dir.items():
+        for key, value in self.dir.items():
             if verbose:
                 print(f"# Function: {key} with return type: {value.type}")
                 print(f"# Resources: {value.resources}")
@@ -85,13 +45,11 @@ class CFuncDir(FuncDir[CFuncInfo]):
                 print(f"# Return address: {value.return_address}")
                 print(f"# Parameters list: {[param for param in value.param_list]}")
                 print(f"# Address: {value.address}")
-            print(
-                f"{key},{value.start_quad},{str(value.resources).removeprefix('(').removesuffix(')')}"
-            )
+            print(value)
 
 
-class VMFuncDir(FuncDir[VMFuncInfo]):
-    def __init__(self):
+class VMFuncDir(Dir[VMFuncInfo]):
+    def __init__(self) -> None:
         super().__init__()
 
     def add(
@@ -100,19 +58,17 @@ class VMFuncDir(FuncDir[VMFuncInfo]):
         start_quad: int,
         resources: FunctionResources,
     ) -> VMFuncInfo:
-        if name in self.func_dir:
+        if name in self.dir:
             raise Exception(f"The function {name} is already in the directory.")
         else:
-            self.func_dir[name] = VMFuncInfo(name, start_quad, resources)
-            return self.func_dir[name]
+            self.dir[name] = VMFuncInfo(name, start_quad, resources)
+            return self.dir[name]
 
     def print(self, verbose: bool) -> None:
-        for key, value in self.func_dir.items():
+        for key, value in self.dir.items():
             if verbose:
                 print(f"# Function: {key}")
                 print(f"# Resources: {value.resources}")
                 print(f"# Start quadruple: {value.start_quad}")
             else:
-                print(
-                    f"# {key},{value.start_quad},{str(value.resources).removeprefix('(').removesuffix(')')}"
-                )
+                print(value)

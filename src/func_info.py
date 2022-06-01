@@ -11,6 +11,12 @@ class FuncInfo:
     def __init__(self, name: str) -> None:
         self.name = name
 
+    def __resources_str(self) -> str:
+        return str(self.resources).removeprefix("(").removesuffix(")")
+
+    def __str__(self) -> str:
+        return f"{self.name},{self.start_quad},{self.__resources_str()}"
+
 
 class CFuncInfo(FuncInfo):
     address: MemoryAddress
@@ -39,6 +45,9 @@ class CFuncInfo(FuncInfo):
         self.scope = scope
         self.type = type
 
+    def __str__(self) -> str:
+        return super().__str__()
+
 
 class VMFuncInfo(FuncInfo):
     def __init__(
@@ -50,3 +59,6 @@ class VMFuncInfo(FuncInfo):
         super().__init__(name)
         self.start_quad = start_quad
         self.resources = resources
+
+    def __str__(self) -> str:
+        return super().__str__()
