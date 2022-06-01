@@ -1,67 +1,125 @@
+from typing import Any
+
 from .utils.enums import Types, Operations
-from typing import Dict
 
 
 class SemanticCube:
-    sem_cube: Dict[Types, Dict[Operations, Dict[Types, Types]]]
+    sem_cube: dict[Any, dict[Operations, dict[Any, Any]]]
 
     def __init__(self):
         self.sem_cube = {
-            Types.INT: {
-                Operations.PLUS: {Types.INT: Types.INT, Types.FLOAT: Types.FLOAT},
-                Operations.MINUS: {Types.INT: Types.INT, Types.FLOAT: Types.FLOAT},
-                Operations.DIVIDES: {
-                    Types.INT: Types.INT,
-                    Types.FLOAT: Types.FLOAT,
+            Types.INT.value: {
+                Operations.PLUS: {
+                    Types.INT.value: Types.INT.value,
+                    Types.FLOAT.value: Types.FLOAT,
                 },
-                Operations.TIMES: {Types.INT: Types.INT, Types.FLOAT: Types.FLOAT},
-                Operations.GT: {Types.INT: Types.BOOL, Types.FLOAT: Types.BOOL},
-                Operations.EQGT: {Types.INT: Types.BOOL, Types.FLOAT: Types.BOOL},
-                Operations.LT: {Types.INT: Types.BOOL, Types.FLOAT: Types.BOOL},
-                Operations.EQLT: {Types.INT: Types.BOOL, Types.FLOAT: Types.BOOL},
-                Operations.EQ: {Types.INT: Types.BOOL, Types.FLOAT: Types.BOOL},
-                Operations.DIFF: {Types.INT: Types.BOOL, Types.FLOAT: Types.BOOL},
-                Operations.ASSIGNOP: {Types.INT: Types.INT, Types.FLOAT: Types.INT},
-            },
-            Types.FLOAT: {
-                Operations.PLUS: {Types.INT: Types.FLOAT, Types.FLOAT: Types.FLOAT},
-                Operations.MINUS: {Types.INT: Types.FLOAT, Types.FLOAT: Types.FLOAT},
-                Operations.DIVIDES: {
-                    Types.INT: Types.FLOAT,
-                    Types.FLOAT: Types.FLOAT,
+                Operations.MINUS: {
+                    Types.INT.value: Types.INT.value,
+                    Types.FLOAT.value: Types.FLOAT,
                 },
-                Operations.TIMES: {Types.INT: Types.FLOAT, Types.FLOAT: Types.FLOAT},
-                Operations.GT: {Types.INT: Types.BOOL, Types.FLOAT: Types.BOOL},
-                Operations.EQGT: {Types.INT: Types.BOOL, Types.FLOAT: Types.BOOL},
-                Operations.LT: {Types.INT: Types.BOOL, Types.FLOAT: Types.BOOL},
-                Operations.EQLT: {Types.INT: Types.BOOL, Types.FLOAT: Types.BOOL},
-                Operations.EQ: {Types.INT: Types.BOOL, Types.FLOAT: Types.BOOL},
-                Operations.DIFF: {Types.INT: Types.BOOL, Types.FLOAT: Types.BOOL},
+                Operations.DIVIDES: {
+                    Types.INT.value: Types.INT.value,
+                    Types.FLOAT.value: Types.FLOAT,
+                },
+                Operations.TIMES: {
+                    Types.INT.value: Types.INT.value,
+                    Types.FLOAT.value: Types.FLOAT,
+                },
+                Operations.GT: {
+                    Types.INT.value: Types.BOOL.value,
+                    Types.FLOAT.value: Types.BOOL.value,
+                },
+                Operations.EQGT: {
+                    Types.INT.value: Types.BOOL.value,
+                    Types.FLOAT.value: Types.BOOL.value,
+                },
+                Operations.LT: {
+                    Types.INT.value: Types.BOOL.value,
+                    Types.FLOAT.value: Types.BOOL.value,
+                },
+                Operations.EQLT: {
+                    Types.INT.value: Types.BOOL.value,
+                    Types.FLOAT.value: Types.BOOL.value,
+                },
+                Operations.EQ: {
+                    Types.INT.value: Types.BOOL.value,
+                    Types.FLOAT.value: Types.BOOL.value,
+                },
+                Operations.DIFF: {
+                    Types.INT.value: Types.BOOL.value,
+                    Types.FLOAT.value: Types.BOOL.value,
+                },
                 Operations.ASSIGNOP: {
-                    Types.INT: Types.FLOAT,
-                    Types.FLOAT: Types.FLOAT,
+                    Types.INT.value: Types.INT.value,
+                    Types.FLOAT.value: Types.INT.value,
                 },
             },
-            Types.STRING: {
-                Operations.PLUS: {Types.STRING: Types.STRING},
-                Operations.GT: {Types.STRING: Types.BOOL},
-                Operations.EQGT: {Types.STRING: Types.BOOL},
-                Operations.LT: {Types.STRING: Types.BOOL},
-                Operations.EQLT: {Types.STRING: Types.BOOL},
-                Operations.EQ: {Types.STRING: Types.BOOL},
-                Operations.DIFF: {Types.STRING: Types.BOOL},
-                Operations.ASSIGNOP: {Types.STRING: Types.STRING},
+            Types.FLOAT.value: {
+                Operations.PLUS: {
+                    Types.INT.value: Types.FLOAT.value,
+                    Types.FLOAT: Types.FLOAT,
+                },
+                Operations.MINUS: {
+                    Types.INT.value: Types.FLOAT.value,
+                    Types.FLOAT: Types.FLOAT,
+                },
+                Operations.DIVIDES: {
+                    Types.INT.value: Types.FLOAT.value,
+                    Types.FLOAT.value: Types.FLOAT,
+                },
+                Operations.TIMES: {
+                    Types.INT.value: Types.FLOAT.value,
+                    Types.FLOAT: Types.FLOAT,
+                },
+                Operations.GT: {
+                    Types.INT.value: Types.BOOL.value,
+                    Types.FLOAT.value: Types.BOOL.value,
+                },
+                Operations.EQGT: {
+                    Types.INT.value: Types.BOOL.value,
+                    Types.FLOAT.value: Types.BOOL.value,
+                },
+                Operations.LT: {
+                    Types.INT.value: Types.BOOL.value,
+                    Types.FLOAT.value: Types.BOOL.value,
+                },
+                Operations.EQLT: {
+                    Types.INT.value: Types.BOOL.value,
+                    Types.FLOAT.value: Types.BOOL.value,
+                },
+                Operations.EQ: {
+                    Types.INT.value: Types.BOOL.value,
+                    Types.FLOAT.value: Types.BOOL.value,
+                },
+                Operations.DIFF: {
+                    Types.INT.value: Types.BOOL.value,
+                    Types.FLOAT.value: Types.BOOL.value,
+                },
+                Operations.ASSIGNOP: {
+                    Types.INT.value: Types.FLOAT.value,
+                    Types.FLOAT.value: Types.FLOAT,
+                },
             },
-            Types.BOOL: {
-                Operations.EQ: {Types.BOOL: Types.BOOL},
-                Operations.DIFF: {Types.BOOL: Types.STRING},
-                Operations.ASSIGNOP: {Types.BOOL: Types.BOOL},
-                Operations.OR: {Types.BOOL: Types.BOOL},
-                Operations.AND: {Types.BOOL: Types.BOOL},
+            Types.STRING.value: {
+                Operations.PLUS: {Types.STRING.value: Types.STRING.value},
+                Operations.GT: {Types.STRING.value: Types.BOOL.value},
+                Operations.EQGT: {Types.STRING.value: Types.BOOL.value},
+                Operations.LT: {Types.STRING.value: Types.BOOL.value},
+                Operations.EQLT: {Types.STRING.value: Types.BOOL.value},
+                Operations.EQ: {Types.STRING.value: Types.BOOL.value},
+                Operations.DIFF: {Types.STRING.value: Types.BOOL.value},
+                Operations.ASSIGNOP: {Types.STRING.value: Types.STRING.value},
+            },
+            Types.BOOL.value: {
+                Operations.EQ: {Types.BOOL.value: Types.BOOL.value},
+                Operations.DIFF: {Types.BOOL.value: Types.STRING.value},
+                Operations.ASSIGNOP: {Types.BOOL.value: Types.BOOL.value},
+                Operations.OR: {Types.BOOL.value: Types.BOOL.value},
+                Operations.AND: {Types.BOOL.value: Types.BOOL.value},
             },
         }
 
-    def get(self, left_type: Types, oper: Operations, right_type: Types) -> Types:
+    def get(self, left_type: str, oper: Operations, right_type: str) -> str:
         """
         Get the return type of an operation.
 
@@ -71,16 +129,13 @@ class SemanticCube:
         right_type: str -- Type of right operator.
         """
         try:
-            result = self.sem_cube.get(left_type).get(oper).get(right_type)
-        except Exception as e:
+            result = self.sem_cube[left_type][oper][right_type]
+        except KeyError as e:
             raise TypeError("Type-mismatch of operands.") from None
 
-        if result is None:
-            raise TypeError("Type-mismatch of operands.")
-        else:
-            return result
+        return result
 
-    def has(self, left_type: Types, oper: Operations, right_type: Types) -> bool:
+    def has(self, left_type: str, oper: Operations, right_type: str) -> bool:
         """
         Check whether an operation is valid.
 
