@@ -7,14 +7,14 @@ from .utils.types import MemoryAddress
 class VarInfo:
     name: str
     type: str
-    address: MemoryAddress | None
+    address: MemoryAddress
     array_info: ArrayInfo | None
 
     def __init__(
         self,
         name: str,
         type: str,
-        address: Optional[MemoryAddress] = None,
+        address: MemoryAddress = 0,
         array_info: Optional[ArrayInfo] = None,
     ) -> None:
         self.name = name
