@@ -1,6 +1,6 @@
 from typing import Tuple, TypeAlias
 
-from .enums import Operations, Types
+from .enums import Operations
 
 # Parsing and lexing
 TokenList = list[str]
@@ -13,4 +13,4 @@ FunctionResources = Tuple[int, int, int, int, int]
 TypeAddress = Tuple[str, MemoryAddress, str | None]
 
 ParamName: TypeAlias = str
-ParamList: TypeAlias = list[Tuple[Types, MemoryAddress, ParamName]]
+ParamList: TypeAlias = list[Tuple[str, MemoryAddress, ParamName]]
