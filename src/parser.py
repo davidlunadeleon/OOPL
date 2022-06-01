@@ -13,8 +13,8 @@ from .quadruple_list import QuadrupleList
 from .scope import Scope
 from .scope_stack import ScopeStack
 from .utils.enums import Types, Operations, ScopeTypes, Segments
+from .utils.errors import OOPLErrorTypes, CError
 from .utils.types import TokenList, MemoryAddress
-from .utils.errors import OOPLErrorTypes, OOPLError
 
 
 class Parser:
@@ -37,9 +37,9 @@ class Parser:
         self.parser = yacc.yacc(module=self)
         self.break_counter = []
         self.break_stack = []
-        self.function_memory = Memory(5000)
+        self.function_memory = Memory(5001)
         self.function_stack = []
-        self.global_memory = Memory(0)
+        self.global_memory = Memory(1)
         self.jump_stack = []
         self.scope_stack = ScopeStack()
         self.func_dir = CFuncDir()
@@ -47,8 +47,8 @@ class Parser:
         self.verbose = verbose
 
         self.quads = QuadrupleList(self.global_memory)
-        self.quads.add((Operations.ERA, None, None, None))
-        self.quads.add((Operations.GOSUB, None, None, None))
+        self.quads.add((Operations.ERA, 0, 0, 0))
+        self.quads.add((Operations.GOSUB, 0, 0, 0))
 
     def parse(self, p):
         self.parser.parse(p, tracking=True)
@@ -72,14 +72,14 @@ class Parser:
         """
         self.quads.quads[0] = (
             Operations.ERA,
-            None,
-            None,
+            0,
+            0,
             self.func_dir.get("main").address,
         )
         self.quads.quads[1] = (
             Operations.GOSUB,
-            None,
-            None,
+            0,
+            0,
             self.func_dir.get("main").address,
         )
         for quad in self.quads:
@@ -91,7 +91,7 @@ class Parser:
                     and self.func_dir.has(func_name)
                     and self.func_dir.get(func_name).is_body_defined
                 ):
-                    raise OOPLError(
+                    raise CError(
                         OOPLErrorTypes.IMPLICIT_DECLARATION,
                         p.lineno(0),
                         p.lexpos(0),
@@ -144,7 +144,7 @@ class Parser:
         if len(p) == 6:
             func_info.is_body_defined = True
             if func_info.type is not Types.VOID and not func_info.has_return:
-                raise OOPLError(
+                raise CError(
                     OOPLErrorTypes.SEMANTIC,
                     p.lineno(0),
                     p.lexpos(0),
@@ -154,7 +154,7 @@ class Parser:
 
             # Only add if there is no return after and it is the end of the function
             if self.quads[self.quads.ptr_address(-1)][0] != Operations.ENDSUB:
-                self.quads.add((Operations.ENDSUB, None, None, None))
+                self.quads.add((Operations.ENDSUB, 0, 0, 0))
             if self.verbose:
                 print(f"# Function: {func_name}")
                 print(f"# Memory map:")
@@ -180,7 +180,7 @@ class Parser:
 
         # Special logic for main function.
         if func_name == "main":
-            if func_type is not Types.INT:
+            if func_type is not Types.INT.value:
                 raise Exception("Return type of main function must be int.")
             if len(func_params) > 0:
                 raise Exception("Main function can't take any parameters.")
@@ -204,8 +204,8 @@ class Parser:
             self.scope_stack.push(func_info.scope)
         else:
             return_address = (
-                None
-                if func_type is Types.VOID
+                0
+                if func_type is Types.VOID.value
                 else self.global_memory.reserve(func_type)
             )
             func_scope = Scope(ScopeTypes.FUNCTION, self.function_memory)
@@ -214,7 +214,7 @@ class Parser:
                 func_type,
                 return_address,
                 func_scope,
-                self.global_memory.append(Types.STRING, func_name),
+                self.global_memory.append(Types.STRING.value, func_name),
             )
             self.scope_stack.push(func_scope)
             for param_type, param_name in func_params:
@@ -245,13 +245,13 @@ class Parser:
         after_expr_true = self.jump_stack.pop()
         after_expr_false = self.jump_stack.pop()
         before_expr = self.jump_stack.pop()
-        self.quads.add((Operations.GOTO, None, None, before_second_assign))
+        self.quads.add((Operations.GOTO, 0, 0, before_second_assign))
         op_code, _, _, _ = self.quads[second_assign]
-        self.quads[second_assign] = (op_code, None, None, before_expr)
+        self.quads[second_assign] = (op_code, 0, 0, before_expr)
         op_code, addr, _, _ = self.quads[after_expr_false]
-        self.quads[after_expr_false] = (op_code, addr, None, self.quads.ptr_address())
+        self.quads[after_expr_false] = (op_code, addr, 0, self.quads.ptr_address())
         op_code, addr, _, _ = self.quads[after_expr_true]
-        self.quads[after_expr_true] = (op_code, addr, None, before_block)
+        self.quads[after_expr_true] = (op_code, addr, 0, before_block)
 
     def p_for_loop_assign(self, p):
         """
@@ -259,16 +259,16 @@ class Parser:
                         |
         """
         self.jump_stack.append(self.quads.ptr_address())
-        self.quads.add((Operations.GOTO, None, None, None))
+        self.quads.add((Operations.GOTO, 0, 0, 0))
 
     def p_loop_expr(self, p):
         """
         loop_expr  :
         """
         expr_type, expr_addr, _ = p[-1]
-        if expr_type is Types.BOOL:
+        if expr_type is Types.BOOL.value:
             self.jump_stack.append(self.quads.ptr_address())
-            self.quads.add((Operations.GOTOF, expr_addr, None, None))
+            self.quads.add((Operations.GOTOF, expr_addr, 0, 0))
         else:
             raise TypeError("Non boolean expression found in loop.")
 
@@ -277,11 +277,11 @@ class Parser:
         for_loop_expr  :
         """
         expr_type, expr_addr, _ = p[-1]
-        if expr_type is Types.BOOL:
+        if expr_type is Types.BOOL.value:
             self.jump_stack.append(self.quads.ptr_address())
-            self.quads.add((Operations.GOTOF, expr_addr, None, None))
+            self.quads.add((Operations.GOTOF, expr_addr, 0, 0))
             self.jump_stack.append(self.quads.ptr_address())
-            self.quads.add((Operations.GOTOT, expr_addr, None, None))
+            self.quads.add((Operations.GOTOT, expr_addr, 0, 0))
         else:
             raise TypeError("Non boolean expression found in loop.")
 
@@ -323,8 +323,8 @@ class Parser:
         for _ in range(self.break_counter.pop()):
             self.quads[self.break_stack.pop()] = (
                 Operations.GOTO,
-                None,
-                None,
+                0,
+                0,
                 self.quads.ptr_address(1),
             )
 
@@ -340,9 +340,9 @@ class Parser:
         """
         after_expr = self.jump_stack.pop()
         before_expr = self.jump_stack.pop()
-        self.quads.add((Operations.GOTO, None, None, before_expr))
+        self.quads.add((Operations.GOTO, 0, 0, before_expr))
         op_code, addr, _, _ = self.quads[after_expr]
-        self.quads[after_expr] = (op_code, addr, None, self.quads.ptr_address())
+        self.quads[after_expr] = (op_code, addr, 0, self.quads.ptr_address())
 
     def p_ptr_to_jump_stack(self, p):
         """
@@ -356,7 +356,7 @@ class Parser:
         """
         end = self.jump_stack.pop()
         op_code, addr, _, _ = self.quads[end]
-        self.quads[end] = (op_code, addr, None, self.quads.ptr_address())
+        self.quads[end] = (op_code, addr, 0, self.quads.ptr_address())
 
     def p_if_alternative(self, p):
         """
@@ -371,20 +371,20 @@ class Parser:
         """
         self.break_counter[-1] += 1
         self.break_stack.append(self.quads.ptr_address())
-        self.quads.add((Operations.GOTO, None, None, None))
+        self.quads.add((Operations.GOTO, 0, 0, 0))
         false = self.jump_stack.pop()
         op_code, addr, _, _ = self.quads[false]
-        self.quads[false] = (op_code, addr, None, self.quads.ptr_address())
+        self.quads[false] = (op_code, addr, 0, self.quads.ptr_address())
 
     def p_if_alternative_neural_point_4(self, p):
         """
         if_alternative_neural_point_4  :
         """
-        self.quads.add((Operations.GOTO, None, None, None))
+        self.quads.add((Operations.GOTO, 0, 0, 0))
         false = self.jump_stack.pop()
         self.jump_stack.append(self.quads.ptr_address(-1))
         op_code, addr, _, _ = self.quads[false]
-        self.quads[false] = (op_code, addr, None, self.quads.ptr_address())
+        self.quads[false] = (op_code, addr, 0, self.quads.ptr_address())
 
     def p_type(self, p):
         """
@@ -396,7 +396,7 @@ class Parser:
                         | FILE
         void            : VOID
         """
-        p[0] = Types(p[1])
+        p[0] = Types(p[1]).value
 
     def p_break(self, p):
         """
@@ -405,7 +405,7 @@ class Parser:
         if not self.scope_stack.is_in_loop():
             raise Exception("Can't use break statement outside a loop.")
         self.break_stack.append(self.quads.ptr_address())
-        self.quads.add((Operations.GOTO, None, None, None))
+        self.quads.add((Operations.GOTO, 0, 0, 0))
         self.break_counter[-1] += 1
 
     def p_return(self, p):
@@ -416,25 +416,25 @@ class Parser:
         func_name = self.function_stack[-1]
         if self.func_dir.has(func_name):
             func_info = self.func_dir.get(func_name)
-            if func_info.type is Types.VOID:
+            if func_info.type is Types.VOID.value:
                 raise Exception("Can't return from a void function.")
             elif func_info.return_address is not None and expr_type is func_info.type:
                 self.quads.add(
                     (
                         Operations.ASSIGNOP,
                         expr_address,
-                        None,
+                        0,
                         func_info.return_address,
                     )
                 )
-                self.quads.add((Operations.ENDSUB, None, None, None))
+                self.quads.add((Operations.ENDSUB, 0, 0, 0))
                 func_info.has_return = True
             else:
-                raise OOPLError(
+                raise CError(
                     OOPLErrorTypes.TYPE_MISMATCH,
                     p.lineno(2),
                     p.lexpos(2),
-                    f"function {func_info.name} expected return type {func_info.type.value} but received {expr_type.value}.",
+                    f"function {func_info.name} expected return type {func_info.type} but received {expr_type.value}.",
                 )
         else:
             raise Exception("Can't return from outside a function.")
@@ -479,28 +479,34 @@ class Parser:
                         f"Arg, self.function_memoryument mismatch when calling {func_name}."
                     )
                 else:
-                    self.quads.add((Operations.ERA, None, None, func_info.address))
+                    self.quads.add((Operations.ERA, 0, 0, func_info.address))
                     for arg, param in zip(func_args, param_list):
                         p_type, p_addr, p_name = param
                         arg_type, arg_addr, _ = arg
                         if (
                             p_type is arg_type
-                            or (p_type is Types.INT and arg_type is Types.FLOAT)
-                            or (p_type is Types.FLOAT and arg_type is Types.INT)
+                            or (
+                                p_type is Types.INT.value
+                                and arg_type is Types.FLOAT.value
+                            )
+                            or (
+                                p_type is Types.FLOAT.value
+                                and arg_type is Types.INT.value
+                            )
                         ):
-                            self.quads.add((Operations.PARAM, arg_addr, None, p_addr))
+                            self.quads.add((Operations.PARAM, arg_addr, 0, p_addr))
                         else:
                             raise TypeError(
                                 f"Wrong parameter {p_name} in call to {func_name}. Expected {p_type} but received {arg_type}."
                             )
-                    self.quads.add((Operations.GOSUB, None, None, func_info.address))
+                    self.quads.add((Operations.GOSUB, 0, 0, func_info.address))
                     if func_info.type is not Types.VOID:
                         var_addr = self.function_memory.reserve(func_info.type)
                         self.quads.add(
                             (
                                 Operations.ASSIGNOP,
                                 func_info.return_address,
-                                None,
+                                0,
                                 var_addr,
                             )
                         )
@@ -527,26 +533,28 @@ class Parser:
                 array_info.table
             ):
                 _, lower_lim_addr, _ = Constant(
-                    "0", Types.INT, self.global_memory
+                    "0", Types.INT.value, self.global_memory
                 ).get()
                 _, addres_address, _ = Constant(
-                    str(var_info.address), Types.INT, self.global_memory
+                    str(var_info.address), Types.INT.value, self.global_memory
                 ).get()
 
                 addr_stack = []
                 for index, (dim, param) in enumerate(zip(array_info.table, p[2])):
                     param_type, param_address, _ = param
                     addr_stack.append(param_address)
-                    if not (param_type is Types.INT or param_type is Types.FLOAT):
+                    if not (
+                        param_type is Types.INT.value or param_type is Types.FLOAT.value
+                    ):
                         raise Exception(
                             f"Can't index {var_info.name} with non int numeric expression."
                         )
                     else:
                         _, upper_lim_addr, _ = Constant(
-                            str(dim.lim_s), Types.INT, self.global_memory
+                            str(dim.lim_s), Types.INT.value, self.global_memory
                         ).get()
                         _, m_addr, _ = Constant(
-                            str(dim.m), Types.INT, self.global_memory
+                            str(dim.m), Types.INT.value, self.global_memory
                         ).get()
                         self.quads.add(
                             (
@@ -557,7 +565,7 @@ class Parser:
                             )
                         )
                         if index < len(array_info.table) - 1:
-                            temp_addr1 = self.function_memory.reserve(Types.INT)
+                            temp_addr1 = self.function_memory.reserve(Types.INT.value)
                             self.quads.add(
                                 (Operations.TIMES, addr_stack.pop(), m_addr, temp_addr1)
                             )
@@ -565,18 +573,18 @@ class Parser:
                         if index > 0:
                             temp_addr2 = addr_stack.pop()
                             temp_addr1 = addr_stack.pop()
-                            temp_addr3 = self.function_memory.reserve(Types.INT)
+                            temp_addr3 = self.function_memory.reserve(Types.INT.value)
                             self.quads.add(
                                 (Operations.PLUS, temp_addr1, temp_addr2, temp_addr3)
                             )
                             addr_stack.append(temp_addr3)
 
-                temp_addr1 = self.function_memory.reserve(Types.INT)
+                temp_addr1 = self.function_memory.reserve(Types.INT.value)
                 self.quads.add(
                     (Operations.PLUS, addr_stack.pop(), addres_address, temp_addr1)
                 )
-                temp_addr2 = self.function_memory.reserve(Types.PTR)
-                self.quads.add((Operations.SAVEPTR, temp_addr1, None, temp_addr2))
+                temp_addr2 = self.function_memory.reserve(Types.PTR.value)
+                self.quads.add((Operations.SAVEPTR, temp_addr1, 0, temp_addr2))
                 p[0] = (var_info.type, temp_addr2, var_info.name)
             else:
                 # Variable has dimensions there's a mismatch with the dimensions passed.
@@ -590,7 +598,7 @@ class Parser:
         """
         if p[3] is not None:
             _, expr_addr, _ = p[3]
-            self.quads.add((Operations.READ, None, None, expr_addr))
+            self.quads.add((Operations.READ, 0, 0, expr_addr))
         else:
             raise Exception(f"No variable found with the id {p[3]}.")
 
@@ -601,7 +609,7 @@ class Parser:
         print_args = p[2]
         for print_arg in print_args:
             if print_arg is not None:
-                self.quads.add((Operations.PRINT, print_arg[1], None, None))
+                self.quads.add((Operations.PRINT, print_arg[1], 0, 0))
             else:
                 raise Exception(f"No variable found with the id {p[3]}.")
 
@@ -704,28 +712,28 @@ class Parser:
         bool_constant   : BOOL_CONSTANT_TRUE
                         | BOOL_CONSTANT_FALSE
         """
-        p[0] = Constant(p[1], Types.BOOL, self.global_memory).get()
+        p[0] = Constant(p[1], Types.BOOL.value, self.global_memory).get()
 
     def p_string_constant(self, p):
         """
         string_constant : STRING_CONSTANT
         """
-        p[0] = Constant(p[1], Types.STRING, self.global_memory).get()
+        p[0] = Constant(p[1], Types.STRING.value, self.global_memory).get()
 
     def p_float_constant(self, p):
         """
         float_constant  : FLOAT_CONSTANT
         """
-        p[0] = Constant(p[1], Types.FLOAT, self.global_memory).get()
+        p[0] = Constant(p[1], Types.FLOAT.value, self.global_memory).get()
 
     def p_int_constant(self, p):
         """
         int_constant    : INT_CONSTANT
         """
-        p[0] = Constant(p[1], Types.INT, self.global_memory).get()
+        p[0] = Constant(p[1], Types.INT.value, self.global_memory).get()
 
     def p_error(self, p):
-        raise OOPLError(
+        raise CError(
             OOPLErrorTypes.SYNTAX,
             p.lineno,
             p.lexpos,
