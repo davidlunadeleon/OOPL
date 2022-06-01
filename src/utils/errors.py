@@ -9,6 +9,7 @@ class OOPLErrorTypes(Enum):
     SEMANTIC = "semantic"
     SYNTAX = "syntax"
     TYPE_MISMATCH = "type mismatch"
+    UNDECLARED_IDENTIFIER = "undeclared identifier"
 
 
 class OOPLError(Exception):
