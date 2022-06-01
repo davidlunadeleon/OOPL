@@ -4,6 +4,7 @@
 from .libs.ply import yacc
 
 from .array_info import ArrayInfo
+from .class_dir import ClassDir
 from .func_dir import CFuncDir
 from .lexer import Lexer
 from .memory import Memory
@@ -20,6 +21,7 @@ from .utils.types import TokenList, MemoryAddress
 class Parser:
     break_counter: list[int]
     break_stack: list[int]
+    class_dir: ClassDir
     func_dir: CFuncDir
     function_memory: Memory
     function_stack: list[str]
@@ -35,20 +37,34 @@ class Parser:
         self.lexer = lexer
         self.tokens = lexer.tokens
         self.parser = yacc.yacc(module=self)
-        self.break_counter = []
-        self.break_stack = []
-        self.function_memory = Memory(5001)
-        self.function_stack = []
-        self.global_memory = Memory(1)
-        self.jump_stack = []
-        self.scope_stack = ScopeStack()
-        self.func_dir = CFuncDir()
-        self.scope_stack.push(Scope(ScopeTypes.GLOBAL, self.global_memory))
-        self.verbose = verbose
 
+        # Memory
+        self.global_memory = Memory(1)
+        self.function_memory = Memory(5001)
+
+        # Scopes
+        self.scope_stack = ScopeStack()
+        self.scope_stack.push(Scope(ScopeTypes.GLOBAL, self.global_memory))
+
+        # Quadruples
         self.quads = QuadrupleList(self.global_memory)
         self.quads.add((Operations.ERA, 0, 0, 0))
         self.quads.add((Operations.GOSUB, 0, 0, 0))
+
+        # Jumps
+        self.break_counter = []
+        self.break_stack = []
+        self.jump_stack = []
+
+        # Functions
+        self.func_dir = CFuncDir()
+        self.function_stack = []
+
+        # Options
+        self.verbose = verbose
+
+        # Classes
+        self.class_dir = ClassDir()
 
     def parse(self, p):
         self.parser.parse(p, tracking=True)
@@ -218,7 +234,7 @@ class Parser:
             )
             self.scope_stack.push(func_scope)
             for param_type, param_name in func_params:
-                _, var_address, _ = self.scope_stack.add_var(
+                _, var_address, _ = self.scope_stack.top().add(
                     param_name, param_type, None
                 )
                 func_info.param_list.append((param_type, var_address, param_name))
@@ -639,7 +655,7 @@ class Parser:
                     value = int(self.global_memory[index])
                     array_info.add_dim(value)
                 array_info.update_dims()
-                self.scope_stack.add_var(
+                self.scope_stack.top().add(
                     var_name, var_type, None if array_info.size == 0 else array_info
                 )
 
