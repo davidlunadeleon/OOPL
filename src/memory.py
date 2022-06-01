@@ -63,19 +63,19 @@ class Memory:
         else:
             return self.ptrs
 
-    def __get_list_from_t(self, t: Types) -> MemoryList:
+    def __get_list_from_t(self, t: str) -> MemoryList:
         match t:
-            case Types.BOOL:
+            case Types.BOOL.value:
                 return self.bools
-            case Types.FLOAT:
+            case Types.FLOAT.value:
                 return self.floats
-            case Types.FLOAT:
+            case Types.FLOAT.value:
                 return self.floats
-            case Types.INT:
+            case Types.INT.value:
                 return self.ints
-            case Types.STRING:
+            case Types.STRING.value:
                 return self.strings
-            case Types.PTR:
+            case Types.PTR.value:
                 return self.ptrs
             case _:
                 raise TypeError("Can't retrieve a list from invalid type.")
@@ -115,17 +115,17 @@ class Memory:
         l = self.ptrs
         l.values[index - l.start_address] = value
 
-    def append(self, type: Types, value: MemoryType) -> MemoryAddress:
+    def append(self, type: str, value: MemoryType) -> MemoryAddress:
         l = self.__get_list_from_t(type)
         return self.__append(l, value)
 
-    def reserve(self, t: Types, size: int = 1) -> MemoryAddress:
+    def reserve(self, t: str, size: int = 1) -> MemoryAddress:
         l = self.__get_list_from_t(t)
         initial_address = self.__append(l, None)
         [self.__append(l, None) for _ in range(size - 1)]
         return initial_address
 
-    def find(self, type: Types, value: MemoryType) -> MemoryAddress | None:
+    def find(self, type: str, value: MemoryType) -> MemoryAddress | None:
         l = self.__get_list_from_t(type)
         try:
             return l.values.index(value) + l.start_address
