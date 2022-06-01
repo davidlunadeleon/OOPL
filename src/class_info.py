@@ -9,3 +9,5 @@ class ClassInfo:
 
     def __init__(self, name: str) -> None:
         self.name = name
+        self.var_table = VarTable()
+        self.func_dir = CFuncDir()
