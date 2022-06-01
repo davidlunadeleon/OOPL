@@ -4,7 +4,7 @@ import sys
 from .func_dir import VMFuncDir
 from .memory import Memory
 from .quadruple_list import QuadrupleList
-from .utils.types import FunctionResources, Quadruple, MemoryType, MemoryAddress
+from .utils.types import Resources, Quadruple, MemoryType, MemoryAddress
 from .utils.enums import Operations
 
 
@@ -20,12 +20,12 @@ class VM:
         self.func_dir = VMFuncDir()
         self.memory_stack = []
 
-    def init_global_memory(self, global_resources: FunctionResources) -> None:
+    def init_global_memory(self, global_resources: Resources) -> None:
         self.global_memory = Memory(1, 1000, global_resources)
         self.function_memory = Memory(5001, 1000, (0, 0, 0, 0, 0))
         self.quads = QuadrupleList(self.global_memory)
 
-    def add_function(self, name: str, start_quad: int, resources: FunctionResources):
+    def add_function(self, name: str, start_quad: int, resources: Resources):
         self.func_dir.add(name, start_quad, resources)
 
     def add_quadruple(self, quad: Quadruple):

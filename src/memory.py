@@ -2,7 +2,7 @@ from typing import Optional, TypeVar, Generic
 
 from .utils.types import MemoryType, MemoryAddress
 from .utils.enums import Types
-from .utils.types import FunctionResources
+from .utils.types import Resources
 
 T = TypeVar(
     "T", None, bool | None, float | None, int | None, str | None, MemoryAddress | None
@@ -35,7 +35,7 @@ class Memory:
         self,
         base_address: int,
         chunk_size: int = 1000,
-        resources: Optional[FunctionResources] = None,
+        resources: Optional[Resources] = None,
     ) -> None:
         self.chunk_size = chunk_size
         if resources is None:
@@ -138,7 +138,7 @@ class Memory:
         self.ints.values.clear()
         self.strings.values.clear()
 
-    def describe_resources(self) -> FunctionResources:
+    def describe_resources(self) -> Resources:
         return (
             len(self.bools.values),
             len(self.floats.values),
