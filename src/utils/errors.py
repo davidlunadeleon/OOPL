@@ -18,6 +18,7 @@ class OOPLError(Exception):
 
     def __init__(self, type: OOPLErrorTypes, message: str) -> None:
         super().__init__(message)
+        self.message = message
         self.type = type
 
     def __str__(self) -> str:
