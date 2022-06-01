@@ -1,7 +1,7 @@
 from typing import Optional
 
 from .array_info import ArrayInfo
-from .dir import Dir
+from .containers.dir import Dir
 from .utils.types import MemoryAddress
 from .var_info import VarInfo
 
@@ -14,7 +14,7 @@ class VarTable(Dir[VarInfo]):
         self,
         name: str,
         var_type: str,
-        address: Optional[MemoryAddress] = None,
+        address: MemoryAddress = 0,
         array_info: Optional[ArrayInfo] = None,
     ) -> VarInfo:
         """

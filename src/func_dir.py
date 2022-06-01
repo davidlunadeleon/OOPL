@@ -12,7 +12,7 @@
 from .func_info import CFuncInfo, VMFuncInfo
 from .scope import Scope
 from .utils.types import FunctionResources, MemoryAddress
-from .dir import Dir
+from .containers.dir import Dir
 
 
 class CFuncDir(Dir[CFuncInfo]):

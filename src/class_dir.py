@@ -1,5 +1,5 @@
 from .class_info import ClassInfo
-from .dir import Dir
+from .containers.dir import Dir
 
 
 class ClassDir(Dir[ClassInfo]):
