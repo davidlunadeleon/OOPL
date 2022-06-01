@@ -8,11 +8,9 @@ TokenList = list[str]
 # Quadruple handling
 MemoryAddress: TypeAlias = int
 MemoryType = bool | float | int | str
-Quadruple = Tuple[
-    Operations, MemoryAddress | None, MemoryAddress | None, MemoryAddress | None
-]
+Quadruple = Tuple[Operations, MemoryAddress, MemoryAddress, MemoryAddress]
 FunctionResources = Tuple[int, int, int, int, int]
-TypeAddress = Tuple[Types, MemoryAddress, str | None]
+TypeAddress = Tuple[str, MemoryAddress, str | None]
 
 ParamName: TypeAlias = str
 ParamList: TypeAlias = list[Tuple[Types, MemoryAddress, ParamName]]
