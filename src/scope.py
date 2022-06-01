@@ -2,7 +2,7 @@ from typing import Optional
 
 from .array_info import ArrayInfo
 from .memory import Memory
-from .utils.enums import Types, ScopeTypes
+from .utils.enums import ScopeTypes
 from .utils.types import TypeAddress
 from .var_table import VarTable
 from .var_info import VarInfo
@@ -25,7 +25,7 @@ class Scope:
         return self.var_table.get(var_name)
 
     def add(
-        self, var_name: str, var_type: Types, array_info: Optional[ArrayInfo] = None
+        self, var_name: str, var_type: str, array_info: Optional[ArrayInfo] = None
     ) -> TypeAddress:
         if array_info is None:
             address = self.mem.reserve(var_type)
