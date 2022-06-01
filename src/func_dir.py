@@ -23,7 +23,7 @@ class CFuncDir(Dir[CFuncInfo]):
         self,
         name: str,
         return_type: str,
-        return_address: MemoryAddress | None,
+        return_address: MemoryAddress,
         scope: Scope,
         address: MemoryAddress,
     ) -> CFuncInfo:
@@ -31,7 +31,11 @@ class CFuncDir(Dir[CFuncInfo]):
             raise Exception(f"The function {name} is already in the directory.")
         else:
             self.dir[name] = CFuncInfo(
-                name, return_address, scope, return_type, address
+                name,
+                scope,
+                return_type,
+                address,
+                return_address,
             )
             return self.dir[name]
 

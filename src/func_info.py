@@ -22,17 +22,17 @@ class CFuncInfo(FuncInfo):
     has_return: bool
     is_body_defined: bool
     param_list: ParamList
-    return_address: MemoryAddress | None
+    return_address: MemoryAddress
     scope: Scope
     type: str
 
     def __init__(
         self,
         name: str,
-        return_address: MemoryAddress | None,
         scope: Scope,
         type: str,
         address: MemoryAddress,
+        return_address: MemoryAddress = 0,
     ) -> None:
         super().__init__(name)
         self.address = address
