@@ -21,6 +21,7 @@ class CFuncInfo(FuncInfo):
     address: MemoryAddress
     has_return: bool
     is_body_defined: bool
+    obj_addresses: dict[str, MemoryAddress]
     param_list: ParamList
     return_address: MemoryAddress
     scope: Scope
@@ -38,6 +39,7 @@ class CFuncInfo(FuncInfo):
         self.address = address
         self.has_return = False
         self.is_body_defined = False
+        self.obj_addresses = {}
         self.param_list = []
         self.resources = (0, 0, 0, 0, 0)
         self.return_address = return_address
