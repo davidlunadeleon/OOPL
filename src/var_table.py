@@ -1,7 +1,6 @@
 from typing import Optional
 
 from .array_info import ArrayInfo
-from .utils.enums import Types
 from .utils.types import MemoryAddress
 from .var_info import VarInfo
 
@@ -15,8 +14,8 @@ class VarTable:
     def add(
         self,
         name: str,
-        var_type: Types,
-        address: MemoryAddress,
+        var_type: str,
+        address: Optional[MemoryAddress] = None,
         array_info: Optional[ArrayInfo] = None,
     ) -> VarInfo:
         """

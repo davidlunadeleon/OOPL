@@ -1,20 +1,21 @@
+from typing import Optional
+
 from .array_info import ArrayInfo
-from .utils.enums import Types
 from .utils.types import MemoryAddress
 
 
 class VarInfo:
     name: str
-    type: Types
-    address: MemoryAddress
+    type: str
+    address: MemoryAddress | None
     array_info: ArrayInfo | None
 
     def __init__(
         self,
         name: str,
-        type: Types,
-        address: MemoryAddress,
-        array_info: ArrayInfo | None,
+        type: str,
+        address: Optional[MemoryAddress] = None,
+        array_info: Optional[ArrayInfo] = None,
     ) -> None:
         self.name = name
         self.type = type
@@ -22,4 +23,4 @@ class VarInfo:
         self.array_info = array_info
 
     def __str__(self) -> str:
-        return f"<name:{self.name},type:{self.type.value},address:{self.address},array_info:{self.array_info}>"
+        return f"<name:{self.name},type:{self.type},address:{self.address},array_info:{self.array_info}>"
