@@ -1,0 +1,61 @@
+class Car {
+    int tires_pressure[4];
+
+    void checkTires(float needed_pressure) {
+        int i;
+        i = 0;
+        while(i < 4) {
+            if(needed_pressure > tires_pressure[i]) {
+                print("Tire ", i, " needs more air!\n");
+            } else {
+                print("Tire ", i, " is perfect.\n");
+            }
+            i = i + 1;
+        }
+    }
+}
+
+class LuxuryCar : Car {
+    bool sun_roof, leather_seats;
+    
+    string getBrand(int num){
+        if(num >= -10 && num <= 0) {
+            return "Ferrari";
+        } esleif (num > 0 && <= num 10) {
+            string name = "Maserati";
+            return name;
+        } else {
+            return "Lamborghini";
+        }
+    }
+}
+
+int main() {
+    Car audi;
+   
+    audi.tires_pressure[0] = 20.3;
+    audi.tires_pressure[1] = 31.12;
+    audi.tires_pressure[2] = 33.7532;
+    audi.tires_pressure[3] = 2.1;
+
+    audi.checkTires(30.5);
+
+    LuxuryCar ferrari;
+
+    ferrari.sun_roof = True;
+    ferrari.leather_seats = True;
+
+    ferrari.tires_pressure[0] = 20.3;
+    ferrari.tires_pressure[1] = 31.12;
+    ferrari.tires_pressure[2] = 33.7532;
+    ferrari.tires_pressure[3] = 2.1;
+
+    int needed_pressure;
+    needed_pressure = 17.4;
+
+    ferrari.checkTires(needed_pressure);
+
+    ferrari.getBrand(-8);
+
+    return 1;
+}
