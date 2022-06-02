@@ -11,19 +11,19 @@ class SemanticCube:
             Types.INT.value: {
                 Operations.PLUS: {
                     Types.INT.value: Types.INT.value,
-                    Types.FLOAT.value: Types.FLOAT,
+                    Types.FLOAT.value: Types.FLOAT.value,
                 },
                 Operations.MINUS: {
                     Types.INT.value: Types.INT.value,
-                    Types.FLOAT.value: Types.FLOAT,
+                    Types.FLOAT.value: Types.FLOAT.value,
                 },
                 Operations.DIVIDES: {
                     Types.INT.value: Types.INT.value,
-                    Types.FLOAT.value: Types.FLOAT,
+                    Types.FLOAT.value: Types.FLOAT.value,
                 },
                 Operations.TIMES: {
                     Types.INT.value: Types.INT.value,
-                    Types.FLOAT.value: Types.FLOAT,
+                    Types.FLOAT.value: Types.FLOAT.value,
                 },
                 Operations.GT: {
                     Types.INT.value: Types.BOOL.value,
@@ -57,19 +57,19 @@ class SemanticCube:
             Types.FLOAT.value: {
                 Operations.PLUS: {
                     Types.INT.value: Types.FLOAT.value,
-                    Types.FLOAT: Types.FLOAT,
+                    Types.FLOAT.value: Types.FLOAT.value,
                 },
                 Operations.MINUS: {
                     Types.INT.value: Types.FLOAT.value,
-                    Types.FLOAT: Types.FLOAT,
+                    Types.FLOAT.value: Types.FLOAT.value,
                 },
                 Operations.DIVIDES: {
                     Types.INT.value: Types.FLOAT.value,
-                    Types.FLOAT.value: Types.FLOAT,
+                    Types.FLOAT.value: Types.FLOAT.value,
                 },
                 Operations.TIMES: {
                     Types.INT.value: Types.FLOAT.value,
-                    Types.FLOAT: Types.FLOAT,
+                    Types.FLOAT.value: Types.FLOAT.value,
                 },
                 Operations.GT: {
                     Types.INT.value: Types.BOOL.value,
@@ -97,7 +97,7 @@ class SemanticCube:
                 },
                 Operations.ASSIGNOP: {
                     Types.INT.value: Types.FLOAT.value,
-                    Types.FLOAT.value: Types.FLOAT,
+                    Types.FLOAT.value: Types.FLOAT.value,
                 },
             },
             Types.STRING.value: {
