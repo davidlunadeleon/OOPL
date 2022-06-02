@@ -7,6 +7,9 @@ class SemanticCube:
     sem_cube: dict[Any, dict[Operations, dict[Any, Any]]]
 
     def __init__(self):
+        """
+        Creating semantic cube TRIE which will be used to check if operations between operands are valid.
+        """
         self.sem_cube = {
             Types.INT.value: {
                 Operations.PLUS: {
