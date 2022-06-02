@@ -21,7 +21,7 @@ class LuxuryCar : Car {
     string getBrand(int num){
         if(num >= -10 && num <= 0) {
             return "Ferrari";
-        } esleif (num > 0 && <= num 10) {
+        } elseif (num > 0 && <= num 10) {
             string name = "Maserati";
             return name;
         } else {
