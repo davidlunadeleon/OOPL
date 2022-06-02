@@ -15,6 +15,7 @@ class Carro {
 
 void main()
 {
+	i = 4;
 	Carro audi;
 	audi.llantas = i;
 	audi.presion_aire = 20.0;
