@@ -44,3 +44,9 @@ class Dir(ABC, Generic[T]):
         Get all the items in the directory.
         """
         return list(self.dir.values())
+
+    def insert(self, name: str, t: T) -> None:
+        """
+        Insert an already built element to the directory.
+        """
+        self.dir[name] = t
