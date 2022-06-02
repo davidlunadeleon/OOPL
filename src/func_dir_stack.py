@@ -9,7 +9,7 @@ class FuncDirStack(Stack[CFuncDir]):
 
     def has_func(self, func_name: str) -> bool:
         """
-        Check whether the function exists in the directory. 
+        Check whether the function exists in a function directory. 
 
         Arguments:
         func_name: str -- Name of the function.
@@ -21,7 +21,7 @@ class FuncDirStack(Stack[CFuncDir]):
 
     def get_func(self, func_name: str) -> CFuncInfo:
         """
-        Get the information of a function within the directory. 
+        Get the information of a function within a function directory. 
 
         Arguments:
         func_name: str -- Name of the function.
