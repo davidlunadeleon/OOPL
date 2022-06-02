@@ -8,12 +8,24 @@ class FuncDirStack(Stack[CFuncDir]):
         super().__init__()
 
     def has_func(self, func_name: str) -> bool:
+        """
+        Check whether the function exists in the directory. 
+
+        Arguments:
+        func_name: str -- Name of the function.
+        """
         for c_func_dir in reversed(self.stack):
             if c_func_dir.has(func_name):
                 return True
         return False
 
     def get_func(self, func_name: str) -> CFuncInfo:
+        """
+        Get the information of a function within the directory. 
+
+        Arguments:
+        func_name: str -- Name of the function.
+        """
         for c_func_dir in reversed(self.stack):
             if c_func_dir.has(func_name):
                 return c_func_dir.get(func_name)
