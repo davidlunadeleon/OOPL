@@ -137,8 +137,12 @@ class Parser:
         """
         class   : CLASS ID register_class class_inheritance mark_class_begin class_block
         """
-        self.class_stack.pop()
-        self.func_dir_stack.pop()
+        class_name = self.class_stack.pop()
+        class_func_dir = self.func_dir_stack.pop()
+        for func in class_func_dir.values():
+            func_copy = deepcopy(func)
+            func_copy.name = f"{class_name}.{func.name}"
+            self.func_dir_stack.top().insert(func_copy.name, func_copy)
         self.scope_stack.pop()
 
     def p_register_class(self, p):
@@ -248,7 +252,7 @@ class Parser:
         func_params = p[-1]
 
         # Special logic for main function.
-        if func_name == "main" and self.scope_stack.is_in_class():
+        if func_name == "main" and not self.scope_stack.is_in_class():
             if func_type != Types.INT.value:
                 raise Exception("Return type of main function must be int.")
             if len(func_params) > 0:
@@ -282,12 +286,19 @@ class Parser:
                 else self.global_memory.reserve(func_type)
             )
             func_scope = Scope(ScopeTypes.FUNCTION, self.function_memory)
+            if self.scope_stack.is_in_class():
+                class_name = self.class_stack.top()
+                func_address = self.global_memory.append(
+                    Types.STRING.value, f"{class_name}.{func_name}"
+                )
+            else:
+                func_address = self.global_memory.append(Types.STRING.value, func_name)
             func_info = self.func_dir_stack.top().add(
                 func_name,
                 func_type,
                 return_address,
                 func_scope,
-                self.global_memory.append(Types.STRING.value, func_name),
+                func_address,
             )
             self.scope_stack.push(func_scope)
             for param_type, param_name in func_params:
@@ -541,57 +552,86 @@ class Parser:
                 | ID DOT ID call_arguments
                 | THIS DOT ID call_arguments
         """
+        if len(p) == 5:
+            base_name = p[1]
+            func_args = p[4]
+            if base_name == "this" and not self.scope_stack.is_in_class():
+                raise CError(
+                    OOPLErrorTypes.SCOPE,
+                    p.linepos(1),
+                    p.lexpos(1),
+                    'cannot use keyword "this" outside a class function',
+                )
+            if base_name != "this" and not self.scope_stack.has_var(base_name):
+                raise CError(
+                    OOPLErrorTypes.UNDECLARED_IDENTIFIER,
+                    p.lineno(1),
+                    p.lexpos(1),
+                    f"use of undeclared variable {base_name}",
+                )
+            var_info = self.scope_stack.get_var(base_name)
+            func_name = f"{var_info.type}.{p[3]}"
+            if not self.func_dir_stack.top().has(func_name):
+                raise CError(
+                    OOPLErrorTypes.UNDECLARED_IDENTIFIER,
+                    p.lineno(3),
+                    p.lexpos(3),
+                    f"use of undeclared function member {func_name}",
+                )
+        else:
+            base_name = ""
+            func_name = p[1]
+            func_args = p[2]
+
         if len(p) == 3:
             func_name = p[1]
             func_args = p[2]
             if func_name == "main":
                 raise Exception(f"Main function cannot be called.")
-            if self.func_dir_stack.has_func(func_name):
-                func_info = self.func_dir_stack.get_func(func_name)
-                param_list = func_info.param_list
-                if len(func_args) != len(param_list):
-                    raise Exception(
-                        f"Arg, self.function_memoryument mismatch when calling {func_name}."
+
+        if self.func_dir_stack.has_func(func_name):
+            func_info = self.func_dir_stack.get_func(func_name)
+            param_list = func_info.param_list
+            if len(func_args) != len(param_list):
+                raise Exception(
+                    f"Arg, self.function_memoryument mismatch when calling {func_name}."
+                )
+            else:
+                self.quads.add((Operations.ERA, 0, 0, func_info.address))
+                for arg, param in zip(func_args, param_list):
+                    p_type, p_addr, p_name = param
+                    arg_type, arg_addr, _ = arg
+                    if (
+                        p_type == arg_type
+                        or (p_type == Types.INT.value and arg_type == Types.FLOAT.value)
+                        or (p_type == Types.FLOAT.value and arg_type == Types.INT.value)
+                    ):
+                        self.quads.add((Operations.PARAM, arg_addr, 0, p_addr))
+                    else:
+                        raise TypeError(
+                            f"Wrong parameter {p_name} in call to {func_name}. Expected {p_type} but received {arg_type}."
+                        )
+                for (
+                    property_name,
+                    property_address,
+                ) in func_info.obj_addresses.items():
+                    pass
+                self.quads.add((Operations.GOSUB, 0, 0, func_info.address))
+                if func_info.type != Types.VOID.value:
+                    var_addr = self.function_memory.reserve(func_info.type)
+                    self.quads.add(
+                        (
+                            Operations.ASSIGNOP,
+                            func_info.return_address,
+                            0,
+                            var_addr,
+                        )
                     )
                 else:
-                    self.quads.add((Operations.ERA, 0, 0, func_info.address))
-                    for arg, param in zip(func_args, param_list):
-                        p_type, p_addr, p_name = param
-                        arg_type, arg_addr, _ = arg
-                        if (
-                            p_type is arg_type
-                            or (
-                                p_type == Types.INT.value
-                                and arg_type == Types.FLOAT.value
-                            )
-                            or (
-                                p_type == Types.FLOAT.value
-                                and arg_type == Types.INT.value
-                            )
-                        ):
-                            self.quads.add((Operations.PARAM, arg_addr, 0, p_addr))
-                        else:
-                            raise TypeError(
-                                f"Wrong parameter {p_name} in call to {func_name}. Expected {p_type} but received {arg_type}."
-                            )
-                    self.quads.add((Operations.GOSUB, 0, 0, func_info.address))
-                    if func_info.type != Types.VOID.value:
-                        var_addr = self.function_memory.reserve(func_info.type)
-                        self.quads.add(
-                            (
-                                Operations.ASSIGNOP,
-                                func_info.return_address,
-                                0,
-                                var_addr,
-                            )
-                        )
-                    else:
-                        var_addr = func_info.return_address
-                    p[0] = (func_info.type, var_addr, None)
-            else:
-                raise Exception(f"Function {func_name} has not been declared.")
+                    var_addr = func_info.return_address
+                p[0] = (func_info.type, var_addr, None)
         else:
-            pass
+            raise Exception(f"Function {func_name} has not been declared.")
 
     def p_variable(self, p):
         """
@@ -609,12 +649,12 @@ class Parser:
                     p.lexpos(1),
                     'cannot use keyword "this" outside a class function',
                 )
-            if base_name != "this" and not self.scope_stack.has_var(base_name):
+            if base_name != "this" and not self.scope_stack.has_var(var_name):
                 raise CError(
                     OOPLErrorTypes.UNDECLARED_IDENTIFIER,
                     p.lineno(1),
                     p.lexpos(1),
-                    f"use of undeclared variable {base_name}",
+                    f"use of undeclared variable {var_name}",
                 )
         else:
             var_name = p[1]
@@ -729,6 +769,7 @@ class Parser:
                 )
             class_info = self.class_dir.get(class_name)
             for var_name in var_names:
+                self.scope_stack.top().add(var_name, class_name, None)
                 for value in class_info.var_table.values():
                     self.scope_stack.top().add(
                         f"{var_name}.{value.name}", value.type, value.array_info
