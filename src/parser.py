@@ -139,6 +139,10 @@ class Parser:
         """
         class_name = self.class_stack.pop()
         class_func_dir = self.func_dir_stack.pop()
+        for func in class_func_dir.values():
+            func_copy = deepcopy(func)
+            func_copy.name = f"{class_name}.{func.name}"
+            self.func_dir_stack.top().insert(func_copy.name, func_copy)
         self.scope_stack.pop()
 
     def p_register_class(self, p):
@@ -541,10 +545,9 @@ class Parser:
                 | ID DOT ID call_arguments
                 | THIS DOT ID call_arguments
         """
-        if len(p) == 4:
+        if len(p) == 5:
             base_name = p[1]
-            func_name = p[2]
-            func_args = p[3]
+            func_args = p[4]
             if base_name == "this" and not self.scope_stack.is_in_class():
                 raise CError(
                     OOPLErrorTypes.SCOPE,
@@ -559,6 +562,8 @@ class Parser:
                     p.lexpos(1),
                     f"use of undeclared variable {base_name}",
                 )
+            var_info = self.scope_stack.get_var(base_name)
+            func_name = f"{var_info.type}.{p[3]}"
             if not self.func_dir_stack.top().has(func_name):
                 raise CError(
                     OOPLErrorTypes.UNDECLARED_IDENTIFIER,
@@ -576,6 +581,7 @@ class Parser:
             func_args = p[2]
             if func_name == "main":
                 raise Exception(f"Main function cannot be called.")
+
         if self.func_dir_stack.has_func(func_name):
             func_info = self.func_dir_stack.get_func(func_name)
             param_list = func_info.param_list
