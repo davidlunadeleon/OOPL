@@ -137,8 +137,8 @@ class Parser:
         """
         class   : CLASS ID register_class class_inheritance mark_class_begin class_block
         """
-        self.class_stack.pop()
-        self.func_dir_stack.pop()
+        class_name = self.class_stack.pop()
+        class_func_dir = self.func_dir_stack.pop()
         self.scope_stack.pop()
 
     def p_register_class(self, p):
@@ -756,6 +756,7 @@ class Parser:
                 )
             class_info = self.class_dir.get(class_name)
             for var_name in var_names:
+                self.scope_stack.top().add(var_name, class_name, None)
                 for value in class_info.var_table.values():
                     self.scope_stack.top().add(
                         f"{var_name}.{value.name}", value.type, value.array_info

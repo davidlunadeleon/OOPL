@@ -1,6 +1,6 @@
 from typing import Tuple, TypeAlias
 
-from .enums import Operations
+from .enums import Operations, Types
 
 # Parsing and lexing
 TokenList = list[str]
@@ -8,6 +8,12 @@ TokenList = list[str]
 # Quadruple handling
 MemoryAddress: TypeAlias = int
 MemoryType = bool | float | int | str
+MemoryTypeNames = [
+    Types.BOOL.value,
+    Types.FLOAT.value,
+    Types.INT.value,
+    Types.STRING.value,
+]
 Quadruple = Tuple[Operations, MemoryAddress, MemoryAddress, MemoryAddress]
 TypeAddress = Tuple[str, MemoryAddress, str | None]
 
