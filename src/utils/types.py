@@ -26,3 +26,6 @@ Resources = Tuple[NumBools, NumFloats, NumInts, NumStrings, NumPointers]
 
 ParamName: TypeAlias = str
 ParamList: TypeAlias = list[Tuple[str, MemoryAddress, ParamName]]
+
+# Classes
+ObjPropAddresses: TypeAlias = dict[str, Tuple[MemoryAddress, MemoryAddress]]

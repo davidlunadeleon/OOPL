@@ -1,4 +1,4 @@
-from .utils.types import Resources, MemoryAddress, ParamList
+from .utils.types import Resources, MemoryAddress, ParamList, ObjPropAddresses
 from .scope import Scope
 
 
@@ -21,7 +21,7 @@ class CFuncInfo(FuncInfo):
     address: MemoryAddress
     has_return: bool
     is_body_defined: bool
-    obj_addresses: dict[str, MemoryAddress]
+    obj_addresses: ObjPropAddresses
     param_list: ParamList
     return_address: MemoryAddress
     scope: Scope
