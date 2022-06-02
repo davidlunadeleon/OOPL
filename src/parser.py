@@ -252,7 +252,7 @@ class Parser:
         func_params = p[-1]
 
         # Special logic for main function.
-        if func_name == "main" and self.scope_stack.is_in_class():
+        if func_name == "main" and not self.scope_stack.is_in_class():
             if func_type != Types.INT.value:
                 raise Exception("Return type of main function must be int.")
             if len(func_params) > 0:
@@ -286,12 +286,19 @@ class Parser:
                 else self.global_memory.reserve(func_type)
             )
             func_scope = Scope(ScopeTypes.FUNCTION, self.function_memory)
+            if self.scope_stack.is_in_class():
+                class_name = self.class_stack.top()
+                func_address = self.global_memory.append(
+                    Types.STRING.value, f"{class_name}.{func_name}"
+                )
+            else:
+                func_address = self.global_memory.append(Types.STRING.value, func_name)
             func_info = self.func_dir_stack.top().add(
                 func_name,
                 func_type,
                 return_address,
                 func_scope,
-                self.global_memory.append(Types.STRING.value, func_name),
+                func_address,
             )
             self.scope_stack.push(func_scope)
             for param_type, param_name in func_params:
