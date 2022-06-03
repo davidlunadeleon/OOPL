@@ -19,6 +19,11 @@ class VarTable(Dir[VarInfo]):
     ) -> VarInfo:
         """
         Insert a new variable to the table.
+
+        Arguments:
+        name: str -- Variable name.
+        address: MemoryAddress -- Address where the variable is saved.
+        array_info: Optional[ArrayInfo] = None -- Information corresponding to array size and dimensions if the variable is an array.
         """
         if name in self.dir:
             raise Exception(f"The variable {name} is already in the table.")
@@ -29,6 +34,9 @@ class VarTable(Dir[VarInfo]):
     def get_from_address(self, address: MemoryAddress) -> VarInfo:
         """
         Get a variable in the table.
+
+        Arguments:
+        address: MemoryAddress -- Address where the variable is saved.
         """
         for var_info in self.dir.values():
             if var_info.address == address:
@@ -36,6 +44,9 @@ class VarTable(Dir[VarInfo]):
         raise Exception(f"Can't retrieve variable with address {address}.")
 
     def __str__(self) -> str:
+        """
+        Stringify every item of the table for readability.
+        """
         var_string = ""
         for key, value in self.dir.items():
             var_string += f"<var_name:{key},var_info:{value}>\n"
@@ -43,7 +54,7 @@ class VarTable(Dir[VarInfo]):
 
     def print(self, table_name: str, verbose: bool) -> None:
         """
-        Print the VarTable
+        Print information of the table depending on verbose flag value.
         """
         if verbose:
             print(f"# {table_name}")
