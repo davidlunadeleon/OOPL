@@ -80,6 +80,8 @@ class Parser:
 
     # Write functions for each grammar rule which is
     # specified in the docstring.
+
+    # Start point of our grammar.
     def p_program(self, p):
         """
         program : class program
@@ -91,6 +93,7 @@ class Parser:
         """
         p[0] = "DONE"
 
+    # Ending of our grammar, used to trigger intermediate code output and update main quadruples' information.
     def p_finish(self, p):
         """
         finish  :
@@ -139,6 +142,7 @@ class Parser:
         """
         class   : CLASS ID register_class class_inheritance mark_class_begin class_block
         """
+        # When the class is completely analyzed, pop it.
         self.class_stack.pop()
         self.scope_stack.pop()
 
@@ -147,6 +151,7 @@ class Parser:
         register_class  :
         """
         class_name = p[-1]
+        # Check if a class with that name already exists, otherwise insert it.
         if self.class_dir.has(class_name):
             raise CError(
                 OOPLErrorTypes.DUPLICATE,
@@ -165,6 +170,7 @@ class Parser:
         """
         class_name = p[-1]
         if len(p) == 3:
+            # Check if base class exists
             base_class_name = p[2]
             if not self.class_dir.has(base_class_name):
                 raise CError(
@@ -173,6 +179,7 @@ class Parser:
                     p.lexpos(2),
                     f"use of undeclared class {base_class_name}",
                 )
+            # If it does, get all the base class information including attributes and methods and insert it into derived class.
             else:
                 base_class_info = self.class_dir.get(base_class_name)
                 class_info = self.class_dir.get(class_name)
@@ -189,12 +196,14 @@ class Parser:
         """
         mark_class_begin    :
         """
+        # Create a new scope for the class to check for forward declaration of methods, this keyword and store its memory and var table.
         class_name = p[-1]
         class_info = self.class_dir.get(class_name)
         self.scope_stack.push(
             Scope(ScopeTypes.CLASS, self.global_memory, class_info.var_table)
         )
 
+    # Controls both headers and complete function definition.
     def p_function(self, p):
         """
         function    : simple_type_id function_parameters register_function mark_function_begin block
@@ -205,7 +214,7 @@ class Parser:
         func_name = self.function_stack.pop()
 
         func_info = self.func_dir.get(func_name)
-
+        # If the complete function was defined, update directory. Also, check if return can be found in function context and if it is appropiate. 
         if len(p) == 6:
             func_info.is_body_defined = True
             if func_info.type != Types.VOID.value and not func_info.has_return:
@@ -216,8 +225,7 @@ class Parser:
                     "missing return statement for non void function",
                 )
             func_info.resources = self.function_memory.describe_resources()
-
-            # Only add if there is no return after and it is the end of the function
+            
             if self.quads[self.quads.ptr_address(-1)][0] != Operations.ENDSUB:
                 for (
                     name,
@@ -243,6 +251,7 @@ class Parser:
                                 global_address,
                             )
                         )
+                # Only add an ENDSUB quadruple if there is no return after the current one and it is the end of the function.
                 self.quads.add((Operations.ENDSUB, 0, 0, 0))
             if self.verbose:
                 print(f"# Function: {func_name}")
@@ -254,19 +263,23 @@ class Parser:
         self.function_memory.clear()
         self.scope_stack.pop()
 
+    # Considers both functions and methods
     def p_mark_function_begin(self, p):
         """
         mark_function_begin :
         """
         func_name = self.function_stack[-1]
         func_info = self.func_dir.get(func_name)
+        # If it is a class, use this as top scope to ensure that class can be referred with it and the its name. 
         if self.scope_stack.is_in_class():
             class_info = self.class_dir.get(self.class_stack.top())
             self.scope_stack.top().add("this", class_info.name, None)
             for value in class_info.var_table.values():
+                # Save the variables with the this keyword directly.
                 _, address, name = self.scope_stack.top().add(
                     f"this.{value.name}", value.type, value.array_info
                 )
+                # Reserve the space needed for each variable of the class.
                 global_address = self.global_memory.reserve(
                     value.type, 1 if value.array_info is None else value.array_info.size
                 )
@@ -286,10 +299,10 @@ class Parser:
                 raise Exception("Return type of main function must be int.")
             if len(func_params) > 0:
                 raise Exception("Main function can't take any parameters.")
-
+        # To distinguish between functions and methods, use class name wiith func_name for methods.
         if self.scope_stack.is_in_class():
             func_name = f"{self.class_stack.top()}.{func_name}"
-
+        # Check if header matches complete body definition.
         if (
             self.func_dir.has(func_name)
             and not (func_info := self.func_dir.get(func_name)).is_body_defined
@@ -298,7 +311,7 @@ class Parser:
                 raise Exception(
                     f"The new function signature of {func_name} does not match the previously defined signature."
                 )
-
+            # Check that the parameters also match between both.
             for saved_param, new_param in zip(func_info.param_list, func_params):
                 sp_type, sp_addr, sp_name = saved_param
                 np_type, np_name = new_param
@@ -310,6 +323,7 @@ class Parser:
                     self.function_memory.reserve(sp_type)
             self.scope_stack.push(func_info.scope)
         else:
+            # If it is a new function (no header defined before) generate its information and update scope.
             return_address = (
                 0
                 if func_type == Types.VOID.value
@@ -331,6 +345,7 @@ class Parser:
             )
             self.scope_stack.push(func_scope)
             for param_type, param_name in func_params:
+                # Add parameters to variable table of the latest scope (which is the function being registered)
                 _, var_address, _ = self.scope_stack.top().add(
                     param_name, param_type, None
                 )
@@ -352,6 +367,7 @@ class Parser:
         """
         for_loop    : FOR LPAREN for_loop_assign SEMICOLON expr for_loop_expr SEMICOLON ptr_to_jump_stack for_loop_assign empty_goto RPAREN ptr_to_jump_stack loop_block
         """
+        # Register all the jumps between the three main elements of the header of a for loop, and the one at the end.
         before_block = self.jump_stack.pop()
         second_assign = self.jump_stack.pop()
         before_second_assign = self.jump_stack.pop()
@@ -383,6 +399,7 @@ class Parser:
         """
         loop_expr  :
         """
+        # Add evaluation of expression that must be fulfilled to continue a loop.
         expr_type, expr_addr, _ = p[-1]
         if expr_type == Types.BOOL.value:
             self.jump_stack.append(self.quads.ptr_address())
@@ -394,6 +411,7 @@ class Parser:
         """
         for_loop_expr  :
         """
+        # Add evaluation of the second element of the header of a for loop (expression).
         expr_type, expr_addr, _ = p[-1]
         if expr_type == Types.BOOL.value:
             self.jump_stack.append(self.quads.ptr_address())
@@ -481,6 +499,7 @@ class Parser:
         op_code, addr, _, _ = self.quads[end]
         self.quads[end] = (op_code, addr, 0, self.quads.ptr_address())
 
+    # To evaluate different conditional combinations.
     def p_if_alternative(self, p):
         """
         if_alternative  : ELSEIF LPAREN if_alternative_neural_point_2 expr loop_expr RPAREN block if_alternative
@@ -488,6 +507,7 @@ class Parser:
                         |
         """
 
+    # Before the elseif expr so it can be evaluated.
     def p_if_alternative_neural_point_2(self, p):
         """
         if_alternative_neural_point_2  :
@@ -499,6 +519,7 @@ class Parser:
         op_code, addr, _, _ = self.quads[false]
         self.quads[false] = (op_code, addr, 0, self.quads.ptr_address())
 
+    # To add the final jump outside of the conditional in case the last if or elseif statement was true
     def p_if_alternative_neural_point_4(self, p):
         """
         if_alternative_neural_point_4  :
@@ -513,6 +534,7 @@ class Parser:
         """
         break   : BREAK SEMICOLON
         """
+        # Only accept break if it is inside a loop.
         if not self.scope_stack.is_in_loop():
             raise Exception("Can't use break statement outside a loop.")
         self.break_stack.append(self.quads.ptr_address())
@@ -529,6 +551,7 @@ class Parser:
             func_info = self.func_dir.get(func_name)
             if func_info.type == Types.VOID.value:
                 raise Exception("Can't return from a void function.")
+                # Save final output of the function on a global variable that can be referenced to avoid overwritting.
             elif func_info.return_address != 0 and expr_type == func_info.type:
                 self.quads.add(
                     (
@@ -605,6 +628,7 @@ class Parser:
         if len(p) == 5:
             base_name = p[1]
             func_args = p[4]
+            # If it started with keyword this we know it must be a class
             if base_name == "this" and not self.scope_stack.is_in_class():
                 raise CError(
                     OOPLErrorTypes.SCOPE,
@@ -857,6 +881,7 @@ class Parser:
         var_decl : composite_type ID id_list SEMICOLON
                  | simple_type ID constant_dimension simple_id_list SEMICOLON
         """
+        # Can define variables, arrays and objects.
         var_type = p[1]
         if len(p) == 5:
             var_names = [p[2], *p[3]]
@@ -887,6 +912,7 @@ class Parser:
                     var_name, var_type, None if array_info.size == 0 else array_info
                 )
 
+    # For array in operations, expressions used in dimension.
     def p_dimension(self, p):
         """
         dimension   : LBRACK expr RBRACK dimension
@@ -909,6 +935,7 @@ class Parser:
         """
         simple_id_list  :   COMMA ID constant_dimension simple_id_list
         """
+        # Arrays can not be object type nor void.
         p[0] = [(p[2], p[3]), *p[4]]
 
     def p_operators(self, p):
@@ -923,6 +950,7 @@ class Parser:
         term        : term DIVIDES factor
                     | term TIMES factor
         """
+        # Using expression node to verify and insert information to where it corresponds.
         p[0] = Expression(
             p[1],
             Operations(p[2]),
@@ -932,6 +960,7 @@ class Parser:
             self.scope_stack,
         ).get()
 
+    # Operations or operators used to compare or express identities
     def p_identity(self, p):
         """
         expr            : or_expr
