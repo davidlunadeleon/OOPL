@@ -1,0 +1,31 @@
+# Explanation: Class redefinition.
+
+class Carro {
+	int llantas;
+	float presion_aire;
+	void checarLlantas(float presion_min) {
+		if(this.presion_aire < presion_min){
+			print("Falta aire");
+		} else {
+			print("Todo bien");
+		}
+	}
+}
+
+class Carro {
+	int llantas;
+	float presion_aire;
+	void checarLlantas(float presion_min) {
+		if(this.presion_aire < presion_min){
+			print("Falta aire");
+		} else {
+			print("Todo bien");
+		}
+	}
+}
+
+
+int main() {
+    return 0;
+}
+

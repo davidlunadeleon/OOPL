@@ -1,13 +1,13 @@
 # Explanation: The attribute name is not defined in Carro class.
 
-int i = 4;
-float j = 28.75;
+int i;
+float j;
 
 class Carro {
 	int llantas;
 	float presion_aire;
 	void checarLlantas(float presion_min) {
-		if(presion_aire < this.presion_min){
+		if(this.presion_aire < presion_min){
 			print("Falta aire");
 		} else {
 			print("Todo bien");
@@ -15,11 +15,16 @@ class Carro {
 	}
 }
 
-void main() {
+int main()
+{
+	i = 4;
 	Carro audi;
 	audi.llantas = i;
 	audi.presion_aire = 20.0;
-	# Undeclared class property
-	audi.name = "Audi";
 	audi.checarLlantas(30.0);
+
+	audi.name = "Audi"; # undeclared attribute
+
+	return 1;
 }
+
