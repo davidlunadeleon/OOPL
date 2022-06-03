@@ -2,7 +2,7 @@ int main()
 {
 	int x, y, i, j;
 	float z;
-	string f;
+	int f;
 	int arr[5];
 	float mat[4][8], mat2[6][10];
 
@@ -21,8 +21,9 @@ int main()
 		print(x, y);
 		for (i = 0; i < 2; i = i + 1) {
 			for (j = 0; j < 2; j = j + 1) {
+				print("Input new value: \n");
 				read(f);
-				# mat[i][j] = f;
+				mat[i][j] = f;
 			}
 		}
 	}
