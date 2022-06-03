@@ -287,6 +287,9 @@ class Parser:
             if len(func_params) > 0:
                 raise Exception("Main function can't take any parameters.")
 
+        if self.scope_stack.is_in_class():
+            func_name = f"{self.class_stack.top()}.{func_name}"
+
         if (
             self.func_dir.has(func_name)
             and not (func_info := self.func_dir.get(func_name)).is_body_defined
@@ -315,7 +318,6 @@ class Parser:
             func_scope = Scope(ScopeTypes.FUNCTION, self.function_memory)
             if self.scope_stack.is_in_class():
                 class_name = self.class_stack.top()
-                func_name = f"{class_name}.{func_name}"
                 func_address = self.global_memory.append(Types.STRING.value, func_name)
                 self.class_dir.get(class_name).funcs.append(func_name)
             else:
