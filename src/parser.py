@@ -18,7 +18,6 @@ from .scope_stack import ScopeStack
 from .utils.enums import Types, Operations, ScopeTypes, Segments
 from .utils.errors import OOPLErrorTypes, CError
 from .utils.types import TokenList, MemoryAddress
-from .func_dir_stack import FuncDirStack
 from .containers.stack import Stack
 
 
@@ -27,7 +26,7 @@ class Parser:
     break_stack: list[int]
     class_dir: ClassDir
     class_stack: Stack[str]
-    func_dir_stack: FuncDirStack
+    func_dir: CFuncDir
     function_memory: Memory
     function_stack: list[str]
     global_memory: Memory
@@ -62,8 +61,7 @@ class Parser:
         self.jump_stack = []
 
         # Functions
-        self.func_dir_stack = FuncDirStack()
-        self.func_dir_stack.push(CFuncDir())
+        self.func_dir = CFuncDir()
         self.function_stack = []
 
         # Options
@@ -97,13 +95,13 @@ class Parser:
             Operations.ERA,
             0,
             0,
-            self.func_dir_stack.get_func("main").address,
+            self.func_dir.get("main").address,
         )
         self.quads.quads[1] = (
             Operations.GOSUB,
             0,
             0,
-            self.func_dir_stack.get_func("main").address,
+            self.func_dir.get("main").address,
         )
         for quad in self.quads:
             op, _, _, func_addr = quad
@@ -111,8 +109,8 @@ class Parser:
                 if func_addr != 0 and not (
                     (func_name := self.global_memory[func_addr]) is not None
                     and isinstance(func_name, str)
-                    and self.func_dir_stack.has_func(func_name)
-                    and self.func_dir_stack.get_func(func_name).is_body_defined
+                    and self.func_dir.has(func_name)
+                    and self.func_dir.get(func_name).is_body_defined
                 ):
                     raise CError(
                         OOPLErrorTypes.IMPLICIT_DECLARATION,
@@ -129,7 +127,7 @@ class Parser:
         print(Segments.GLOBAL_MEMORY.value)
         self.global_memory.print(self.verbose)
         print(Segments.FUNCTIONS.value)
-        self.func_dir_stack.top().print(self.verbose)
+        self.func_dir.print(self.verbose)
         print(Segments.QUADRUPLES.value)
         self.quads.print(self.verbose)
 
@@ -137,12 +135,7 @@ class Parser:
         """
         class   : CLASS ID register_class class_inheritance mark_class_begin class_block
         """
-        class_name = self.class_stack.pop()
-        class_func_dir = self.func_dir_stack.pop()
-        for func in class_func_dir.values():
-            func_copy = deepcopy(func)
-            func_copy.name = f"{class_name}.{func.name}"
-            self.func_dir_stack.top().insert(func_copy.name, func_copy)
+        self.class_stack.pop()
         self.scope_stack.pop()
 
     def p_register_class(self, p):
@@ -179,7 +172,7 @@ class Parser:
             else:
                 base_class_info = self.class_dir.get(base_class_name)
                 class_info = self.class_dir.get(class_name)
-                class_info.func_dir = deepcopy(base_class_info.func_dir)
+                class_info.funcs = deepcopy(base_class_info.funcs)
                 class_info.var_table = deepcopy(base_class_info.var_table)
         p[0] = class_name
 
@@ -192,7 +185,6 @@ class Parser:
         self.scope_stack.push(
             Scope(ScopeTypes.CLASS, self.global_memory, class_info.var_table)
         )
-        self.func_dir_stack.push(class_info.func_dir)
 
     def p_function(self, p):
         """
@@ -204,7 +196,7 @@ class Parser:
         func_name = self.function_stack.pop()
         self.scope_stack.pop()
 
-        func_info = self.func_dir_stack.get_func(func_name)
+        func_info = self.func_dir.get(func_name)
 
         if len(p) == 6:
             func_info.is_body_defined = True
@@ -241,9 +233,10 @@ class Parser:
         mark_function_begin :
         """
         func_name = self.function_stack[-1]
-        func_info = self.func_dir_stack.top().get(func_name)
+        func_info = self.func_dir.get(func_name)
         if self.scope_stack.is_in_class():
             class_info = self.class_dir.get(self.class_stack.top())
+            self.scope_stack.top().add("this", class_info.name, None)
             for value in class_info.var_table.values():
                 _, address, name = self.scope_stack.top().add(
                     f"this.{value.name}", value.type, value.array_info
@@ -267,10 +260,8 @@ class Parser:
                 raise Exception("Main function can't take any parameters.")
 
         if (
-            self.func_dir_stack.top().has(func_name)
-            and not (
-                func_info := self.func_dir_stack.top().get(func_name)
-            ).is_body_defined
+            self.func_dir.has(func_name)
+            and not (func_info := self.func_dir.get(func_name)).is_body_defined
         ):
             if func_type != func_info.type:
                 raise Exception(
@@ -296,12 +287,11 @@ class Parser:
             func_scope = Scope(ScopeTypes.FUNCTION, self.function_memory)
             if self.scope_stack.is_in_class():
                 class_name = self.class_stack.top()
-                func_address = self.global_memory.append(
-                    Types.STRING.value, f"{class_name}.{func_name}"
-                )
+                func_name = f"{class_name}.{func_name}"
+                func_address = self.global_memory.append(Types.STRING.value, func_name)
             else:
                 func_address = self.global_memory.append(Types.STRING.value, func_name)
-            func_info = self.func_dir_stack.top().add(
+            func_info = self.func_dir.add(
                 func_name,
                 func_type,
                 return_address,
@@ -504,8 +494,8 @@ class Parser:
         """
         expr_type, expr_address, _ = p[2]
         func_name = self.function_stack[-1]
-        if self.func_dir_stack.has_func(func_name):
-            func_info = self.func_dir_stack.get_func(func_name)
+        if self.func_dir.has(func_name):
+            func_info = self.func_dir.get(func_name)
             if func_info.type == Types.VOID.value:
                 raise Exception("Can't return from a void function.")
             elif func_info.return_address != 0 and expr_type == func_info.type:
@@ -583,7 +573,7 @@ class Parser:
                 )
             var_info = self.scope_stack.get_var(base_name)
             func_name = f"{var_info.type}.{p[3]}"
-            if not self.func_dir_stack.top().has(func_name):
+            if not self.func_dir.has(func_name):
                 raise CError(
                     OOPLErrorTypes.UNDECLARED_IDENTIFIER,
                     p.lineno(3),
@@ -601,8 +591,8 @@ class Parser:
             if func_name == "main":
                 raise Exception(f"Main function cannot be called.")
 
-        if self.func_dir_stack.has_func(func_name):
-            func_info = self.func_dir_stack.get_func(func_name)
+        if self.func_dir.has(func_name):
+            func_info = self.func_dir.get(func_name)
             param_list = func_info.param_list
             if len(func_args) != len(param_list):
                 raise Exception(
