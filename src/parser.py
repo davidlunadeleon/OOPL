@@ -176,7 +176,12 @@ class Parser:
             else:
                 base_class_info = self.class_dir.get(base_class_name)
                 class_info = self.class_dir.get(class_name)
-                class_info.funcs = deepcopy(base_class_info.funcs)
+                for func in base_class_info.funcs:
+                    func_info = deepcopy(self.func_dir.get(func))
+                    [_, func_name] = func.split(".")
+                    func_info.name = f"{class_info.name}.{func_name}"
+                    self.func_dir.insert(func_info.name, func_info)
+                    class_info.funcs.append(func_info.name)
                 class_info.var_table = deepcopy(base_class_info.var_table)
         p[0] = class_name
 
@@ -312,6 +317,7 @@ class Parser:
                 class_name = self.class_stack.top()
                 func_name = f"{class_name}.{func_name}"
                 func_address = self.global_memory.append(Types.STRING.value, func_name)
+                self.class_dir.get(class_name).funcs.append(func_name)
             else:
                 func_address = self.global_memory.append(Types.STRING.value, func_name)
             func_info = self.func_dir.add(
