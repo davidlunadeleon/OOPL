@@ -215,13 +215,6 @@ class Parser:
             # Only add if there is no return after and it is the end of the function
             if self.quads[self.quads.ptr_address(-1)][0] != Operations.ENDSUB:
                 for (
-                    _,
-                    (local_address, global_address),
-                ) in func_info.obj_addresses.items():
-                    self.quads.add(
-                        (Operations.ASSIGNOP, local_address, 0, global_address)
-                    )
-                for (
                     name,
                     (local_address, global_address),
                 ) in func_info.obj_addresses.items():
@@ -230,7 +223,7 @@ class Parser:
                         for offset in range(0, obj_prop.array_info.size):
                             self.quads.add(
                                 (
-                                    Operations.ASSIGNOP,
+                                    Operations.OPT_ASSIGN,
                                     local_address + offset,
                                     0,
                                     global_address + offset,
@@ -239,7 +232,7 @@ class Parser:
                     else:
                         self.quads.add(
                             (
-                                Operations.ASSIGNOP,
+                                Operations.OPT_ASSIGN,
                                 local_address,
                                 0,
                                 global_address,
@@ -546,7 +539,7 @@ class Parser:
                         for offset in range(0, obj_prop.array_info.size):
                             self.quads.add(
                                 (
-                                    Operations.ASSIGNOP,
+                                    Operations.OPT_ASSIGN,
                                     local_address + offset,
                                     0,
                                     global_address + offset,
@@ -555,7 +548,7 @@ class Parser:
                     else:
                         self.quads.add(
                             (
-                                Operations.ASSIGNOP,
+                                Operations.OPT_ASSIGN,
                                 local_address,
                                 0,
                                 global_address,
@@ -710,7 +703,7 @@ class Parser:
                             for offset in range(0, obj_prop.array_info.size):
                                 self.quads.add(
                                     (
-                                        Operations.ASSIGNOP,
+                                        Operations.OPT_ASSIGN,
                                         global_address + offset,
                                         0,
                                         obj_prop.address + offset,
@@ -719,7 +712,7 @@ class Parser:
                         else:
                             self.quads.add(
                                 (
-                                    Operations.ASSIGNOP,
+                                    Operations.OPT_ASSIGN,
                                     global_address,
                                     0,
                                     obj_prop.address,

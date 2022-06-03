@@ -89,6 +89,8 @@ class VM:
                 addr3 = int(mem3[addr3])
                 mem3 = temp_mem
 
+            print((op_code, addr1, addr2, addr3))
+
             match op_code:
                 case Operations.PRINT:
                     print(mem1[addr1], end="")
@@ -110,6 +112,9 @@ class VM:
                     mem3[addr3] = mem1[addr1]
                 case Operations.PARAM:
                     self.temp_memory[addr3] = mem1[addr1]
+                case Operations.OPT_ASSIGN:
+                    if mem1[addr1] is not None:
+                        mem3[addr3] = mem1[addr1]
                 case Operations.OPT_PARAM:
                     if mem1[addr1] is not None:
                         self.temp_memory[addr3] = mem1[addr1]
