@@ -11,9 +11,15 @@ class FuncInfo:
         self.name = name
 
     def __resources_str(self) -> str:
+        """
+        Stringify the resources' information for operations.
+        """
         return str(self.resources).removeprefix("(").removesuffix(")")
 
     def __str__(self) -> str:
+        """
+        Stringify the resources' information for printing.
+        """
         return f"{self.name},{self.start_quad},{self.__resources_str()}"
 
 
@@ -47,6 +53,9 @@ class CFuncInfo(FuncInfo):
         self.type = type
 
     def __str__(self) -> str:
+        """
+        Stringify the resources' information for operations.
+        """
         return super().__str__()
 
 
@@ -62,4 +71,7 @@ class VMFuncInfo(FuncInfo):
         self.resources = resources
 
     def __str__(self) -> str:
+        """
+        Stringify the resources' information for operations.
+        """
         return super().__str__()
