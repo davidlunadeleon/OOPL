@@ -80,7 +80,7 @@ class VM:
         )
 
     def __reserve_memory(self, func_address: MemoryAddress) -> None:
-        """"
+        """ "
         Reserve the memory for the function that is being called.
 
         Arguments:
@@ -115,6 +115,14 @@ class VM:
             mem[self.func_dir.get(str(self.global_memory[func_address])).start_quad]
         )
 
+    def __check_none(self, l: list[Tuple[MemoryType, MemoryAddress]]) -> None:
+        for val, addr in l:
+            if val is None:
+                raise VMError(
+                    OOPLErrorTypes.UNINITIALIZED_VARIABLE,
+                    f"the variable at address {addr} is uninitialized",
+                )
+
     def run(self) -> MemoryType:
         """
         Carry out the operations described on the quadruples and also solve the expressions.
@@ -139,29 +147,37 @@ class VM:
                 addr3 = int(mem3[addr3])
                 mem3 = temp_mem
 
+            # print((op_code, addr1, addr2, addr3))
+
             match op_code:
                 case Operations.PRINT:
+                    self.__check_none([(mem1[addr1], addr1)])
                     print(mem1[addr1], end="")
                 case Operations.GOSUB:
                     self.__save_state(addr3, mem1)
                 case Operations.ERA:
                     self.__reserve_memory(addr3)
                 case Operations.GOTO:
+                    self.__check_none([(mem3[addr3], addr3)])
                     self.quads.ptr = int(mem3[addr3])
                 case Operations.READ:
                     mem3[addr3] = input()
                 case Operations.GOTOF:
+                    self.__check_none([(mem1[addr1], addr1), (mem3[addr3], addr3)])
                     if not mem1[addr1]:
                         self.quads.ptr = int(mem3[addr3])
                 case Operations.GOTOT:
+                    self.__check_none([(mem1[addr1], addr1), (mem3[addr3], addr3)])
                     if mem1[addr1]:
                         self.quads.ptr = int(mem3[addr3])
                 case Operations.ASSIGNOP:
+                    self.__check_none([(mem1[addr1], addr1)])
                     self.last_return = mem1[addr1]
                     mem3[addr3] = mem1[addr1]
                 case Operations.PARAM:
-                    # Need to use temporary memory to pass value from one context to another 
+                    # Need to use temporary memory to pass value from one context to another
                     # (previous function to new one)
+                    self.__check_none([(mem1[addr1], addr1)])
                     self.temp_memory[addr3] = mem1[addr1]
                 case Operations.OPT_ASSIGN:
                     if mem1[addr1] is not None:
@@ -170,33 +186,53 @@ class VM:
                     if mem1[addr1] is not None:
                         self.temp_memory[addr3] = mem1[addr1]
                 case Operations.SAVEPTR:
+                    self.__check_none([(mem1[addr1], addr1)])
                     mem3.save_ptr(addr3, mem1[addr1])
                 case Operations.AND:
+                    self.__check_none([(mem1[addr1], addr1), (mem2[addr2], addr2)])
                     mem3[addr3] = mem1[addr1] and mem2[addr2]
                 case Operations.DIFF:
+                    self.__check_none([(mem1[addr1], addr1), (mem2[addr2], addr2)])
                     mem3[addr3] = mem1[addr1] != mem2[addr2]
                 case Operations.DIVIDES:
+                    self.__check_none([(mem1[addr1], addr1), (mem2[addr2], addr2)])
                     mem3[addr3] = mem1[addr1] / mem2[addr2]
                 case Operations.EQ:
+                    self.__check_none([(mem1[addr1], addr1), (mem2[addr2], addr2)])
                     mem3[addr3] = mem1[addr1] == mem2[addr2]
                 case Operations.EQGT:
+                    self.__check_none([(mem1[addr1], addr1), (mem2[addr2], addr2)])
                     mem3[addr3] = mem1[addr1] >= mem2[addr2]
                 case Operations.EQLT:
+                    self.__check_none([(mem1[addr1], addr1), (mem2[addr2], addr2)])
                     mem3[addr3] = mem1[addr1] <= mem2[addr2]
                 case Operations.GT:
+                    self.__check_none([(mem1[addr1], addr1), (mem2[addr2], addr2)])
                     mem3[addr3] = mem1[addr1] > mem2[addr2]
                 case Operations.LT:
+                    self.__check_none([(mem1[addr1], addr1), (mem2[addr2], addr2)])
                     mem3[addr3] = mem1[addr1] < mem2[addr2]
                 case Operations.MINUS:
+                    self.__check_none([(mem1[addr1], addr1), (mem2[addr2], addr2)])
                     mem3[addr3] = mem1[addr1] - mem2[addr2]
                 case Operations.OR:
+                    self.__check_none([(mem1[addr1], addr1), (mem2[addr2], addr2)])
                     mem3[addr3] = mem1[addr1] or mem2[addr2]
                 case Operations.PLUS:
+                    self.__check_none([(mem1[addr1], addr1), (mem2[addr2], addr2)])
                     mem3[addr3] = mem1[addr1] + mem2[addr2]
                 case Operations.TIMES:
+                    self.__check_none([(mem1[addr1], addr1), (mem2[addr2], addr2)])
                     mem3[addr3] = mem1[addr1] * mem2[addr2]
                 # Check that the value is not out of bounds of the dimension
                 case Operations.VER:
+                    self.__check_none(
+                        [
+                            (mem1[addr1], addr1),
+                            (mem2[addr2], addr2),
+                            (mem3[addr3], addr3),
+                        ]
+                    )
                     if not (mem2[addr2] <= mem1[addr1] and mem1[addr1] < mem3[addr3]):
                         raise Exception("Out of bounds error.")
                 case Operations.ENDSUB:

@@ -259,7 +259,12 @@ class Parser:
                 self.function_memory.print(True, True)
         elif len(p) == 5 and func_name == "main":
             # Special logic for main function.
-            raise Exception("Main function cannot be declared via forward declaration.")
+            raise CError(
+                OOPLErrorTypes.SEMANTIC,
+                p.lineno(1),
+                p.lexpos(1),
+                "main function cannot be declared via forward declaration",
+            )
         self.function_memory.clear()
         self.scope_stack.pop()
 
@@ -296,9 +301,19 @@ class Parser:
         # Special logic for main function.
         if func_name == "main" and not self.scope_stack.is_in_class():
             if func_type != Types.INT.value:
-                raise Exception("Return type of main function must be int.")
+                raise CError(
+                    OOPLErrorTypes.SEMANTIC,
+                    p.lineno(0),
+                    p.lexpos(0),
+                    "return type of main function must be int",
+                )
             if len(func_params) > 0:
-                raise Exception("Main function can't take any parameters.")
+                raise CError(
+                    OOPLErrorTypes.SYNTAX,
+                    p.lineno(0),
+                    p.lexpos(0),
+                    "main function can't take any parameters",
+                )
         # To distinguish between functions and methods, use class name wiith func_name for methods.
         if self.scope_stack.is_in_class():
             func_name = f"{self.class_stack.top()}.{func_name}"
@@ -308,16 +323,22 @@ class Parser:
             and not (func_info := self.func_dir.get(func_name)).is_body_defined
         ):
             if func_type != func_info.type:
-                raise Exception(
-                    f"The new function signature of {func_name} does not match the previously defined signature."
+                raise CError(
+                    OOPLErrorTypes.SEMANTIC,
+                    p.lineno(0),
+                    p.lexpos(0),
+                    f"the new function signature of {func_name} does not match the previously defined signature",
                 )
             # Check that the parameters also match between both.
             for saved_param, new_param in zip(func_info.param_list, func_params):
                 sp_type, sp_addr, sp_name = saved_param
                 np_type, np_name = new_param
                 if sp_type != np_type or np_name != sp_name:
-                    raise Exception(
-                        f"The new function signature of {func_name} does not match the previously defined signature."
+                    raise CError(
+                        OOPLErrorTypes.SEMANTIC,
+                        p.lineno(0),
+                        p.lexpos(0),
+                        f"the new function signature of {func_name} does not match the previously defined signature",
                     )
                 else:
                     self.function_memory.reserve(sp_type)
@@ -405,7 +426,12 @@ class Parser:
             self.jump_stack.append(self.quads.ptr_address())
             self.quads.add((Operations.GOTOF, expr_addr, 0, 0))
         else:
-            raise TypeError("Non boolean expression found in loop.")
+            raise CError(
+                OOPLErrorTypes.TYPE_MISMATCH,
+                p.lineno(0),
+                p.lexpos(0),
+                f"expected boolean expression in loop but found {expr_type}",
+            )
 
     def p_for_loop_expr(self, p):
         """
@@ -419,7 +445,12 @@ class Parser:
             self.jump_stack.append(self.quads.ptr_address())
             self.quads.add((Operations.GOTOT, expr_addr, 0, 0))
         else:
-            raise TypeError("Non boolean expression found in loop.")
+            raise CError(
+                OOPLErrorTypes.TYPE_MISMATCH,
+                p.lineno(0),
+                p.lexpos(0),
+                f"expected boolean expression in loop but found {expr_type}",
+            )
 
     def p_no_action(self, p):
         """
@@ -536,7 +567,12 @@ class Parser:
         """
         # Only accept break if it is inside a loop.
         if not self.scope_stack.is_in_loop():
-            raise Exception("Can't use break statement outside a loop.")
+            raise CError(
+                OOPLErrorTypes.SCOPE,
+                p.lineno(1),
+                p.lexpos(1),
+                "can't use break statement outside a loop",
+            )
         self.break_stack.append(self.quads.ptr_address())
         self.quads.add((Operations.GOTO, 0, 0, 0))
         self.break_counter[-1] += 1
@@ -550,7 +586,12 @@ class Parser:
         if self.func_dir.has(func_name):
             func_info = self.func_dir.get(func_name)
             if func_info.type == Types.VOID.value:
-                raise Exception("Can't return from a void function.")
+                raise CError(
+                    OOPLErrorTypes.SCOPE,
+                    p.lineno(1),
+                    p.lexpos(1),
+                    "can't return from a void function",
+                )
                 # Save final output of the function on a global variable that can be referenced to avoid overwritting.
             elif func_info.return_address != 0 and expr_type == func_info.type:
                 self.quads.add(
@@ -595,7 +636,12 @@ class Parser:
                     f"function {func_info.name} expected return type {func_info.type} but received {expr_type.value}.",
                 )
         else:
-            raise Exception("Can't return from outside a function.")
+            raise CError(
+                OOPLErrorTypes.SEMANTIC,
+                p.lineno(1),
+                p.lexpos(1),
+                "can't return from outside a function",
+            )
 
     def p_type_addr_list(self, p):
         """
@@ -632,7 +678,7 @@ class Parser:
             if base_name == "this" and not self.scope_stack.is_in_class():
                 raise CError(
                     OOPLErrorTypes.SCOPE,
-                    p.linepos(1),
+                    p.lineno(1),
                     p.lexpos(1),
                     'cannot use keyword "this" outside a class function',
                 )
@@ -661,14 +707,22 @@ class Parser:
             func_name = p[1]
             func_args = p[2]
             if func_name == "main":
-                raise Exception(f"Main function cannot be called.")
+                raise CError(
+                    OOPLErrorTypes.SEMANTIC,
+                    p.lineno(1),
+                    p.lexpos(1),
+                    "main function cannot be called",
+                )
 
         if self.func_dir.has(func_name):
             func_info = self.func_dir.get(func_name)
             param_list = func_info.param_list
             if len(func_args) != len(param_list):
-                raise Exception(
-                    f"Arg, self.function_memoryument mismatch when calling {func_name}."
+                raise CError(
+                    OOPLErrorTypes.SEMANTIC,
+                    p.lineno(1),
+                    p.lexpos(1),
+                    f"function call of {func_name} did not match the expected parameters",
                 )
             else:
                 self.quads.add((Operations.ERA, 0, 0, func_info.address))
@@ -682,8 +736,11 @@ class Parser:
                     ):
                         self.quads.add((Operations.PARAM, arg_addr, 0, p_addr))
                     else:
-                        raise TypeError(
-                            f"Wrong parameter {p_name} in call to {func_name}. Expected {p_type} but received {arg_type}."
+                        raise CError(
+                            OOPLErrorTypes.TYPE_MISMATCH,
+                            p.lineno(1),
+                            p.lexpos(1),
+                            f"wrong parameter {p_name} in call to {func_name}; expected {p_type} but received {arg_type}",
                         )
                 for (
                     property_name,
@@ -754,7 +811,12 @@ class Parser:
                     var_addr = func_info.return_address
                 p[0] = (func_info.type, var_addr, None)
         else:
-            raise Exception(f"Function {func_name} has not been declared.")
+            raise CError(
+                OOPLErrorTypes.UNDECLARED_IDENTIFIER,
+                p.lineno(1),
+                p.lexpos(1),
+                f"function {func_name} has not been declared",
+            )
 
     def p_variable(self, p):
         """
@@ -768,7 +830,7 @@ class Parser:
             if base_name == "this" and not self.scope_stack.is_in_class():
                 raise CError(
                     OOPLErrorTypes.SCOPE,
-                    p.linepos(1),
+                    p.lineno(1),
                     p.lexpos(1),
                     'cannot use keyword "this" outside a class function',
                 )
@@ -784,7 +846,9 @@ class Parser:
             var_name = p[1]
             dim = p[2]
 
-        if not self.scope_stack.has_var(var_name):
+        if not self.scope_stack.has_var(var_name) or (
+            var_info := self.scope_stack.get_var(var_name).address == 0
+        ):
             raise CError(
                 OOPLErrorTypes.UNDECLARED_IDENTIFIER,
                 p.lineno(1),
@@ -811,8 +875,11 @@ class Parser:
                 if not (
                     param_type == Types.INT.value or param_type == Types.FLOAT.value
                 ):
-                    raise Exception(
-                        f"Can't index {var_info.name} with non int numeric expression."
+                    raise CError(
+                        OOPLErrorTypes.SEMANTIC,
+                        p.lineno(1),
+                        p.lexpos(1),
+                        f"can't index {var_info.name} with non numeric expression",
                     )
                 else:
                     _, upper_lim_addr, _ = Constant(
@@ -853,17 +920,19 @@ class Parser:
             p[0] = (var_info.type, temp_addr2, var_info.name)
         else:
             # Variable has dimensions there's a mismatch with the dimensions passed.
-            raise Exception(f"Wrong indexing when trying to access {var_info.name}.")
+            raise CError(
+                OOPLErrorTypes.ARRAY,
+                p.lineno(1),
+                p.lexpos(1),
+                f"wrong indexing when trying to access {var_info.name}",
+            )
 
     def p_read(self, p):
         """
         read : READ LPAREN variable RPAREN SEMICOLON
         """
-        if p[3] is not None:
-            _, expr_addr, _ = p[3]
-            self.quads.add((Operations.READ, 0, 0, expr_addr))
-        else:
-            raise Exception(f"No variable found with the id {p[3]}.")
+        _, expr_addr, _ = p[3]
+        self.quads.add((Operations.READ, 0, 0, expr_addr))
 
     def p_write(self, p):
         """
@@ -871,10 +940,7 @@ class Parser:
         """
         print_args = p[2]
         for print_arg in print_args:
-            if print_arg is not None:
-                self.quads.add((Operations.PRINT, print_arg[1], 0, 0))
-            else:
-                raise Exception(f"No variable found with the id {p[3]}.")
+            self.quads.add((Operations.PRINT, print_arg[1], 0, 0))
 
     def p_var_decl(self, p):
         """
