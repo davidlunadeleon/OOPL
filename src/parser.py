@@ -20,6 +20,10 @@ from .utils.errors import OOPLErrorTypes, CError
 from .utils.types import TokenList, MemoryAddress
 from .containers.stack import Stack
 
+start_global_memory = 1
+start_function_memory = 5001
+chunk_size = 1000
+
 
 class Parser:
     break_counter: list[int]
@@ -43,8 +47,8 @@ class Parser:
         self.parser = yacc.yacc(module=self)
 
         # Memory
-        self.global_memory = Memory(1)
-        self.function_memory = Memory(5001)
+        self.global_memory = Memory(start_global_memory, chunk_size)
+        self.function_memory = Memory(start_function_memory, chunk_size)
 
         # Scopes
         self.scope_stack = ScopeStack()
@@ -194,7 +198,6 @@ class Parser:
                     | void_id function_parameters register_function SEMICOLON
         """
         func_name = self.function_stack.pop()
-        self.scope_stack.pop()
 
         func_info = self.func_dir.get(func_name)
 
@@ -218,6 +221,31 @@ class Parser:
                     self.quads.add(
                         (Operations.ASSIGNOP, local_address, 0, global_address)
                     )
+                for (
+                    name,
+                    (local_address, global_address),
+                ) in func_info.obj_addresses.items():
+                    obj_prop = self.scope_stack.get_var(name)
+                    if obj_prop.array_info is not None:
+                        for offset in range(0, obj_prop.array_info.size):
+                            print(offset)
+                            self.quads.add(
+                                (
+                                    Operations.ASSIGNOP,
+                                    local_address + offset,
+                                    0,
+                                    global_address + offset,
+                                )
+                            )
+                    else:
+                        self.quads.add(
+                            (
+                                Operations.ASSIGNOP,
+                                local_address,
+                                0,
+                                global_address,
+                            )
+                        )
                 self.quads.add((Operations.ENDSUB, 0, 0, 0))
             if self.verbose:
                 print(f"# Function: {func_name}")
@@ -227,6 +255,7 @@ class Parser:
             # Special logic for main function.
             raise Exception("Main function cannot be declared via forward declaration.")
         self.function_memory.clear()
+        self.scope_stack.pop()
 
     def p_mark_function_begin(self, p):
         """
@@ -241,7 +270,9 @@ class Parser:
                 _, address, name = self.scope_stack.top().add(
                     f"this.{value.name}", value.type, value.array_info
                 )
-                global_address = self.global_memory.reserve(value.type)
+                global_address = self.global_memory.reserve(
+                    value.type, 1 if value.array_info is None else value.array_info.size
+                )
                 func_info.obj_addresses[str(name)] = address, global_address
         func_info.start_quad = self.quads.ptr_address()
 
@@ -508,12 +539,30 @@ class Parser:
                     )
                 )
                 for (
-                    _,
+                    name,
                     (local_address, global_address),
                 ) in func_info.obj_addresses.items():
-                    self.quads.add(
-                        (Operations.ASSIGNOP, local_address, 0, global_address)
-                    )
+                    obj_prop = self.scope_stack.get_var(name)
+                    if obj_prop.array_info is not None:
+                        for offset in range(0, obj_prop.array_info.size):
+                            print(offset)
+                            self.quads.add(
+                                (
+                                    Operations.ASSIGNOP,
+                                    local_address + offset,
+                                    0,
+                                    global_address + offset,
+                                )
+                            )
+                    else:
+                        self.quads.add(
+                            (
+                                Operations.ASSIGNOP,
+                                local_address,
+                                0,
+                                global_address,
+                            )
+                        )
                 self.quads.add((Operations.ENDSUB, 0, 0, 0))
                 func_info.has_return = True
             else:
@@ -621,9 +670,25 @@ class Parser:
                     obj_prop_name = f"{base_name}.{prop_name}"
                     if self.scope_stack.has_var(obj_prop_name):
                         obj_prop = self.scope_stack.get_var(obj_prop_name)
-                        self.quads.add(
-                            (Operations.OPT_PARAM, obj_prop.address, 0, local_address)
-                        )
+                        if obj_prop.array_info is not None:
+                            for offset in range(0, obj_prop.array_info.size):
+                                self.quads.add(
+                                    (
+                                        Operations.OPT_PARAM,
+                                        obj_prop.address + offset,
+                                        0,
+                                        local_address + offset,
+                                    )
+                                )
+                        else:
+                            self.quads.add(
+                                (
+                                    Operations.OPT_PARAM,
+                                    obj_prop.address,
+                                    0,
+                                    local_address,
+                                )
+                            )
                 self.quads.add((Operations.GOSUB, 0, 0, func_info.address))
                 if func_info.type != Types.VOID.value:
                     var_addr = self.function_memory.reserve(func_info.type)
@@ -643,9 +708,25 @@ class Parser:
                     obj_prop_name = f"{base_name}.{prop_name}"
                     if self.scope_stack.has_var(obj_prop_name):
                         obj_prop = self.scope_stack.get_var(obj_prop_name)
-                        self.quads.add(
-                            (Operations.ASSIGNOP, global_address, 0, obj_prop.address)
-                        )
+                        if obj_prop.array_info is not None:
+                            for offset in range(0, obj_prop.array_info.size):
+                                self.quads.add(
+                                    (
+                                        Operations.ASSIGNOP,
+                                        global_address + offset,
+                                        0,
+                                        obj_prop.address + offset,
+                                    )
+                                )
+                        else:
+                            self.quads.add(
+                                (
+                                    Operations.ASSIGNOP,
+                                    global_address,
+                                    0,
+                                    obj_prop.address,
+                                )
+                            )
                 else:
                     var_addr = func_info.return_address
                 p[0] = (func_info.type, var_addr, None)
@@ -654,11 +735,11 @@ class Parser:
 
     def p_variable(self, p):
         """
-        variable    : ID DOT ID
-                    | THIS DOT ID
+        variable    : ID DOT ID dimension
+                    | THIS DOT ID dimension
                     | ID dimension
         """
-        if len(p) == 4:
+        if len(p) == 5:
             base_name = p[1]
             var_name = f"{base_name}.{p[3]}"
             if base_name == "this" and not self.scope_stack.is_in_class():
@@ -675,8 +756,10 @@ class Parser:
                     p.lexpos(1),
                     f"use of undeclared variable {var_name}",
                 )
+            dim = p[4]
         else:
             var_name = p[1]
+            dim = p[2]
 
         if not self.scope_stack.has_var(var_name):
             raise CError(
@@ -688,7 +771,7 @@ class Parser:
         var_info = self.scope_stack.get_var(var_name)
         if var_info.array_info is None:
             p[0] = (var_info.type, var_info.address, var_info.name)
-        elif (array_info := var_info.array_info) is not None and len(p[2]) == len(
+        elif (array_info := var_info.array_info) is not None and len(dim) == len(
             array_info.table
         ):
             _, lower_lim_addr, _ = Constant(
@@ -699,7 +782,7 @@ class Parser:
             ).get()
 
             addr_stack = []
-            for index, (dim, param) in enumerate(zip(array_info.table, p[2])):
+            for index, (dim, param) in enumerate(zip(array_info.table, dim)):
                 param_type, param_address, _ = param
                 addr_stack.append(param_address)
                 if not (
