@@ -344,7 +344,6 @@ class Parser:
         self.quads[after_expr_false] = (op_code, addr, 0, self.quads.ptr_address())
         op_code, addr, _, _ = self.quads[after_expr_true]
         self.quads[after_expr_true] = (op_code, addr, 0, before_block)
-        self.quads.print(True)
 
     def p_for_loop_assign(self, p):
         """
@@ -352,8 +351,6 @@ class Parser:
                         |
         """
         self.jump_stack.append(self.quads.ptr_address())
-        print(self.quads.ptr)
-        print(self.jump_stack[-1])
 
     def p_empty_goto(self, p):
         """
