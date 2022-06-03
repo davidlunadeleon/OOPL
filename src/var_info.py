@@ -23,4 +23,7 @@ class VarInfo:
         self.array_info = array_info
 
     def __str__(self) -> str:
+        """
+        Stringify the values of VarInfo for readability.
+        """
         return f"<name:{self.name},type:{self.type},address:{self.address},array_info:{self.array_info}>"
