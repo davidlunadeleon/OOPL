@@ -214,7 +214,7 @@ class Parser:
         func_name = self.function_stack.pop()
 
         func_info = self.func_dir.get(func_name)
-        # If the complete function was defined, update directory. Also, check if return can be found in function context and if it is appropiate. 
+        # If the complete function was defined, update directory. Also, check if return can be found in function context and if it is appropiate.
         if len(p) == 6:
             func_info.is_body_defined = True
             if func_info.type != Types.VOID.value and not func_info.has_return:
@@ -225,7 +225,7 @@ class Parser:
                     "missing return statement for non void function",
                 )
             func_info.resources = self.function_memory.describe_resources()
-            
+
             if self.quads[self.quads.ptr_address(-1)][0] != Operations.ENDSUB:
                 for (
                     name,
@@ -270,7 +270,7 @@ class Parser:
         """
         func_name = self.function_stack[-1]
         func_info = self.func_dir.get(func_name)
-        # If it is a class, use this as top scope to ensure that class can be referred with it and the its name. 
+        # If it is a class, use this as top scope to ensure that class can be referred with it and the its name.
         if self.scope_stack.is_in_class():
             class_info = self.class_dir.get(self.class_stack.top())
             self.scope_stack.top().add("this", class_info.name, None)
@@ -723,33 +723,33 @@ class Parser:
                             var_addr,
                         )
                     )
-                for (
-                    property_name,
-                    (_, global_address),
-                ) in func_info.obj_addresses.items():
-                    [_, prop_name] = property_name.split(".")
-                    obj_prop_name = f"{base_name}.{prop_name}"
-                    if self.scope_stack.has_var(obj_prop_name):
-                        obj_prop = self.scope_stack.get_var(obj_prop_name)
-                        if obj_prop.array_info is not None:
-                            for offset in range(0, obj_prop.array_info.size):
+                    for (
+                        property_name,
+                        (_, global_address),
+                    ) in func_info.obj_addresses.items():
+                        [_, prop_name] = property_name.split(".")
+                        obj_prop_name = f"{base_name}.{prop_name}"
+                        if self.scope_stack.has_var(obj_prop_name):
+                            obj_prop = self.scope_stack.get_var(obj_prop_name)
+                            if obj_prop.array_info is not None:
+                                for offset in range(0, obj_prop.array_info.size):
+                                    self.quads.add(
+                                        (
+                                            Operations.OPT_ASSIGN,
+                                            global_address + offset,
+                                            0,
+                                            obj_prop.address + offset,
+                                        )
+                                    )
+                            else:
                                 self.quads.add(
                                     (
                                         Operations.OPT_ASSIGN,
-                                        global_address + offset,
+                                        global_address,
                                         0,
-                                        obj_prop.address + offset,
+                                        obj_prop.address,
                                     )
                                 )
-                        else:
-                            self.quads.add(
-                                (
-                                    Operations.OPT_ASSIGN,
-                                    global_address,
-                                    0,
-                                    obj_prop.address,
-                                )
-                            )
                 else:
                     var_addr = func_info.return_address
                 p[0] = (func_info.type, var_addr, None)
