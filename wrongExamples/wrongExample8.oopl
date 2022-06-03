@@ -1,0 +1,19 @@
+# Explanation: Prototype does not match with body definition.
+
+int getLarger(int a, float b);
+
+int main() {
+    int i;
+
+    i = getLarger(12, 3);
+
+    return 0;
+}
+
+int getLarger(float a, int b) {
+    if(a > b) {
+        return a;
+    } else {
+        return b;
+    }
+}
