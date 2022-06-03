@@ -219,6 +219,13 @@ class Parser:
 
             # Only add if there is no return after and it is the end of the function
             if self.quads[self.quads.ptr_address(-1)][0] != Operations.ENDSUB:
+                for (
+                    _,
+                    (local_address, global_address),
+                ) in func_info.obj_addresses.items():
+                    self.quads.add(
+                        (Operations.ASSIGNOP, local_address, 0, global_address)
+                    )
                 self.quads.add((Operations.ENDSUB, 0, 0, 0))
             if self.verbose:
                 print(f"# Function: {func_name}")
@@ -241,7 +248,8 @@ class Parser:
                 _, address, name = self.scope_stack.top().add(
                     f"this.{value.name}", value.type, value.array_info
                 )
-                func_info.obj_addresses[str(name)] = address
+                global_address = self.global_memory.reserve(value.type)
+                func_info.obj_addresses[str(name)] = address, global_address
         func_info.start_quad = self.quads.ptr_address()
 
     def p_register_function(self, p):
@@ -336,7 +344,6 @@ class Parser:
         self.quads[after_expr_false] = (op_code, addr, 0, self.quads.ptr_address())
         op_code, addr, _, _ = self.quads[after_expr_true]
         self.quads[after_expr_true] = (op_code, addr, 0, before_block)
-        self.quads.print(True)
 
     def p_for_loop_assign(self, p):
         """
@@ -344,8 +351,6 @@ class Parser:
                         |
         """
         self.jump_stack.append(self.quads.ptr_address())
-        print(self.quads.ptr)
-        print(self.jump_stack[-1])
 
     def p_empty_goto(self, p):
         """
@@ -512,6 +517,13 @@ class Parser:
                         func_info.return_address,
                     )
                 )
+                for (
+                    _,
+                    (local_address, global_address),
+                ) in func_info.obj_addresses.items():
+                    self.quads.add(
+                        (Operations.ASSIGNOP, local_address, 0, global_address)
+                    )
                 self.quads.add((Operations.ENDSUB, 0, 0, 0))
                 func_info.has_return = True
             else:
@@ -613,9 +625,15 @@ class Parser:
                         )
                 for (
                     property_name,
-                    property_address,
+                    (local_address, _),
                 ) in func_info.obj_addresses.items():
-                    pass
+                    [_, prop_name] = property_name.split(".")
+                    obj_prop_name = f"{base_name}.{prop_name}"
+                    if self.scope_stack.has_var(obj_prop_name):
+                        obj_prop = self.scope_stack.get_var(obj_prop_name)
+                        self.quads.add(
+                            (Operations.PARAM, obj_prop.address, 0, local_address)
+                        )
                 self.quads.add((Operations.GOSUB, 0, 0, func_info.address))
                 if func_info.type != Types.VOID.value:
                     var_addr = self.function_memory.reserve(func_info.type)
@@ -627,6 +645,17 @@ class Parser:
                             var_addr,
                         )
                     )
+                for (
+                    property_name,
+                    (_, global_address),
+                ) in func_info.obj_addresses.items():
+                    [_, prop_name] = property_name.split(".")
+                    obj_prop_name = f"{base_name}.{prop_name}"
+                    if self.scope_stack.has_var(obj_prop_name):
+                        obj_prop = self.scope_stack.get_var(obj_prop_name)
+                        self.quads.add(
+                            (Operations.ASSIGNOP, global_address, 0, obj_prop.address)
+                        )
                 else:
                     var_addr = func_info.return_address
                 p[0] = (func_info.type, var_addr, None)
