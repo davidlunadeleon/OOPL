@@ -632,7 +632,7 @@ class Parser:
                     if self.scope_stack.has_var(obj_prop_name):
                         obj_prop = self.scope_stack.get_var(obj_prop_name)
                         self.quads.add(
-                            (Operations.PARAM, obj_prop.address, 0, local_address)
+                            (Operations.OPT_PARAM, obj_prop.address, 0, local_address)
                         )
                 self.quads.add((Operations.GOSUB, 0, 0, func_info.address))
                 if func_info.type != Types.VOID.value:

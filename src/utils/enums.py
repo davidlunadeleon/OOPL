@@ -27,6 +27,7 @@ class Operations(Enum):
     GT = ">"
     LT = "<"
     MINUS = "-"
+    OPT_PARAM = "OPT_PARAM"
     OR = "||"
     PARAM = "PARAM"
     PLUS = "+"

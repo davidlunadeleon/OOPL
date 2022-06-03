@@ -104,6 +104,9 @@ class VM:
                     mem3[addr3] = mem1[addr1]
                 case Operations.PARAM:
                     self.temp_memory[addr3] = mem1[addr1]
+                case Operations.OPT_PARAM:
+                    if mem1[addr1] is not None:
+                        self.temp_memory[addr3] = mem1[addr1]
                 case Operations.SAVEPTR:
                     mem3.save_ptr(addr3, mem1[addr1])
                 case Operations.AND:
