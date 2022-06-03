@@ -89,8 +89,6 @@ class VM:
                 addr3 = int(mem3[addr3])
                 mem3 = temp_mem
 
-            # print((op_code, addr1, addr2, addr3))
-
             match op_code:
                 case Operations.PRINT:
                     print(mem1[addr1], end="")

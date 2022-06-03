@@ -228,7 +228,6 @@ class Parser:
                     obj_prop = self.scope_stack.get_var(name)
                     if obj_prop.array_info is not None:
                         for offset in range(0, obj_prop.array_info.size):
-                            print(offset)
                             self.quads.add(
                                 (
                                     Operations.ASSIGNOP,
@@ -545,7 +544,6 @@ class Parser:
                     obj_prop = self.scope_stack.get_var(name)
                     if obj_prop.array_info is not None:
                         for offset in range(0, obj_prop.array_info.size):
-                            print(offset)
                             self.quads.add(
                                 (
                                     Operations.ASSIGNOP,
