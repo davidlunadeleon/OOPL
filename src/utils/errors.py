@@ -4,6 +4,7 @@ from typing import TypeAlias
 
 class OOPLErrorTypes(Enum):
     DUPLICATE = "duplicate entity"
+    EMPTY_QUADRUPLES = "empty quadruple list"
     IMPLICIT_DECLARATION = "implicit function declaration"
     NULL_DEREF = "null pointer dereference"
     SEMANTIC = "semantic"
@@ -11,6 +12,7 @@ class OOPLErrorTypes(Enum):
     SYNTAX = "syntax"
     TYPE_MISMATCH = "type mismatch"
     UNDECLARED_IDENTIFIER = "undeclared identifier"
+    UNKNOWN_QUADRUPLE = "unknowkn quadruple"
 
 
 class OOPLError(Exception):

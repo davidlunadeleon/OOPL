@@ -1,4 +1,5 @@
 import argparse
+import sys
 
 from src.vm import VM
 from src.utils.enums import Segments, Operations
@@ -63,6 +64,6 @@ if __name__ == "__main__":
                                 int(line[4]),
                             )
                         )
-        vm.run()
+        sys.exit(vm.run())
     except (EOFError, FileNotFoundError) as e:
         print(e)

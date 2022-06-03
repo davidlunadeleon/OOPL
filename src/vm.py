@@ -6,6 +6,7 @@ from .memory import Memory
 from .quadruple_list import QuadrupleList
 from .utils.types import Resources, Quadruple, MemoryType, MemoryAddress
 from .utils.enums import Operations
+from .utils.errors import VMError, OOPLErrorTypes
 
 start_global_memory = 1
 start_function_memory = 5001
@@ -19,6 +20,7 @@ class VM:
     temp_memory: Memory
     memory_stack: list[Tuple[Memory, int]]
     quads: QuadrupleList
+    last_return: MemoryType
 
     def __init__(self) -> None:
         self.func_dir = VMFuncDir()
@@ -69,7 +71,7 @@ class VM:
             mem[self.func_dir.get(str(self.global_memory[func_address])).start_quad]
         )
 
-    def run(self):
+    def run(self) -> MemoryType:
         for quad in self.quads:
             op_code, addr1, addr2, addr3 = quad
             mem1 = self.__get_memory(addr1)
@@ -89,8 +91,6 @@ class VM:
                 addr3 = int(mem3[addr3])
                 mem3 = temp_mem
 
-            print((op_code, addr1, addr2, addr3))
-
             match op_code:
                 case Operations.PRINT:
                     print(mem1[addr1], end="")
@@ -109,6 +109,7 @@ class VM:
                     if mem1[addr1]:
                         self.quads.ptr = int(mem3[addr3])
                 case Operations.ASSIGNOP:
+                    self.last_return = mem1[addr1]
                     mem3[addr3] = mem1[addr1]
                 case Operations.PARAM:
                     self.temp_memory[addr3] = mem1[addr1]
@@ -150,4 +151,12 @@ class VM:
                 case Operations.ENDSUB:
                     if op_code is Operations.ENDSUB:
                         if self.__restore_state():
-                            return
+                            return self.last_return
+                case _:
+                    raise VMError(
+                        OOPLErrorTypes.UNKNOWN_QUADRUPLE,
+                        f"cannot handle unknown quadruple {quad}",
+                    )
+        raise VMError(
+            OOPLErrorTypes.EMPTY_QUADRUPLES, "cannot run on an empty quadruple list"
+        )
