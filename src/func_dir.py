@@ -27,6 +27,16 @@ class CFuncDir(Dir[CFuncInfo]):
         scope: Scope,
         address: MemoryAddress,
     ) -> CFuncInfo:
+        """
+        Insert a new function into the function directory.
+
+        Arguments:
+        name: str -- Name of the function.
+        return_type: str -- Type of the function.
+        return_address: MemoryAddress -- Address where the value returned by the function is to be saved.
+        scope: Scope -- Define the scope of the function.
+        address: MemoryAddress -- Address where the function name is stored.
+        """
         if self.has(name) and self.get(name).is_body_defined:
             raise Exception(f"The function {name} is already in the directory.")
         else:
@@ -40,6 +50,9 @@ class CFuncDir(Dir[CFuncInfo]):
             return self.dir[name]
 
     def print(self, verbose: bool) -> None:
+        """
+        Print information of the directory depending on verbose flag value.
+        """
         for key, value in self.dir.items():
             if verbose:
                 print(f"# Function: {key} with return type: {value.type}")
@@ -60,6 +73,14 @@ class VMFuncDir(Dir[VMFuncInfo]):
         start_quad: int,
         resources: Resources,
     ) -> VMFuncInfo:
+        """
+        Insert function to the VM's directory.
+
+        Arguments:
+        name: str -- Name of the function.
+        start_quad: int -- Quadruple where the function body starts.
+        resources: Resources -- Amount of each type of resource needed for the function.
+        """
         if name in self.dir:
             raise Exception(f"The function {name} is already in the directory.")
         else:
@@ -67,6 +88,9 @@ class VMFuncDir(Dir[VMFuncInfo]):
             return self.dir[name]
 
     def print(self, verbose: bool) -> None:
+        """
+        Print information of the directory depending on verbose flag value.
+        """
         for key, value in self.dir.items():
             if verbose:
                 print(f"# Function: {key}")

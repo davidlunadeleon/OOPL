@@ -20,7 +20,7 @@ class ClassDir(Dir[ClassInfo]):
 
     def print(self, verbose: bool) -> None:
         """
-        Print nformation of the directory depending on verbose flag value.
+        Print information of the directory depending on verbose flag value.
         """
         for value in self.values():
             if verbose:
