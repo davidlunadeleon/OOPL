@@ -27,6 +27,9 @@ class VM:
         self.memory_stack = []
 
     def init_global_memory(self, global_resources: Resources) -> None:
+        """
+        Starting a global memory that will be accessible to all contexts.
+        """
         self.global_memory = Memory(start_global_memory, chunk_size, global_resources)
         self.function_memory = Memory(
             start_function_memory, chunk_size, (0, 0, 0, 0, 0)
@@ -34,15 +37,42 @@ class VM:
         self.quads = QuadrupleList(self.global_memory)
 
     def add_function(self, name: str, start_quad: int, resources: Resources):
+        """
+        Inserting a new function to directory.
+
+        Arguments:
+        name: str -- Name of the function.
+        start_quad: int -- Number of the quadruple where the function starts.
+        resources: Resources -- The information about the amount of resources of each type needed for the function.
+        """
         self.func_dir.add(name, start_quad, resources)
 
     def add_quadruple(self, quad: Quadruple):
+        """
+        Insert a new quadruple to list.
+
+        Arguments:
+        quad: Quarduple -- The quadruple to be inserted.
+        """
         self.quads.add(quad)
 
     def set_global_variable(self, addr: int, val: MemoryType):
+        """
+        Setting a global variable according to a known address.
+
+        Arguments:
+        addr: int -- The space in the global memory where the variable should be stored.
+        val: MemoryType: The type of the variable asigned.
+        """
         self.global_memory[addr] = val
 
     def __get_memory(self, address: MemoryAddress | None):
+        """
+        Get either the global or function memory depending in which range the address is in.
+
+        Arguments:
+        address: MemoryAddress -- Address targeted.
+        """
         return (
             self.function_memory
             if address is not None and address >= start_function_memory
@@ -50,6 +80,12 @@ class VM:
         )
 
     def __reserve_memory(self, func_address: MemoryAddress) -> None:
+        """"
+        Reserve the memory for the function that is being called.
+
+        Arguments:
+        func_address: MemoryAddress -- Address where the function name is stored.
+        """
         self.temp_memory = Memory(
             start_function_memory,
             chunk_size,
@@ -57,6 +93,10 @@ class VM:
         )
 
     def __restore_state(self) -> bool:
+        """
+        Delete the temporary function memory that was being executed and reawaken the previous function memory.
+        If there is no other one, then notify to use global memory.
+        """
         self.temp_memory.clear()
         self.function_memory, self.quads.ptr = self.memory_stack.pop()
         if len(self.memory_stack) == 0:
@@ -65,6 +105,10 @@ class VM:
             return False
 
     def __save_state(self, func_address: MemoryAddress, mem: Memory) -> None:
+        """
+        Store the previous function memory being used to change context to the new one. Also, go towards the
+        quadruples that correspond to the new one.
+        """
         self.memory_stack.append((self.function_memory, self.quads.ptr))
         self.function_memory = self.temp_memory
         self.quads.ptr = int(
@@ -72,6 +116,9 @@ class VM:
         )
 
     def run(self) -> MemoryType:
+        """
+        Carry out the operations described on the quadruples and also solve the expressions.
+        """
         for quad in self.quads:
             op_code, addr1, addr2, addr3 = quad
             mem1 = self.__get_memory(addr1)
@@ -86,6 +133,7 @@ class VM:
                 temp_mem = self.__get_memory(int(mem2[addr2]))
                 addr2 = int(mem2[addr2])
                 mem2 = temp_mem
+            # When using arrays, the last element of a quadruple could be a pointer, so we need to check to obtain its content
             if addr3 != 0 and mem3.is_ptr(addr3) and op_code is not Operations.SAVEPTR:
                 temp_mem = self.__get_memory(int(mem3[addr3]))
                 addr3 = int(mem3[addr3])
@@ -112,6 +160,8 @@ class VM:
                     self.last_return = mem1[addr1]
                     mem3[addr3] = mem1[addr1]
                 case Operations.PARAM:
+                    # Need to use temporary memory to pass value from one context to another 
+                    # (previous function to new one)
                     self.temp_memory[addr3] = mem1[addr1]
                 case Operations.OPT_ASSIGN:
                     if mem1[addr1] is not None:
@@ -145,6 +195,7 @@ class VM:
                     mem3[addr3] = mem1[addr1] + mem2[addr2]
                 case Operations.TIMES:
                     mem3[addr3] = mem1[addr1] * mem2[addr2]
+                # Check that the value is not out of bounds of the dimension
                 case Operations.VER:
                     if not (mem2[addr2] <= mem1[addr1] and mem1[addr1] < mem3[addr3]):
                         raise Exception("Out of bounds error.")
