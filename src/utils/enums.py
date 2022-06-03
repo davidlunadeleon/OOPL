@@ -1,6 +1,6 @@
 from enum import Enum, auto
 
-
+# For functions and variables
 class Types(Enum):
     BOOL = "bool"
     FLOAT = "float"
@@ -9,7 +9,7 @@ class Types(Enum):
     VOID = "void"
     PTR = "ptr"
 
-
+# For quadruples and VM's switch execution
 class Operations(Enum):
     AND = "&&"
     ASSIGNOP = "="
@@ -38,7 +38,7 @@ class Operations(Enum):
     TIMES = "*"
     VER = "VER"
 
-
+# To check keywords and types of actions permitted
 class ScopeTypes(Enum):
     CLASS = auto()
     CLASS_FUNCTION = auto()
@@ -47,7 +47,7 @@ class ScopeTypes(Enum):
     GLOBAL = auto()
     LOOP = auto()
 
-
+# For better readability in VM's output
 class Segments(Enum):
     FUNCTIONS = "%%functions"
     GLOBAL_MEMORY = "%%global_memory"

@@ -17,6 +17,7 @@ MemoryTypeNames = [
 Quadruple = Tuple[Operations, MemoryAddress, MemoryAddress, MemoryAddress]
 TypeAddress = Tuple[str, MemoryAddress, str | None]
 
+# For resource handling in functions
 NumBools: TypeAlias = int
 NumFloats: TypeAlias = int
 NumInts: TypeAlias = int

@@ -3,7 +3,7 @@ from typing import Optional, TypeVar, Generic
 from .utils.types import MemoryType, MemoryAddress
 from .utils.enums import Types
 from .utils.types import Resources
-
+# Generic definition of every accepted var type
 T = TypeVar(
     "T", None, bool | None, float | None, int | None, str | None, MemoryAddress | None
 )

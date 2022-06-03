@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import TypeAlias
 
-
+# Generic error types 
 class OOPLErrorTypes(Enum):
     DUPLICATE = "duplicate entity"
     EMPTY_QUADRUPLES = "empty quadruple list"
@@ -27,7 +27,7 @@ class OOPLError(Exception):
     def __str__(self) -> str:
         return f"{self.type.value} error: {self.message}"
 
-
+# Error during compilation
 class CError(OOPLError):
     char_pos: int
     line_number: int
@@ -41,5 +41,5 @@ class CError(OOPLError):
         self.char_pos = char_pos
         self.line_number = line_number
 
-
+# Errors during runtime
 VMError: TypeAlias = OOPLError
