@@ -7,6 +7,10 @@ from .quadruple_list import QuadrupleList
 from .utils.types import Resources, Quadruple, MemoryType, MemoryAddress
 from .utils.enums import Operations
 
+start_global_memory = 1
+start_function_memory = 5001
+chunk_size = 1000
+
 
 class VM:
     function_memory: Memory
@@ -21,8 +25,10 @@ class VM:
         self.memory_stack = []
 
     def init_global_memory(self, global_resources: Resources) -> None:
-        self.global_memory = Memory(1, 1000, global_resources)
-        self.function_memory = Memory(5001, 1000, (0, 0, 0, 0, 0))
+        self.global_memory = Memory(start_global_memory, chunk_size, global_resources)
+        self.function_memory = Memory(
+            start_function_memory, chunk_size, (0, 0, 0, 0, 0)
+        )
         self.quads = QuadrupleList(self.global_memory)
 
     def add_function(self, name: str, start_quad: int, resources: Resources):
@@ -37,14 +43,14 @@ class VM:
     def __get_memory(self, address: MemoryAddress | None):
         return (
             self.function_memory
-            if address is not None and address >= 5001
+            if address is not None and address >= start_function_memory
             else self.global_memory
         )
 
     def __reserve_memory(self, func_address: MemoryAddress) -> None:
         self.temp_memory = Memory(
-            5001,
-            1000,
+            start_function_memory,
+            chunk_size,
             self.func_dir.get(str(self.global_memory[func_address])).resources,
         )
 
@@ -83,6 +89,8 @@ class VM:
                 addr3 = int(mem3[addr3])
                 mem3 = temp_mem
 
+            print((op_code, addr1, addr2, addr3))
+
             match op_code:
                 case Operations.PRINT:
                     print(mem1[addr1], end="")
@@ -104,6 +112,12 @@ class VM:
                     mem3[addr3] = mem1[addr1]
                 case Operations.PARAM:
                     self.temp_memory[addr3] = mem1[addr1]
+                case Operations.OPT_ASSIGN:
+                    if mem1[addr1] is not None:
+                        mem3[addr3] = mem1[addr1]
+                case Operations.OPT_PARAM:
+                    if mem1[addr1] is not None:
+                        self.temp_memory[addr3] = mem1[addr1]
                 case Operations.SAVEPTR:
                     mem3.save_ptr(addr3, mem1[addr1])
                 case Operations.AND:
