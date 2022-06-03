@@ -5,9 +5,9 @@ from .func_dir import CFuncDir
 class ClassInfo:
     name: str
     var_table: VarTable
-    func_dir: CFuncDir
+    funcs: list[str]
 
     def __init__(self, name: str) -> None:
         self.name = name
         self.var_table = VarTable()
-        self.func_dir = CFuncDir()
+        self.funcs = []
