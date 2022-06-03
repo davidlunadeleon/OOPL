@@ -1,0 +1,24 @@
+# Explanation: Assigning wrong variable type to mat.
+
+int main()
+{
+	int x, y, i, j;
+	float z;
+	string f;
+	int arr[5];
+	float mat[4][8], mat2[6][10];
+
+	x = 1;
+	z = x + 2.5;
+	y = z;
+
+    for (i = 0; i < 2; i = i + 1) {
+        for (j = 0; j < 2; j = j + 1) {
+            print("Input new value: \n");
+            read(f);
+            mat[i][j] = f; 
+        }
+    }
+	
+	return 0;
+}
