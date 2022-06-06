@@ -780,35 +780,35 @@ class Parser:
                             var_addr,
                         )
                     )
-                    for (
-                        property_name,
-                        (_, global_address),
-                    ) in func_info.obj_addresses.items():
-                        [_, prop_name] = property_name.split(".")
-                        obj_prop_name = f"{base_name}.{prop_name}"
-                        if self.scope_stack.has_var(obj_prop_name):
-                            obj_prop = self.scope_stack.get_var(obj_prop_name)
-                            if obj_prop.array_info is not None:
-                                for offset in range(0, obj_prop.array_info.size):
-                                    self.quads.add(
-                                        (
-                                            Operations.OPT_ASSIGN,
-                                            global_address + offset,
-                                            0,
-                                            obj_prop.address + offset,
-                                        )
-                                    )
-                            else:
+                else:
+                    var_addr = func_info.return_address
+                for (
+                    property_name,
+                    (_, global_address),
+                ) in func_info.obj_addresses.items():
+                    [_, prop_name] = property_name.split(".")
+                    obj_prop_name = f"{base_name}.{prop_name}"
+                    if self.scope_stack.has_var(obj_prop_name):
+                        obj_prop = self.scope_stack.get_var(obj_prop_name)
+                        if obj_prop.array_info is not None:
+                            for offset in range(0, obj_prop.array_info.size):
                                 self.quads.add(
                                     (
                                         Operations.OPT_ASSIGN,
-                                        global_address,
+                                        global_address + offset,
                                         0,
-                                        obj_prop.address,
+                                        obj_prop.address + offset,
                                     )
                                 )
-                else:
-                    var_addr = func_info.return_address
+                        else:
+                            self.quads.add(
+                                (
+                                    Operations.OPT_ASSIGN,
+                                    global_address,
+                                    0,
+                                    obj_prop.address,
+                                )
+                            )
                 p[0] = (func_info.type, var_addr, None)
         else:
             raise CError(
