@@ -15,6 +15,9 @@ if __name__ == "__main__":
     vm = VM()
 
     try:
+        if args.output:
+            file_out = open(args.output, "w")
+            sys.stdout = file_out
         with open(args.file, "r") as file:
             for line in file.readlines():
                 line = line.removesuffix("\n")

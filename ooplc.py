@@ -11,13 +11,14 @@
 
 # Libraries
 import argparse
+import sys
 from pathlib import Path
 from math import floor, ceil
 
 # Internal modules
 from src.lexer import Lexer
 from src.parser import Parser
-from src.utils.errors import OOPLError
+from src.utils.errors import CError
 
 
 def clamp(num: int, min_num: int, max_num: int) -> int:
@@ -40,7 +41,10 @@ if __name__ == "__main__":
     argparser = argparse.ArgumentParser()
     argparser.add_argument("file", help="OOPL source file")
     argparser.add_argument(
-        "-o", "--output", help="object file to generate", default="a.ooplobj"
+        "-o",
+        "--output",
+        help="object file to generate, defaults to a.ooplobj",
+        default="a.ooplobj",
     )
     argparser.add_argument(
         "-v",
@@ -61,8 +65,11 @@ if __name__ == "__main__":
             file_lines = file.readlines()
             file_content = "".join(file_lines)
             try:
+                if args.output:
+                    file_out = open(args.output, "w")
+                    sys.stdout = file_out
                 parser.parse(file_content)
-            except OOPLError as e:
+            except CError as e:
                 col = find_column(file_lines, e.char_pos, e.line_number)
                 print(f"\nError in {file.name}")
                 print(f"{Path(file.name).name}:{e.line_number}:{col}: {e.__str__()}\n")
